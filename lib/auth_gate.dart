@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:owtest/sign_in_screen.dart';
 import 'package:owtest/staff_portal.dart';
-import 'package:owtest/student/complaint_detail_screen.dart'; // Corrected Import
+import 'package:owtest/student/home_page.dart'; // Show student homepage after login
 import 'package:owtest/technician/dashboard.dart'; // Corrected Import
 
 class AuthGate extends StatelessWidget {
@@ -45,8 +45,8 @@ class AuthGate extends StatelessWidget {
               case 'staff':
                 return StaffPortalApp();
               case 'student':
-                // Navigate to the new student screen
-                return const ComplaintDetailScreen(); 
+                // Navigate to the student home page after login
+                return const HomePage();
               case 'technician':
                 // Navigate to the new technician screen
                 return const TechnicianDashboard(); 

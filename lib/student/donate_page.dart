@@ -197,11 +197,18 @@ class _TipsPageState extends State<TipsPage> {
 
                   const SizedBox(height: 12),
 
-                  Text(
-                    'Maybe next time',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey[400],
+                  // Allow user to cancel and return to HomePage
+                  TextButton(
+                    onPressed: () {
+                      // Pop back to the first route (HomePage) so user returns to dashboard
+                      Navigator.of(context).popUntil((route) => route.isFirst);
+                    },
+                    child: Text(
+                      'Maybe next time',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey[600],
+                      ),
                     ),
                   ),
                 ],
@@ -245,7 +252,7 @@ class _AmountButton extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'RM\$amount',
+                'RM$amount',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,

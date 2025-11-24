@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'services/weatherService.dart';
 
 import 'notification_page.dart';
 import 'donate_page.dart';
+
+
+// Note: `login_main.dart` is the application entrypoint. This file exposes
+// `HomePage` which will be shown after successful login via `AuthGate`.
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -47,6 +52,9 @@ class _HomePageState extends State<HomePage> {
       // Get weather by city (Johor Bahru)
       final weather = await weatherService.getWeatherByCity('Johor Bahru');
 
+      // Or use coordinates for Taman Senai, Johor
+      // final weather = await weatherService.getWeatherByCoordinates(1.5896, 103.6545);
+
       setState(() {
         weatherData = weather;
         isLoadingWeather = false;
@@ -56,7 +64,7 @@ class _HomePageState extends State<HomePage> {
         weatherError = 'Failed to load weather';
         isLoadingWeather = false;
       });
-      if (kDebugMode) print('Weather error: $e');
+      print('Weather error: $e');
     }
   }
 
@@ -67,16 +75,31 @@ class _HomePageState extends State<HomePage> {
     });
 
     try {
-      final doc = await FirebaseFirestore.instance
+      // Get the current signed-in user's email
+      final user = FirebaseAuth.instance.currentUser;
+      final email = user?.email;
+
+      if (email == null || email.isEmpty) {
+        setState(() {
+          studentName = 'Guest';
+          matricNo = '';
+          isLoadingStudent = false;
+        });
+        return;
+      }
+
+      // Query the `student` collection for a document with matching email
+      final query = await FirebaseFirestore.instance
           .collection('student')
-          .doc('ZukqFozo1CRmr1Rnuz91')
+          .where('email', isEqualTo: email)
+          .limit(1)
           .get();
 
-      if (doc.exists) {
-        final data = doc.data() as Map<String, dynamic>;
+      if (query.docs.isNotEmpty) {
+        final data = query.docs.first.data();
         setState(() {
-          studentName = (data['studentName'] ?? '').toString();
-          matricNo = (data['matricNo'] ?? '').toString();
+          studentName = (data['studentName'] ?? data['name'] ?? '').toString();
+          matricNo = (data['matricNo'] ?? data['matric'] ?? '').toString();
           isLoadingStudent = false;
         });
         if (kDebugMode) {
@@ -88,7 +111,7 @@ class _HomePageState extends State<HomePage> {
           matricNo = '';
           isLoadingStudent = false;
         });
-        if (kDebugMode) print('Student document not found');
+        if (kDebugMode) print('No matching student document for $email');
       }
     } catch (e) {
       setState(() {
@@ -307,7 +330,7 @@ class _HomePageState extends State<HomePage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Text(
-                                'Furniture\\nreparation',
+                                'Furniture\nreparation',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 20,
@@ -343,7 +366,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                             child: const Center(
                               child: Text(
-                                'Technician\\non the\\nway',
+                                'Technician\non the\nway',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: Colors.white,
@@ -480,7 +503,7 @@ class _HomePageState extends State<HomePage> {
                                                 ),
                                                 const SizedBox(height: 4),
                                                 Text(
-                                                  'Tap to\\nrefresh',
+                                                  'Tap to\nrefresh',
                                                   textAlign: TextAlign.center,
                                                   style: TextStyle(
                                                     color: Colors.white,
@@ -686,3 +709,4 @@ class ScheduleItem extends StatelessWidget {
     );
   }
 }
+

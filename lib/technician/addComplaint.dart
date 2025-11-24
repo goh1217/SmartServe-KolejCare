@@ -7,7 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
-import 'firebase_service.dart';
+//import 'firebase_service.dart';
 
 // ==================== AI Category Predictor ====================
 
@@ -42,6 +42,8 @@ class CategoryPredictor {
     }
 
     var input = [padded];
+
+    // Prepare a 2D output buffer: one row with length = number of labels
     var output = List.filled(_labelMap.length, 0.0).reshape([1, _labelMap.length]);
     _interpreter.run(input, output);
 
