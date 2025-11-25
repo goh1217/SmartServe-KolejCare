@@ -64,7 +64,7 @@ class _HomePageState extends State<HomePage> {
         weatherError = 'Failed to load weather';
         isLoadingWeather = false;
       });
-      print('Weather error: $e');
+      if (kDebugMode) print('Weather error: $e');
     }
   }
 
