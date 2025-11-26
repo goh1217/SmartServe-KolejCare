@@ -7,6 +7,7 @@ import 'services/weatherService.dart';
 
 import 'notification_page.dart';
 import 'donate_page.dart';
+import 'screens/activity.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -24,17 +25,252 @@ class _HomePageState extends State<HomePage> {
   String studentName = '';
   String matricNo = '';
   bool isLoadingStudent = true;
+
+  // Complaint progress
+  double complaintProgress = 0.0; // 0.0 - 1.0
+  String complaintStatusLabel = 'No reports';
+  String complaintStatusDescription = '';
+  // raw status value from complaint doc (lowercase) for logic decisions
+  String complaintRawStatus = '';
+  // damage category from complaint doc (e.g. "Electrical", "Furniture")
+  String complaintDamageCategory = '';
+
   @override
   void initState() {
     super.initState();
     _loadWeather();
+    _loadComplaintProgress();
     fetchStudentData();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (showAlert) {
-        _showAlertDialog();
-      }
+  }
+
+  // Small status bar widget that reflects complaint progress and status
+  Widget _buildStatusBar() {
+    final label = complaintStatusLabel.replaceAll('\n', ' ');
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(color: Colors.grey.withOpacity(0.06), blurRadius: 6),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        complaintStatusDescription,
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      ),
+                      Text(
+                        '${(complaintProgress * 100).round()}%',
+                        style: TextStyle(color: Colors.grey[700], fontSize: 12, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: LinearProgressIndicator(
+                      value: complaintProgress,
+                      minHeight: 8,
+                      backgroundColor: Colors.grey[200],
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        complaintProgress >= 1.0
+                            ? Colors.green
+                            : (complaintRawStatus.contains('rejected') ? Colors.red : Colors.deepPurple),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Show damage/category on the right so student knows which complaint this refers to
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.deepPurple.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                complaintDamageCategory.isNotEmpty ? complaintDamageCategory : 'No category',
+                style: TextStyle(
+                  color: complaintDamageCategory.isNotEmpty ? Colors.deepPurple : Colors.grey[600],
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _loadComplaintProgress() async {
+  try {
+    final user = FirebaseAuth.instance.currentUser;
+    final email = user?.email;
+
+    if (kDebugMode) print('Loading complaint progress for user email: $email');
+
+    if (email == null || email.isEmpty) {
+      if (kDebugMode) print('No user logged in');
+      setState(() {
+        complaintProgress = 0.0;
+        complaintStatusLabel = 'No reports';
+        complaintStatusDescription = '';
+      });
+      return;
+    }
+
+    final studentQuery = await FirebaseFirestore.instance
+        .collection('student')
+        .where('email', isEqualTo: email)
+        .limit(1)
+        .get();
+
+    if (studentQuery.docs.isEmpty) {
+      if (kDebugMode) print('No student document found for $email');
+      setState(() {
+        complaintProgress = 0.0;
+        complaintStatusLabel = 'No reports';
+        complaintStatusDescription = '';
+      });
+      return;
+    }
+
+    final studentData = studentQuery.docs.first.data();
+    if (kDebugMode) print('Student data: $studentData');
+
+    // Look for common complaint id fields inside student document
+    String complaintIdRaw = (studentData['complaintID'] ?? studentData['complaintId'] ?? studentData['complaint'] ?? studentData['latestComplaintId'] ?? studentData['latestComplaint'] ?? '').toString();
+    String? complaintId = complaintIdRaw.isNotEmpty ? complaintIdRaw : null;
+
+    if (kDebugMode) print('Found complaintId in student doc: $complaintId');
+
+    if (complaintId == null) {
+      // No linked complaint id found
+      setState(() {
+        complaintProgress = 0.0;
+        complaintStatusLabel = 'No reports';
+        complaintStatusDescription = '';
+      });
+      return;
+    }
+
+    // Fetch the complaint document by its document id
+    final complaintDoc = await FirebaseFirestore.instance.collection('complaint').doc(complaintId).get();
+    if (!complaintDoc.exists) {
+      if (kDebugMode) print('Complaint doc $complaintId not found');
+      setState(() {
+        complaintProgress = 0.0;
+        complaintStatusLabel = 'No reports';
+        complaintStatusDescription = '';
+      });
+      return;
+    }
+
+    final data = complaintDoc.data() ?? {};
+    if (kDebugMode) print('Complaint data: $data');
+
+    // Try different field names for damage/category
+    final categoryRaw = (data['damageCategory'] ?? data['damage_category'] ?? data['category'] ?? data['damage'] ?? '').toString();
+    final category = categoryRaw.isNotEmpty ? categoryRaw : '';
+
+    // Try different field names for status
+    final statusRaw = (data['status'] ?? data['reportStatus'] ?? data['Status'] ?? data['ReportStatus'] ?? '').toString();
+    final status = statusRaw.trim();
+
+    if (kDebugMode) print('Status found: "$status"');
+
+    // Map status to progress and description
+    double progress = 0.0;
+    String desc = '';
+    String displayText = '';
+    
+    final s = status.toLowerCase();
+    
+    if (s == 'submitted') {
+      progress = 0.15;
+      desc = 'Submitted';
+      displayText = 'Report\nSubmitted';
+    } else if (s == 'pending') {
+      progress = 0.30;
+      desc = 'Pending';
+      displayText = 'Under\nReview';
+    } else if (s == 'reviewed') {
+      progress = 0.50;
+      desc = 'Reviewed';
+      displayText = 'Being\nReviewed';
+    } else if (s.contains('approved') || s == 'approved') {
+      progress = 0.70;
+      desc = 'Approved';
+      displayText = 'Report\nApproved';
+    } else if (s == 'rejected') {
+      progress = 0.70;
+      desc = 'Rejected';
+      displayText = 'Report\nRejected';
+    } else if (s == 'assigned') {
+      progress = 0.90;
+      desc = 'Assigned';
+      displayText = 'Technician\nOn The Way';
+    } else if (s == 'completed') {
+      progress = 1.0;
+      desc = 'Completed';
+      displayText = 'Work\nCompleted';
+    } else {
+      // Fallback
+      progress = 0.0;
+      desc = status.isNotEmpty ? status : 'No reports';
+      displayText = status.isNotEmpty ? status : 'No\nReports';
+    }
+
+    if (kDebugMode) print('Setting progress: $progress, label: $desc');
+
+    setState(() {
+      complaintProgress = progress;
+      complaintStatusLabel = displayText;
+      complaintRawStatus = s;
+      complaintStatusDescription = '${(progress * 100).round()}%';
+      complaintDamageCategory = category;
+    });
+
+    // Show alert only when status is 'assigned' and we haven't shown it yet
+    if (s == 'assigned' && showAlert && mounted) {
+      // prevent multiple displays
+      setState(() {
+        showAlert = false;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _showAlertDialog();
+      });
+    }
+  } catch (e) {
+    if (kDebugMode) print('ERROR loading complaint progress: $e');
+    setState(() {
+      complaintProgress = 0.0;
+      complaintStatusLabel = 'Error';
+      complaintStatusDescription = '';
     });
   }
+}
+
 
   // Load weather data
   Future<void> _loadWeather() async {
@@ -70,6 +306,7 @@ class _HomePageState extends State<HomePage> {
 
     try {
       final user = FirebaseAuth.instance.currentUser;
+      
       if (user == null) {
         throw Exception("Not logged in");
       }
@@ -300,6 +537,16 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
+            const SizedBox(height: 12),
+            // Show status bar only when there is a linked complaint (status or category available)
+            (complaintRawStatus.isNotEmpty || complaintDamageCategory.isNotEmpty)
+                ? Column(
+                    children: [
+                      _buildStatusBar(),
+                      const SizedBox(height: 12),
+                    ],
+                  )
+                : const SizedBox.shrink(),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -331,7 +578,7 @@ class _HomePageState extends State<HomePage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text(
-                                  'Make a\\nDonation',
+                                  'Make a Donation',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 20,
@@ -501,7 +748,7 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'Tap to\\nrefresh',
+                                    'Tap to\nrefresh',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       color: Colors.white,
@@ -530,7 +777,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         InkWell(
-                          onTap: _showAlertDialog,
+                          onTap: complaintRawStatus == 'assigned' ? _showAlertDialog : null,
                           child: Container(
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
@@ -539,7 +786,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                             child: Icon(
                               Icons.info_outline,
-                              color: Colors.deepPurple,
+                              color: complaintRawStatus == 'assigned' ? Colors.deepPurple : Colors.grey,
                               size: 20,
                             ),
                           ),
@@ -611,7 +858,12 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(width: 40),
             IconButton(
               icon: Icon(Icons.description, color: Colors.grey),
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ActivityScreen()),
+                );
+              },
             ),
             IconButton(
               icon: Icon(Icons.settings, color: Colors.grey),

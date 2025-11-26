@@ -20,7 +20,8 @@ class ComplaintDetailsPage extends StatelessWidget {
           children: [
             Text(complaint.title, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
-            Text('Student: ${complaint.student}'),
+            //Text('Student: ${complaint.student}'),
+            Text('Student: ${complaint.studentId}'),
             Text('Room: ${complaint.room}'),
             Text('Category: ${complaint.category}'),
             Text('Priority: ${complaint.priority}'),

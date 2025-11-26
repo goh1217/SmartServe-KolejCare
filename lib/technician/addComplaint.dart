@@ -7,7 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
-import 'firebase_service.dart';
+//import 'firebase_service.dart';
 
 // ==================== AI Category Predictor ====================
 

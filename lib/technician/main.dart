@@ -4,7 +4,7 @@ import 'calendar.dart'; // Import the calendar page
 import 'addComplaint.dart'; // TEMP: developer-only page to quickly add data (remove for production)
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'firebase_options.dart'; // generated after flutterfire configure
+import '../firebase_options.dart'; // generated after flutterfire configure
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
