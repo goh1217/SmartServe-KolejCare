@@ -1,4 +1,4 @@
-import 'dart:math';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -75,12 +75,9 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
     try {
       final firestore = FirebaseFirestore.instance;
 
-      final snapshot = await firestore.collection('complaint').get();
-      final nextID = 'CP${(snapshot.docs.length + 1).toString().padLeft(4, '0')}';
-
-      await firestore.collection('complaint').add({
+      // Let firestore generate a unique ID
+      final docRef = await firestore.collection('complaint').add({
         'assignedTo': '/collection/technician', //not done yet
-        'complaintID': nextID,
         'damageCategory': _selectedMaintenanceType,
         'damagePic': null, //not done yet
         'feedbackRating': 0,
@@ -95,6 +92,9 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
         'technicianTip': 0,
         'urgencyLevel': _selectedUrgency,
       });
+
+      // Get the generated ID and update the document
+      await docRef.update({'complaintID': docRef.id});
 
       setState(() {
         _isSubmitted = true;
@@ -134,9 +134,6 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const double designWidth = 375;
-    const double designHeight = 812;
-
     String submitButtonText;
     Color submitButtonColor;
 
@@ -151,11 +148,7 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
       submitButtonColor = const Color(0xFF5F33E1);
     }
 
-    return LayoutBuilder(builder: (context, constraints) {
-      final double scale = min(
-          constraints.maxWidth / designWidth, constraints.maxHeight / designHeight);
-
-      return Scaffold(
+    return Scaffold(
         backgroundColor: const Color(0xFFF9F9FB),
         appBar: AppBar(
           title: Text('Make a Complaint', style: GoogleFonts.poppins()),
@@ -166,254 +159,251 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
             icon: const Icon(Icons.arrow_back),
             onPressed: () => Navigator.pop(context),
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: () {
+                FirebaseAuth.instance.signOut();
+              },
+            ),
+          ],
         ),
         body: SingleChildScrollView(
-          child: Center(
-            child: Transform.scale(
-              scale: scale,
-              alignment: Alignment.topLeft,
-              child: SizedBox(
-                width: designWidth,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  decoration: _cardDecoration(),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedMaintenanceType,
+                    items: _maintenanceOptions
+                        .map(
+                          (m) => DropdownMenuItem(
+                        value: m,
+                        child: Text(
+                          m,
+                          style: GoogleFonts.poppins(
+                              fontSize: 14, color: const Color(0xFF24252C)),
+                        ),
+                      ),
+                    )
+                        .toList(),
+                    onChanged: _isSubmitted || _isSubmitting
+                        ? null
+                        : (v) => setState(() => _selectedMaintenanceType = v),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      hintText: 'Select maintenance type',
+                      hintStyle: GoogleFonts.poppins(
+                          fontSize: 14, color: const Color(0xFF90929C)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                Container(
+                  decoration: _cardDecoration(),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  child: TextField(
+                    controller: _titleController,
+                    enabled: !_isSubmitted && !_isSubmitting,
+                    decoration: InputDecoration(
+                      hintText: 'Fragile bed and missing mattress',
+                      hintStyle: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: const Color(0xFF90929C),
+                      ),
+                      border: InputBorder.none,
+                    ),
+                    style: GoogleFonts.poppins(
+                        fontSize: 14, color: const Color(0xFF24252C)),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                Container(
+                  decoration: _cardDecoration(),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  child: TextField(
+                    controller: _descriptionController,
+                    enabled: !_isSubmitted && !_isSubmitting,
+                    maxLines: 5,
+                    decoration: InputDecoration(
+                      hintText:
+                      'The bed isn’t in good condition. It’s very shaky and feels like it could collapse if I lie down...',
+                      hintStyle: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: const Color(0xFF90929C),
+                      ),
+                      border: InputBorder.none,
+                    ),
+                    style: GoogleFonts.poppins(
+                        fontSize: 14, color: const Color(0xFF24252C)),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Upload picture, not functional yet
+                Container(
+                  decoration: _cardDecoration(),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  child: Row(
                     children: [
-                      Container(
-                        decoration: _cardDecoration(),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: DropdownButtonFormField<String>(
-                          value: _selectedMaintenanceType,
-                          items: _maintenanceOptions
-                              .map(
-                                (m) => DropdownMenuItem(
-                              value: m,
-                              child: Text(
-                                m,
-                                style: GoogleFonts.poppins(
-                                    fontSize: 14, color: const Color(0xFF24252C)),
-                              ),
-                            ),
-                          )
-                              .toList(),
-                          onChanged: _isSubmitted || _isSubmitting
-                              ? null
-                              : (v) => setState(() => _selectedMaintenanceType = v),
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            hintText: 'Select maintenance type',
-                            hintStyle: GoogleFonts.poppins(
-                                fontSize: 14, color: const Color(0xFF90929C)),
-                          ),
+                      const Icon(Icons.photo_camera),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Upload picture of report item (Max 3)',
+                          style: GoogleFonts.poppins(fontSize: 14),
                         ),
                       ),
-                      const SizedBox(height: 16),
-
-                      Container(
-                        decoration: _cardDecoration(),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                        child: TextField(
-                          controller: _titleController,
-                          enabled: !_isSubmitted && !_isSubmitting,
-                          decoration: InputDecoration(
-                            hintText: 'Fragile bed and missing mattress',
-                            hintStyle: GoogleFonts.poppins(
-                              fontSize: 14,
-                              color: const Color(0xFF90929C),
-                            ),
-                            border: InputBorder.none,
-                          ),
-                          style: GoogleFonts.poppins(
-                              fontSize: 14, color: const Color(0xFF24252C)),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      Container(
-                        decoration: _cardDecoration(),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                        child: TextField(
-                          controller: _descriptionController,
-                          enabled: !_isSubmitted && !_isSubmitting,
-                          maxLines: 5,
-                          decoration: InputDecoration(
-                            hintText:
-                            'The bed isn’t in good condition. It’s very shaky and feels like it could collapse if I lie down...',
-                            hintStyle: GoogleFonts.poppins(
-                              fontSize: 14,
-                              color: const Color(0xFF90929C),
-                            ),
-                            border: InputBorder.none,
-                          ),
-                          style: GoogleFonts.poppins(
-                              fontSize: 14, color: const Color(0xFF24252C)),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Upload picture, not functional yet
-                      Container(
-                        decoration: _cardDecoration(),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.photo_camera),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'Upload picture of report item (Max 3)',
-                                style: GoogleFonts.poppins(fontSize: 14),
-                              ),
-                            ),
-                            const Icon(Icons.cloud_upload),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      Container(
-                        decoration: _cardDecoration(),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: DropdownButtonFormField<String>(
-                          value: _selectedUrgency,
-                          items: _urgencyOptions
-                              .map(
-                                (u) => DropdownMenuItem(
-                              value: u,
-                              child: Text(
-                                u,
-                                style: GoogleFonts.poppins(
-                                    fontSize: 14, color: const Color(0xFF24252C)),
-                              ),
-                            ),
-                          )
-                              .toList(),
-                          onChanged: _isSubmitted || _isSubmitting
-                              ? null
-                              : (v) => setState(() => _selectedUrgency = v),
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            hintText: 'Select urgency level',
-                            hintStyle: GoogleFonts.poppins(
-                                fontSize: 14, color: const Color(0xFF90929C)),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      Container(
-                        decoration: _cardDecoration(),
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Room Entry Consent',
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'I hereby grant permission for authorized staff or technicians to enter my room without my presence...',
-                              style: GoogleFonts.poppins(
-                                  fontSize: 12, color: const Color(0xFF90929C)),
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: GestureDetector(
-                                    onTap: _isSubmitted || _isSubmitting
-                                        ? null
-                                        : () => setState(() => _consentGiven = true),
-                                    child: Container(
-                                      padding:
-                                      const EdgeInsets.symmetric(vertical: 12),
-                                      alignment: Alignment.center,
-                                      decoration: BoxDecoration(
-                                        color: _consentGiven
-                                            ? const Color(0xFFEDE8FF)
-                                            : Colors.transparent,
-                                        borderRadius: BorderRadius.circular(8),
-                                        border:
-                                        Border.all(color: const Color(0xFF5F33E1)),
-                                      ),
-                                      child: Text(
-                                        'Yes, I consent',
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 14,
-                                          color: const Color(0xFF5F33E1),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: GestureDetector(
-                                    // --- UPDATED LOGIC TO DISABLE ON SUBMIT ---
-                                    onTap: _isSubmitted || _isSubmitting
-                                        ? null
-                                        : () => setState(() => _consentGiven = false),
-                                    child: Container(
-                                      padding:
-                                      const EdgeInsets.symmetric(vertical: 12),
-                                      alignment: Alignment.center,
-                                      decoration: BoxDecoration(
-                                        color: !_consentGiven
-                                            ? const Color(0xFFEDE8FF)
-                                            : Colors.transparent,
-                                        borderRadius: BorderRadius.circular(8),
-                                        border:
-                                        Border.all(color: const Color(0xFF5F33E1)),
-                                      ),
-                                      child: Text(
-                                        'No, I do not consent',
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 14,
-                                          color: const Color(0xFF5F33E1),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            )
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      GestureDetector(
-                        onTap: _isSubmitted || _isSubmitting ? null : _handleSubmit,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          decoration: BoxDecoration(
-                            color: submitButtonColor,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Text(
-                            submitButtonText,
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.poppins(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
+                      const Icon(Icons.cloud_upload),
                     ],
                   ),
                 ),
-              ),
+                const SizedBox(height: 16),
+
+                Container(
+                  decoration: _cardDecoration(),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedUrgency,
+                    items: _urgencyOptions
+                        .map(
+                          (u) => DropdownMenuItem(
+                        value: u,
+                        child: Text(
+                          u,
+                          style: GoogleFonts.poppins(
+                              fontSize: 14, color: const Color(0xFF24252C)),
+                        ),
+                      ),
+                    )
+                        .toList(),
+                    onChanged: _isSubmitted || _isSubmitting
+                        ? null
+                        : (v) => setState(() => _selectedUrgency = v),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      hintText: 'Select urgency level',
+                      hintStyle: GoogleFonts.poppins(
+                          fontSize: 14, color: const Color(0xFF90929C)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                Container(
+                  decoration: _cardDecoration(),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Room Entry Consent',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'I hereby grant permission for authorized staff or technicians to enter my room without my presence...',
+                        style: GoogleFonts.poppins(
+                            fontSize: 12, color: const Color(0xFF90929C)),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: _isSubmitted || _isSubmitting
+                                  ? null
+                                  : () => setState(() => _consentGiven = true),
+                              child: Container(
+                                padding:
+                                const EdgeInsets.symmetric(vertical: 12),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: _consentGiven
+                                      ? const Color(0xFFEDE8FF)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border:
+                                  Border.all(color: const Color(0xFF5F33E1)),
+                                ),
+                                child: Text(
+                                  'Yes, I consent',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    color: const Color(0xFF5F33E1),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: GestureDetector(
+                              // --- UPDATED LOGIC TO DISABLE ON SUBMIT ---
+                              onTap: _isSubmitted || _isSubmitting
+                                  ? null
+                                  : () => setState(() => _consentGiven = false),
+                              child: Container(
+                                padding:
+                                const EdgeInsets.symmetric(vertical: 12),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: !_consentGiven
+                                      ? const Color(0xFFEDE8FF)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border:
+                                  Border.all(color: const Color(0xFF5F33E1)),
+                                ),
+                                child: Text(
+                                  'No, I do not consent',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    color: const Color(0xFF5F33E1),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                GestureDetector(
+                  onTap: _isSubmitted || _isSubmitting ? null : _handleSubmit,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      color: submitButtonColor,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      submitButtonText,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
             ),
           ),
-        ),
-      );
-    });
+        ));
   }
 }
