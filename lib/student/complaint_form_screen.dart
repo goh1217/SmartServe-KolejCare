@@ -74,6 +74,10 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
 
     try {
       final firestore = FirebaseFirestore.instance;
+      final user = FirebaseAuth.instance.currentUser;
+      final uid = user?.uid;
+      final email = user?.email;
+      final name = user?.displayName ?? '';
 
       // Let firestore generate a unique ID
       final docRef = await firestore.collection('complaint').add({
@@ -83,7 +87,10 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
         'feedbackRating': 0,
         'inventoryDamage': desc,
         'rejectionReason': '',
-        'reportBy': '/collection/student', //not done yet
+        // store the reporter's uid and email so we can query by owner later
+        'reportBy': uid ?? '/collection/student',
+        'reportByEmail': email ?? '',
+        'reportByName': name,
         'reportStatus': 'Pending',
         'reportedDate': FieldValue.serverTimestamp(),
         'reviewedBy': '/collection/staff', //not done yet
