@@ -1,14 +1,13 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-
-import 'package:image_picker/image_picker.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:http/http.dart' as http;
 
 class ComplaintFormScreen extends StatefulWidget {
   const ComplaintFormScreen({super.key});
@@ -43,14 +42,16 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
   BoxDecoration _cardDecoration() => BoxDecoration(
     color: Colors.white,
     borderRadius: BorderRadius.circular(16),
-    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 4))],
+    boxShadow: [
+      BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 4))
+    ],
   );
 
   Future<void> _pickImages() async {
     if (_pickedImages.length >= 3) return;
     final ImagePicker picker = ImagePicker();
     final XFile? img = await picker.pickImage(source: ImageSource.gallery);
-    if (img != null) setState(() { _pickedImages.add(img); });
+    if (img != null) setState(() => _pickedImages.add(img));
   }
 
   Future<void> _handleSubmit() async {
@@ -74,6 +75,8 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
 
     try {
     final firestore = FirebaseFirestore.instance;
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw 'User not logged in';
 
     final docRef = await firestore.collection('complaint').add({
     'assignedTo': '/collection/technician',
@@ -82,7 +85,7 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
     'feedbackRating': 0,
     'inventoryDamage': desc,
     'rejectionReason': '',
-    'reportBy': '/collection/student',
+    'reportBy': '/collection/student/${user.uid}',
     'reportStatus': 'Pending',
     'reportedDate': FieldValue.serverTimestamp(),
     'reviewedBy': '/collection/staff',
@@ -94,6 +97,7 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
 
     await docRef.update({'complaintID': docRef.id});
 
+    // --- Image upload ---
     List<String> cloudinaryUrls = [];
     const cloudName = 'deaju8keu';
     const uploadPreset = 'flutter upload';
@@ -101,12 +105,9 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
     for (int i = 0; i < _pickedImages.length && i < 3; i++) {
     final file = _pickedImages[i];
     Uint8List bytes;
-
     if (kIsWeb) {
-    // On web, skip compression
     bytes = await file.readAsBytes();
     } else {
-    // On mobile, compress image
     final rawBytes = await file.readAsBytes();
     bytes = await FlutterImageCompress.compressWithList(rawBytes, quality: 70) ?? rawBytes;
     }
@@ -175,36 +176,61 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
     child: Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-    /// Maintenance Type
+    // Maintenance Type
     Container(
     decoration: _cardDecoration(),
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     child: DropdownButtonFormField<String>(
     value: _selectedMaintenanceType,
-    items: _maintenanceOptions.map((m) => DropdownMenuItem(value: m, child: Text(m, style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF24252C))))).toList(),
+    items: _maintenanceOptions
+        .map((m) => DropdownMenuItem(value: m, child: Text(m, style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF24252C)))))
+        .toList(),
     onChanged: (_isSubmitted || _isSubmitting) ? null : (v) => setState(() => _selectedMaintenanceType = v),
-    decoration: InputDecoration(border: InputBorder.none, hintText: 'Select maintenance type', hintStyle: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF90929C))),
+    decoration: InputDecoration(
+    border: InputBorder.none,
+    hintText: 'Select maintenance type',
+    hintStyle: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF90929C)),
+    ),
     ),
     ),
     const SizedBox(height: 16),
 
-    /// Title
+    // Title
     Container(
     decoration: _cardDecoration(),
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-    child: TextField(controller: _titleController, enabled: !_isSubmitted && !_isSubmitting, decoration: InputDecoration(hintText: 'Fragile bed and missing mattress', hintStyle: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF90929C)), border: InputBorder.none), style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF24252C))),
+    child: TextField(
+    controller: _titleController,
+    enabled: !_isSubmitted && !_isSubmitting,
+    decoration: InputDecoration(
+    hintText: 'Fragile bed and missing mattress',
+    hintStyle: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF90929C)),
+    border: InputBorder.none,
+    ),
+    style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF24252C)),
+    ),
     ),
     const SizedBox(height: 16),
 
-    /// Description
+    // Description
     Container(
     decoration: _cardDecoration(),
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-    child: TextField(controller: _descriptionController, enabled: !_isSubmitted && !_isSubmitting, maxLines: 5, decoration: InputDecoration(hintText: 'The bed isn’t in good condition. It’s very shaky and feels like it could collapse if I lie down...', hintStyle: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF90929C)), border: InputBorder.none), style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF24252C))),
+    child: TextField(
+    controller: _descriptionController,
+    enabled: !_isSubmitted && !_isSubmitting,
+    maxLines: 5,
+    decoration: InputDecoration(
+    hintText: 'The bed isn’t in good condition. It’s very shaky...',
+    hintStyle: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF90929C)),
+    border: InputBorder.none,
+    ),
+    style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF24252C)),
+    ),
     ),
     const SizedBox(height: 16),
 
-    /// Image Upload
+    // Image Upload
     GestureDetector(
     onTap: _isSubmitting || _isSubmitted ? null : _pickImages,
     child: Container(
@@ -224,20 +250,26 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
     ),
     const SizedBox(height: 16),
 
-    /// Urgency
+    // Urgency
     Container(
     decoration: _cardDecoration(),
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     child: DropdownButtonFormField<String>(
     value: _selectedUrgency,
-    items: _urgencyOptions.map((u) => DropdownMenuItem(value: u, child: Text(u, style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF24252C))))).toList(),
+    items: _urgencyOptions
+        .map((u) => DropdownMenuItem(value: u, child: Text(u, style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF24252C)))))
+        .toList(),
     onChanged: (_isSubmitted || _isSubmitting) ? null : (v) => setState(() => _selectedUrgency = v),
-    decoration: InputDecoration(border: InputBorder.none, hintText: 'Select urgency level', hintStyle: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF90929C))),
+    decoration: InputDecoration(
+    border: InputBorder.none,
+    hintText: 'Select urgency level',
+    hintStyle: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF90929C)),
+    ),
     ),
     ),
     const SizedBox(height: 16),
 
-    /// Consent
+    // Consent
     Container(
     decoration: _cardDecoration(),
     padding: const EdgeInsets.all(16),
@@ -246,7 +278,8 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
     children: [
     Text('Room Entry Consent', style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w500)),
     const SizedBox(height: 8),
-    Text('I hereby grant permission for authorized staff or technicians to enter my room without my presence...', style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF90929C))),
+    Text('I hereby grant permission for authorized staff or technicians to enter my room without my presence...',
+    style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF90929C))),
     const SizedBox(height: 12),
     Row(
     children: [
@@ -256,7 +289,11 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
     child: Container(
     padding: const EdgeInsets.symmetric(vertical: 12),
     alignment: Alignment.center,
-    decoration: BoxDecoration(color: _consentGiven ? const Color(0xFFEDE8FF) : Colors.transparent, borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFF5F33E1))),
+    decoration: BoxDecoration(
+    color: _consentGiven ? const Color(0xFFEDE8FF) : Colors.transparent,
+    borderRadius: BorderRadius.circular(8),
+    border: Border.all(color: const Color(0xFF5F33E1)),
+    ),
     child: Text('Yes, I consent', style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF5F33E1))),
     ),
     ),
@@ -268,7 +305,11 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
     child: Container(
     padding: const EdgeInsets.symmetric(vertical: 12),
     alignment: Alignment.center,
-    decoration: BoxDecoration(color: !_consentGiven ? const Color(0xFFEDE8FF) : Colors.transparent, borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFF5F33E1))),
+    decoration: BoxDecoration(
+    color: !_consentGiven ? const Color(0xFFEDE8FF) : Colors.transparent,
+    borderRadius: BorderRadius.circular(8),
+    border: Border.all(color: const Color(0xFF5F33E1)),
+    ),
     child: Text('No, I do not consent', style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF5F33E1))),
     ),
     ),
@@ -280,13 +321,14 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
     ),
     const SizedBox(height: 24),
 
-    /// Submit
+    // Submit
     GestureDetector(
     onTap: _isSubmitted || _isSubmitting ? null : _handleSubmit,
     child: Container(
     padding: const EdgeInsets.symmetric(vertical: 16),
     decoration: BoxDecoration(color: submitButtonColor, borderRadius: BorderRadius.circular(16)),
-    child: Text(submitButtonText, textAlign: TextAlign.center, style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+    child: Text(submitButtonText,
+    textAlign: TextAlign.center, style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
     ),
     ),
     const SizedBox(height: 24),
@@ -296,5 +338,5 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
     );
 
 
-  }
+    }
 }
