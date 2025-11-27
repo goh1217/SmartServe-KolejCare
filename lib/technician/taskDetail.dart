@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'main.dart'; // For navigation if needed
+import 'calendar.dart'; // For navigation if needed
+import 'profile.dart'; // For navigation if needed
 
 class TaskDetailPage extends StatefulWidget {
-  // These will be passed from the previous page
   final String taskId;
+  // Basic info passed for immediate display (hero animation or quick load)
+  // We will fetch the full details in this page.
   final String title;
   final String location;
   final String time;
+  final String status;
 
   const TaskDetailPage({
     super.key,
@@ -13,6 +20,7 @@ class TaskDetailPage extends StatefulWidget {
     required this.title,
     required this.location,
     required this.time,
+    this.status = 'PENDING',
   });
 
   @override
@@ -22,17 +30,123 @@ class TaskDetailPage extends StatefulWidget {
 class _TaskDetailPageState extends State<TaskDetailPage> {
   int selectedNavIndex = 0;
 
-  // Placeholder data - will be replaced with Firebase data later
-  String status = 'PENDING';
-  String urgency = 'High';
-  String category = 'Furniture';
-  String date = '5/4/2025';
-  String description = 'Bed, table is broken, need a new one.';
-  String assignmentNotes = 'No new shoe cabinet needed, just screw it back on.';
-  String studentName = 'David Tan';
-  String studentRole = 'Student';
-  String studentImage = 'https://via.placeholder.com/150'; // Placeholder image
-  String taskImage = 'https://via.placeholder.com/300x200'; // Placeholder image
+  // Data fields
+  String status = 'Loading...';
+  String urgency = 'Loading...';
+  String category = 'Loading...';
+  String date = 'Loading...';
+  String description = 'Loading...';
+  String assignmentNotes = 'Loading...'; // Rejection reason or notes
+  String studentName = 'Loading...';
+  String studentRole = 'Student'; // Assuming student for now
+  String studentImage = 'https://via.placeholder.com/150';
+  String taskImage = 'https://via.placeholder.com/300x200';
+  String studentId = '';
+
+  @override
+  void initState() {
+    super.initState();
+    status = widget.status; // Initialize with passed status
+    _fetchComplaintDetails();
+  }
+
+  Future<void> _fetchComplaintDetails() async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('complaint')
+          .doc(widget.taskId)
+          .get();
+
+      if (doc.exists) {
+        final data = doc.data() as Map<String, dynamic>;
+        
+        setState(() {
+          status = data['reportStatus'] ?? widget.status;
+          urgency = data['urgencyLevel'] ?? 'Medium';
+          category = data['damageCategory'] ?? 'Uncategorized';
+          description = data['inventoryDamage'] ?? 'No description provided.';
+          assignmentNotes = data['rejectionReason'] ?? 'No notes provided.';
+          // If there is a damagePic field
+          if (data['damagePic'] != null) {
+             taskImage = data['damagePic'];
+          }
+
+          // Date handling
+          Timestamp? timestamp;
+          if (data['scheduledDate'] != null) {
+            timestamp = data['scheduledDate'] as Timestamp;
+          } else if (data['scheduledDate'] != null) {
+            timestamp = data['scheduledDate'] as Timestamp;
+          } else if (data['reportedDate'] != null) {
+            timestamp = data['reportedDate'] as Timestamp;
+          }
+
+          if (timestamp != null) {
+            // Convert to local time (or UTC+8 if we strictly followed the previous fix, 
+            // but usually Detail view can show standard local format)
+            final dt = timestamp.toDate();
+            date = "${dt.day}/${dt.month}/${dt.year}";
+          } else {
+            date = widget.time;
+          }
+
+          // Fetch Student Info
+          // The 'reportBy' field is a String path "/collection/student/..."
+          // We need to extract the ID or use the path directly if we can parse it.
+          final String? reportByPath = data['reportBy'];
+          if (reportByPath != null) {
+             _fetchStudentInfo(reportByPath);
+          }
+        });
+      }
+    } catch (e) {
+      print("Error fetching task details: $e");
+    }
+  }
+
+  Future<void> _fetchStudentInfo(String studentPath) async {
+    try {
+      // studentPath example: "/collection/student/StudentId123"
+      // We can try to get the document directly if we split it or just use doc reference if it was a reference.
+      // Since the prompt says it's a String: "/collection/student", wait, usually it's "student/ID".
+      // If the prompt says "/collection/student", maybe it meant the COLLECTION path, but typically it should be a document path.
+      // Let's assume it holds the path to the student document.
+      // If it's just "/collection/student", we can't find the specific student.
+      // Assuming it's a valid path to a document:
+      
+      // Clean up path if it starts with /
+      String path = studentPath;
+      if (path.startsWith('/')) path = path.substring(1);
+      
+      // Firestore cannot get document from just collection path. 
+      // If the data provided in prompt example was literally just "/collection/student", it's incomplete.
+      // Assuming it might be "student/STUDENT_ID".
+      // Let's try to just split and see.
+      
+      // If we can't fetch, we leave as Loading.
+      // However, typically we might have 'StudentId' field.
+      // In the provided class attributes:
+      // reportBy "/collection/student" (string)
+      // This looks like a placeholder string in the prompt example.
+      // If real data has "student/b70..." then we can fetch.
+      
+      // For now, I will try to fetch if it looks like a doc path (even number of segments).
+      final segments = path.split('/');
+      if (segments.length % 2 == 0 && segments.isNotEmpty) {
+         final studentDoc = await FirebaseFirestore.instance.doc(path).get();
+         if (studentDoc.exists) {
+           final studentData = studentDoc.data() as Map<String, dynamic>;
+           setState(() {
+             studentName = studentData['name'] ?? 'Unknown Student';
+             // studentImage = studentData['profileImage'] ?? studentImage; 
+             // studentRole = 'Student'; 
+           });
+         }
+      }
+    } catch (e) {
+      print("Error fetching student info: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -97,11 +211,11 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF7D6E3A),
+                          color: _getStatusColor(status),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          status,
+                          status.toUpperCase(),
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -146,7 +260,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  widget.time,
+                                  widget.time, // Time passed from list might be sufficient
                                   style: const TextStyle(
                                     fontSize: 14,
                                     color: Colors.black87,
@@ -248,7 +362,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
 
             const SizedBox(height: 16),
 
-            // Assignment Notes Card
+            // Assignment Notes / Rejection Reason Card
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16),
               padding: const EdgeInsets.all(20),
@@ -267,7 +381,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Assignment notes',
+                    'Notes / Rejection Reason',
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey,
@@ -322,7 +436,11 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                     width: double.infinity,
                     child: OutlinedButton(
                       onPressed: () {
-                        // TODO: Implement view on calendar functionality
+                        // Navigate to Calendar
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const CalendarPage()),
+                        );
                       },
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -478,7 +596,20 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
           selectedNavIndex = index;
         });
         if (index == 0) {
-          Navigator.popUntil(context, (route) => route.isFirst);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const TechnicianDashboard()),
+          );
+        } else if (index == 1) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const CalendarPage()),
+          );
+        } else if (index == 2) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const ProfilePage()),
+          );
         }
       },
       child: Container(
@@ -494,5 +625,20 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
         ),
       ),
     );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return const Color(0xFFFFA726);
+      case 'in progress':
+        return const Color(0xFF42A5F5);
+      case 'completed':
+        return const Color(0xFF66BB6A);
+      case 'rejected':
+        return const Color(0xFFEF5350);
+      default:
+        return const Color(0xFF7D6E3A);
+    }
   }
 }

@@ -81,15 +81,18 @@ class _CalendarPageState extends State<CalendarPage> {
                         final data = doc.data() as Map<String, dynamic>;
                         
                         Timestamp? timestamp;
-                        if (data['repairDate'] != null) {
-                          timestamp = data['repairDate'] as Timestamp;
+                        if (data['scheduledDate'] != null) {
+                          timestamp = data['scheduledDate'] as Timestamp;
                         } else if (data['scheduledDate'] != null) {
                           timestamp = data['scheduledDate'] as Timestamp;
                         }
 
                         if (timestamp == null) return false;
 
-                        final taskDate = timestamp.toDate();
+                        // FIX: Shift time to UTC+8 for Malaysia/Campus time
+                        final utcTime = timestamp.toDate().toUtc();
+                        final taskDate = utcTime.add(const Duration(hours: 8));
+
                         return taskDate.year == selectedDate.year &&
                             taskDate.month == selectedDate.month &&
                             taskDate.day == selectedDate.day;
@@ -287,15 +290,18 @@ class _CalendarPageState extends State<CalendarPage> {
           
           // Check both scheduledDate and repairDate as per prompt
           Timestamp? timestamp;
-          if (data['repairDate'] != null) {
-            timestamp = data['repairDate'] as Timestamp;
+          if (data['scheduledDate'] != null) {
+            timestamp = data['scheduledDate'] as Timestamp;
           } else if (data['scheduledDate'] != null) {
             timestamp = data['scheduledDate'] as Timestamp;
           }
           
           if (timestamp == null) return const SizedBox.shrink();
 
-          final start = timestamp.toDate();
+          // FIX: Shift time to UTC+8 for Malaysia/Campus time
+          final utcTime = timestamp.toDate().toUtc();
+          final start = utcTime.add(const Duration(hours: 8));
+
           // Default duration 1 hour if not specified
           final duration = (data['duration'] ?? 1.0).toDouble();
           // Determine color based on status or priority
