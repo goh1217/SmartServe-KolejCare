@@ -8,7 +8,11 @@ import 'activity/scheduledrepair.dart';
 import 'activity/rejectedrepair.dart';
 import 'activity/waitappro.dart';
 import 'student_make_complaints.dart';
+import '../complaint_form_screen.dart';
+import '../home_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 class ActivityScreen extends StatefulWidget {
   const ActivityScreen({super.key});
@@ -22,6 +26,23 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
   @override
   Widget build(BuildContext context) {
+    String formatTimestamp(dynamic ts) {
+      try {
+        DateTime dt;
+        if (ts == null) return 'No date';
+        if (ts is Timestamp) {
+          dt = ts.toDate().toLocal();
+        } else if (ts is DateTime) {
+          dt = ts.toLocal();
+        } else {
+          // try parse string
+          dt = DateTime.tryParse(ts.toString())?.toLocal() ?? DateTime.now().toLocal();
+        }
+        return DateFormat('d MMM yyyy, hh:mm a').format(dt);
+      } catch (_) {
+        return ts?.toString() ?? 'No date';
+      }
+    }
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F7),
       appBar: PreferredSize(
@@ -176,88 +197,251 @@ class _ActivityScreenState extends State<ActivityScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Waiting Approval Section
-            _buildSectionCard(
-              context,
-              title: 'Waiting Approval',
-              backgroundColor: Colors.transparent,
-              items: [
-                ActivityItem(
-                  title: 'Door handle',
-                  status: 'Submitted on',
-                  date: '23 Nov 2025, 01:58 PM',
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => WaitingApprovalScreen(
-                        reportStatus: 'Waiting to be approved',
-                        damageCategory: 'Door handle',
-                        inventoryDamage: 'Door handle is loose',
-                        reportedOn: '23 Nov 2025, 01:58 PM',
+            // Waiting Approval Section (dynamic from Firestore)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(left: 4, bottom: 8),
+                    child: Text('Waiting Approval', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('complaint')
+                            .where('reportStatus', isEqualTo: 'Pending')
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Padding(
+                              padding: EdgeInsets.all(20),
+                              child: Center(child: CircularProgressIndicator()),
+                            );
+                          }
+
+                          if (snapshot.hasError) {
+                            return Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Center(child: Text('Error: \\${snapshot.error}')),
+                            );
+                          }
+
+                          final user = FirebaseAuth.instance.currentUser;
+                          final uid = user?.uid ?? '';
+                          final email = user?.email ?? '';
+
+                          final docs = snapshot.data?.docs ?? [];
+
+                          // Filter pending complaints that belong to the current user.
+                          final userDocs = docs.where((d) {
+                            final data = d.data() as Map<String, dynamic>;
+                            final reportBy = (data['reportBy'] ?? '').toString();
+                            final reportByEmail = (data['reportByEmail'] ?? data['email'] ?? '').toString();
+
+                            if (reportByEmail.isNotEmpty && email.isNotEmpty) {
+                              if (reportByEmail == email) return true;
+                            }
+
+                            if (uid.isNotEmpty && reportBy.contains(uid)) return true;
+                            if (email.isNotEmpty && reportBy.contains(email)) return true;
+
+                            return false;
+                          }).toList();
+
+                          if (userDocs.isEmpty) {
+                            return const Padding(
+                              padding: EdgeInsets.all(20),
+                              child: Center(child: Text('No pending complaints.')),
+                            );
+                          }
+
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: userDocs.map((d) {
+                              final data = d.data() as Map<String, dynamic>;
+                              final title = (data['inventoryDamage'] ?? data['damageCategory'] ?? 'No title').toString();
+
+                              String dateText = 'No date';
+                              final reportedTs = data['reportedDate'];
+                              try {
+                                dateText = formatTimestamp(reportedTs ?? data['reportedOn']);
+                              } catch (_) {}
+
+                              final item = ActivityItem(
+                                title: title,
+                                status: 'Submitted on',
+                                date: dateText,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => WaitingApprovalScreen(
+                                      reportStatus: data['reportStatus'] ?? 'Pending',
+                                      damageCategory: data['damageCategory'] ?? '',
+                                      inventoryDamage: data['inventoryDamage'] ?? '',
+                                      reportedOn: dateText,
+                                    ),
+                                  ),
+                                ),
+                              );
+
+                              return _buildActivityItem(context, item);
+                            }).toList(),
+                          );
+                        },
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 16),
 
-            // Completed Section
-            _buildSectionCard(
-              context,
-              title: 'Completed Repairs',
-              backgroundColor: Colors.transparent,
-              items: [
-                ActivityItem(
-                  title: 'Electric shortage',
-                  status: 'Completed on',
-                  date: '18 Nov 2025, 01:18 PM',
-                  showActions: true,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const CompletedRepairScreen()),
+            // Completed Section (dynamic from Firestore)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(left: 4, bottom: 8),
+                    child: Text('Completed Repairs', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   ),
-                  onRateTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const RatingPage()),
-                  ),
-                  onTipsTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const TipsPage()),
-                  ),
-                ),
-                ActivityItem(
-                  title: 'Socket damage',
-                  status: 'Completed on',
-                  date: '9 Oct 2025, 03:20 PM',
-                  showActions: true,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => CompletedRepair2Screen(
-                        reportId: 'RPT-20251009-034',
-                        status: 'Completed',
-                        completedDate: '9 Oct 2025, 03:20 PM',
-                        assignedTechnician: 'Abdul Malim',
-                        damageCategory: 'Electrical',
-                        inventoryDamage: 'Damaged wall socket',
-                        duration: '45 minutes',
-                        technicianNotes: 'Removed the damaged socket and installed a new outlet with proper grounding. Tested with voltage meter — all safe and working.',
-                        reportedOn: '8 Oct 2025, 10:37 PM',
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('complaint')
+                            .where('reportStatus', isEqualTo: 'Completed')
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Padding(
+                              padding: EdgeInsets.all(20),
+                              child: Center(child: CircularProgressIndicator()),
+                            );
+                          }
+
+                          if (snapshot.hasError) {
+                            return Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Center(child: Text('Error: \\${snapshot.error}')),
+                            );
+                          }
+
+                          final user = FirebaseAuth.instance.currentUser;
+                          final uid = user?.uid ?? '';
+                          final email = user?.email ?? '';
+
+                          final docs = snapshot.data?.docs ?? [];
+
+                          final userDocs = docs.where((d) {
+                            final data = d.data() as Map<String, dynamic>;
+                            final reportBy = (data['reportBy'] ?? '').toString();
+                            final reportByEmail = (data['reportByEmail'] ?? data['email'] ?? '').toString();
+                            if (reportByEmail.isNotEmpty && email.isNotEmpty) {
+                              if (reportByEmail == email) return true;
+                            }
+                            if (uid.isNotEmpty && reportBy.contains(uid)) return true;
+                            if (email.isNotEmpty && reportBy.contains(email)) return true;
+                            return false;
+                          }).toList();
+
+                          if (userDocs.isEmpty) {
+                            return const Padding(
+                              padding: EdgeInsets.all(20),
+                              child: Center(child: Text('No completed repairs.')),
+                            );
+                          }
+
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: userDocs.map((d) {
+                              final data = d.data() as Map<String, dynamic>;
+                              final title = (data['inventoryDamage'] ?? data['damageCategory'] ?? 'No title').toString();
+
+                              String dateText = 'No date';
+                              final completedTs = data['completedDate'] ?? data['reportedDate'];
+                              try {
+                                dateText = formatTimestamp(completedTs);
+                              } catch (_) {}
+
+                              final item = ActivityItem(
+                                title: title,
+                                status: 'Completed on',
+                                date: dateText,
+                                showActions: true,
+                                onTap: () {
+                                  // navigate to detailed completed view if enough fields exist
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => CompletedRepair2Screen(
+                                        reportId: data['complaintID'] ?? d.id,
+                                        status: data['reportStatus'] ?? 'Completed',
+                                        completedDate: dateText,
+                                        assignedTechnician: data['assignedTo'] ?? '',
+                                        damageCategory: data['damageCategory'] ?? '',
+                                        inventoryDamage: data['inventoryDamage'] ?? '',
+                                        duration: data['duration'] ?? '',
+                                        technicianNotes: data['technicianNotes'] ?? '',
+                                        reportedOn: (data['reportedOn'] ?? data['reportedDate'] ?? '').toString(),
+                                      ),
+                                    ),
+                                  );
+                                },
+                                onRateTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => RatingPage(
+                                      complaintId: data['complaintID'] ?? d.id,
+                                      technicianId: (data['technicianID'] ?? data['assignedTo'] ?? '').toString(),
+                                    ),
+                                  ),
+                                ),
+                                onTipsTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const TipsPage()),
+                                ),
+                              );
+
+                              return _buildActivityItem(context, item);
+                            }).toList(),
+                          );
+                        },
                       ),
                     ),
                   ),
-                  onRateTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const RatingPage()),
-                  ),
-                  onTipsTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const TipsPage()),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
+            const SizedBox(height: 80),
             const SizedBox(height: 80),
           ],
         ),
@@ -265,7 +449,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (c) => const MakeComplaintScreen()),
+          MaterialPageRoute(builder: (c) => const ComplaintFormScreen()),
         ),
         backgroundColor: const Color(0xFF5E4DB2),
         child: const Icon(Icons.add),
@@ -332,13 +516,19 @@ class _ActivityScreenState extends State<ActivityScreen> {
         // navigate to named routes (ensure these routes exist in main.dart)
         switch (index) {
           case 0:
-            Navigator.pushNamed(context, '/home');
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const HomePage()),
+            );
             break;
           case 1:
             Navigator.pushNamed(context, '/schedule');
             break;
           case 2:
-            Navigator.pushNamed(context, '/reports');
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ActivityScreen()),
+            );
             break;
           case 3:
             Navigator.pushNamed(context, '/chat');
