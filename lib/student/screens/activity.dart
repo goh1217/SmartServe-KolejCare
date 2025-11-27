@@ -418,7 +418,12 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                 },
                                 onRateTap: () => Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (_) => const RatingPage()),
+                                  MaterialPageRoute(
+                                    builder: (_) => RatingPage(
+                                      complaintId: data['complaintID'] ?? d.id,
+                                      technicianId: (data['technicianID'] ?? data['assignedTo'] ?? '').toString(),
+                                    ),
+                                  ),
                                 ),
                                 onTipsTap: () => Navigator.push(
                                   context,
