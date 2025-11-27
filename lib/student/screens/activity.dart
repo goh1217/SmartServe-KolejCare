@@ -24,6 +24,44 @@ class ActivityScreen extends StatefulWidget {
 class _ActivityScreenState extends State<ActivityScreen> {
   int _selectedIndex = 2; // default to activity tab
 
+  // Resolve a technician name for display. Prefer stored assignedTechnicianName,
+  // then assignedTechnicianId, then try to parse assignedTo path to find a doc id.
+  Future<String> _getTechnicianName(Map<String, dynamic> data) async {
+    try {
+      final fromField = (data['assignedTechnicianName'] ?? '').toString();
+      if (fromField.isNotEmpty) return fromField;
+
+      final techId = (data['assignedTechnicianId'] ?? data['technicianID'] ?? '').toString();
+      if (techId.isNotEmpty) {
+        final doc = await FirebaseFirestore.instance.collection('technician').doc(techId).get();
+        if (doc.exists) {
+          final m = doc.data() as Map<String, dynamic>?;
+          final name = (m?['technicianName'] ?? m?['name'] ?? '').toString();
+          if (name.isNotEmpty) return name;
+        }
+      }
+
+      final assignedTo = (data['assignedTo'] ?? '').toString();
+      if (assignedTo.isNotEmpty) {
+        // try to extract an id from a path like '/collection/technician/<id>' or similar
+        final parts = assignedTo.split('/').where((s) => s.isNotEmpty).toList();
+        if (parts.isNotEmpty) {
+          final possibleId = parts.last;
+          final doc = await FirebaseFirestore.instance.collection('technician').doc(possibleId).get();
+          if (doc.exists) {
+            final m = doc.data() as Map<String, dynamic>?;
+            final name = (m?['technicianName'] ?? m?['name'] ?? '').toString();
+            if (name.isNotEmpty) return name;
+          }
+        }
+      }
+
+      return '';
+    } catch (_) {
+      return '';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     String formatTimestamp(dynamic ts) {
@@ -250,23 +288,27 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                 title: title,
                                 status: data['reportStatus']?.toString() ?? 'In Progress',
                                 date: dateStr,
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ScheduledRepairScreen(
-                                      reportId: (data['complaintID'] ?? d.id).toString(),
-                                      status: data['reportStatus']?.toString() ?? 'In Progress',
-                                      scheduledDate: dateStr,
-                                      assignedTechnician: (data['assignedTechnicianName'] ?? data['assignedTo'] ?? '').toString(),
-                                      damageCategory: (data['damageCategory'] ?? '').toString(),
-                                      inventoryDamage: (data['inventoryDamage'] ?? '').toString(),
-                                      expectedDuration: (data['expectedDuration'] ?? '').toString(),
-                                      reportedOn: dateStr,
-                                      onEditRequest: () {},
-                                      onCancelRequest: () {},
+                                onTap: () async {
+                                  final techName = await _getTechnicianName(data);
+                                  if (!mounted) return;
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ScheduledRepairScreen(
+                                        reportId: (data['complaintID'] ?? d.id).toString(),
+                                        status: data['reportStatus']?.toString() ?? 'In Progress',
+                                        scheduledDate: dateStr,
+                                        assignedTechnician: techName.isNotEmpty ? techName : (data['assignedTechnicianName'] ?? data['assignedTo'] ?? '').toString(),
+                                        damageCategory: (data['damageCategory'] ?? '').toString(),
+                                        inventoryDamage: (data['inventoryDamage'] ?? '').toString(),
+                                        expectedDuration: (data['expectedDuration'] ?? '').toString(),
+                                        reportedOn: dateStr,
+                                        onEditRequest: () {},
+                                        onCancelRequest: () {},
+                                      ),
                                     ),
-                                  ),
-                                ),
+                                  );
+                                },
                               );
 
                               return _buildActivityItem(context, item);
@@ -621,12 +663,17 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
                               // For each completed item, check if there's already a rating in Firestore.
                               // Use a FutureBuilder so the UI shows the Rate button disabled when a record exists.
+                              // robust complaint id candidates
+                              final idA = (data['complaintID'] ?? '').toString();
+                              final idB = d.id.toString();
+                              final candidates = [idA, idB].where((s) => s.isNotEmpty).toList();
+
+                              final Future<QuerySnapshot> futureRating = candidates.isNotEmpty
+                                  ? FirebaseFirestore.instance.collection('rating').where('complaintID', whereIn: candidates).limit(1).get()
+                                  : FirebaseFirestore.instance.collection('rating').where('complaintID', isEqualTo: idB).limit(1).get();
+
                               return FutureBuilder<QuerySnapshot>(
-                                future: FirebaseFirestore.instance
-                                    .collection('rating')
-                                    .where('complaintID', isEqualTo: (data['complaintID'] ?? d.id).toString())
-                                    .limit(1)
-                                    .get(),
+                                future: futureRating,
                                 builder: (context, ratingSnap) {
                                   final hasRating = ratingSnap.hasData && (ratingSnap.data?.docs.isNotEmpty ?? false);
 
@@ -635,7 +682,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                     status: 'Completed on',
                                     date: dateText,
                                     showActions: true,
-                                    onTap: () {
+                                    onTap: () async {
+                                      final techName = await _getTechnicianName(data);
+                                      if (!mounted) return;
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
@@ -643,7 +692,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                             reportId: data['complaintID'] ?? d.id,
                                             status: data['reportStatus'] ?? 'Completed',
                                             completedDate: dateText,
-                                            assignedTechnician: data['assignedTo'] ?? '',
+                                            assignedTechnician: techName.isNotEmpty ? techName : (data['assignedTo'] ?? '').toString(),
                                             damageCategory: data['damageCategory'] ?? '',
                                             inventoryDamage: data['inventoryDamage'] ?? '',
                                             duration: data['duration'] ?? '',
@@ -864,12 +913,21 @@ class _ActivityScreenState extends State<ActivityScreen> {
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Row(children: [
-                TextButton.icon(
-                  onPressed: item.onRateTap,
-                  icon: const Icon(Icons.star_border, size: 16),
-                  label: const Text('Rate'),
-                  style: TextButton.styleFrom(foregroundColor: const Color(0xFF5E4DB2), padding: EdgeInsets.zero),
-                ),
+                // Rate button: show 'Rated' disabled when already rated
+                if (item.onRateTap != null)
+                  TextButton.icon(
+                    onPressed: item.onRateTap,
+                    icon: const Icon(Icons.star_border, size: 16),
+                    label: const Text('Rate'),
+                    style: TextButton.styleFrom(foregroundColor: const Color(0xFF5E4DB2), padding: EdgeInsets.zero),
+                  )
+                else
+                  TextButton.icon(
+                    onPressed: null,
+                    icon: const Icon(Icons.star, size: 16, color: Colors.grey),
+                    label: const Text('Rated', style: TextStyle(color: Colors.grey)),
+                    style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                  ),
                 const SizedBox(width: 16),
                 TextButton.icon(
                   onPressed: item.onTipsTap,

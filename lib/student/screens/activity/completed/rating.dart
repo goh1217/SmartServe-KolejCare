@@ -38,6 +38,9 @@ class _RatingPageState extends State<RatingPage> {
   final TextEditingController _feedbackController = TextEditingController();
   bool _loading = false;
   String? _ratingDocId;
+  // dynamic technician display
+  String _technicianName = '';
+  String? _technicianPhotoUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -58,25 +61,33 @@ class _RatingPageState extends State<RatingPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Profile Picture and Name
+            // Profile Picture and Name (dynamic)
             Row(
               children: [
                 CircleAvatar(
                   radius: 30,
-                  backgroundColor: const Color(0xFF5E4DB2),
-                  child: CircleAvatar(
-                    radius: 28,
-                    backgroundColor: Colors.white,
-                    child: CircleAvatar(
-                      radius: 26,
-                      backgroundImage: const AssetImage('assets/male.jpg'),
-                    ),
-                  ),
+                  backgroundColor: const Color(0xFF5E4DB2).withOpacity(0.15),
+                  child: _technicianPhotoUrl != null
+                      ? CircleAvatar(radius: 28, backgroundImage: NetworkImage(_technicianPhotoUrl!))
+                      : CircleAvatar(
+                          radius: 28,
+                          backgroundColor: Colors.white,
+                          child: CircleAvatar(
+                            radius: 26,
+                            backgroundColor: const Color(0xFF5E4DB2),
+                            child: Text(
+                              _technicianName.isNotEmpty
+                                  ? _technicianName.split(' ').map((s) => s.isNotEmpty ? s[0] : '').take(2).join()
+                                  : 'T',
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
                 ),
                 const SizedBox(width: 12),
-                const Text(
-                  'Gregory Smith',
-                  style: TextStyle(
+                Text(
+                  _technicianName.isNotEmpty ? _technicianName : 'Technician',
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -156,6 +167,7 @@ class _RatingPageState extends State<RatingPage> {
     if (widget.complaintId != null) {
       _loadExistingRating();
     }
+    _loadTechnicianInfo();
   }
 
   Future<void> _loadExistingRating() async {
@@ -180,6 +192,64 @@ class _RatingPageState extends State<RatingPage> {
       // ignore errors, keep defaults
     } finally {
       setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _loadTechnicianInfo() async {
+    try {
+      String name = '';
+      String? photo;
+
+      final techIdRaw = (widget.technicianId ?? '').toString();
+      String techId = techIdRaw;
+
+      // If techId is a path, take the last segment
+      if (techIdRaw.contains('/')) {
+        final parts = techIdRaw.split('/').where((s) => s.isNotEmpty).toList();
+        if (parts.isNotEmpty) techId = parts.last;
+      }
+
+      if (techId.isNotEmpty) {
+        final doc = await FirebaseFirestore.instance.collection('technician').doc(techId).get();
+        if (doc.exists) {
+          final data = doc.data();
+          name = (data?['technicianName'] ?? data?['name'] ?? '').toString();
+          photo = (data?['photoUrl'] ?? data?['avatar'] ?? '').toString();
+        }
+      }
+
+      // Fallback: read assignedTechnicianName from complaint doc
+      if (name.isEmpty && widget.complaintId != null && widget.complaintId!.isNotEmpty) {
+        final cdoc = await FirebaseFirestore.instance.collection('complaint').doc(widget.complaintId).get();
+        if (cdoc.exists) {
+          final cdata = cdoc.data();
+          name = (cdata?['assignedTechnicianName'] ?? '').toString();
+          if (name.isEmpty) {
+            final assignedTo = (cdata?['assignedTo'] ?? '').toString();
+            if (assignedTo.isNotEmpty) {
+              final parts = assignedTo.split('/').where((s) => s.isNotEmpty).toList();
+              if (parts.isNotEmpty) {
+                final possibleId = parts.last;
+                final doc = await FirebaseFirestore.instance.collection('technician').doc(possibleId).get();
+                if (doc.exists) {
+                  final t = doc.data();
+                  name = (t?['technicianName'] ?? t?['name'] ?? '').toString();
+                  photo = (t?['photoUrl'] ?? t?['avatar'] ?? '').toString();
+                }
+              }
+            }
+          }
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _technicianName = name;
+          _technicianPhotoUrl = (photo != null && photo.isNotEmpty) ? photo : null;
+        });
+      }
+    } catch (_) {
+      // ignore
     }
   }
 
