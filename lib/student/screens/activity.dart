@@ -619,46 +619,60 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                 dateText = formatTimestamp(completedTs);
                               } catch (_) {}
 
-                              final item = ActivityItem(
-                                title: title,
-                                status: 'Completed on',
-                                date: dateText,
-                                showActions: true,
-                                onTap: () {
-                                  // navigate to detailed completed view if enough fields exist
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => CompletedRepair2Screen(
-                                        reportId: data['complaintID'] ?? d.id,
-                                        status: data['reportStatus'] ?? 'Completed',
-                                        completedDate: dateText,
-                                        assignedTechnician: data['assignedTo'] ?? '',
-                                        damageCategory: data['damageCategory'] ?? '',
-                                        inventoryDamage: data['inventoryDamage'] ?? '',
-                                        duration: data['duration'] ?? '',
-                                        technicianNotes: data['technicianNotes'] ?? '',
-                                        reportedOn: (data['reportedOn'] ?? data['reportedDate'] ?? '').toString(),
-                                      ),
+                              // For each completed item, check if there's already a rating in Firestore.
+                              // Use a FutureBuilder so the UI shows the Rate button disabled when a record exists.
+                              return FutureBuilder<QuerySnapshot>(
+                                future: FirebaseFirestore.instance
+                                    .collection('rating')
+                                    .where('complaintID', isEqualTo: (data['complaintID'] ?? d.id).toString())
+                                    .limit(1)
+                                    .get(),
+                                builder: (context, ratingSnap) {
+                                  final hasRating = ratingSnap.hasData && (ratingSnap.data?.docs.isNotEmpty ?? false);
+
+                                  final item = ActivityItem(
+                                    title: title,
+                                    status: 'Completed on',
+                                    date: dateText,
+                                    showActions: true,
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => CompletedRepair2Screen(
+                                            reportId: data['complaintID'] ?? d.id,
+                                            status: data['reportStatus'] ?? 'Completed',
+                                            completedDate: dateText,
+                                            assignedTechnician: data['assignedTo'] ?? '',
+                                            damageCategory: data['damageCategory'] ?? '',
+                                            inventoryDamage: data['inventoryDamage'] ?? '',
+                                            duration: data['duration'] ?? '',
+                                            technicianNotes: data['technicianNotes'] ?? '',
+                                            reportedOn: (data['reportedOn'] ?? data['reportedDate'] ?? '').toString(),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    onRateTap: hasRating
+                                        ? null
+                                        : () => Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) => RatingPage(
+                                                  complaintId: data['complaintID'] ?? d.id,
+                                                  technicianId: (data['technicianID'] ?? data['assignedTo'] ?? '').toString(),
+                                                ),
+                                              ),
+                                            ),
+                                    onTipsTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (_) => const TipsPage()),
                                     ),
                                   );
-                                },
-                                onRateTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => RatingPage(
-                                      complaintId: data['complaintID'] ?? d.id,
-                                      technicianId: (data['technicianID'] ?? data['assignedTo'] ?? '').toString(),
-                                    ),
-                                  ),
-                                ),
-                                onTipsTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => const TipsPage()),
-                                ),
-                              );
 
-                              return _buildActivityItem(context, item);
+                                  return _buildActivityItem(context, item);
+                                },
+                              );
                             }).toList(),
                           );
                         },
