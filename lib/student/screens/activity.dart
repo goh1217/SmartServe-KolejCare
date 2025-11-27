@@ -136,35 +136,148 @@ class _ActivityScreenState extends State<ActivityScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Scheduled Section
-            _buildSectionCard(
-              context,
-              title: 'Scheduled',
-              backgroundColor: Colors.transparent,
-              items: [
-                ActivityItem(
-                  title: 'Shower head damage',
-                  status: 'Scheduled visit',
-                  date: '25 Nov 2025, 02:20 PM',
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ScheduledRepairScreen(
-                        reportId: 'RPT-20251125-0234',
-                        status: 'Scheduled',
-                        scheduledDate: '25 Nov 2025, 10:00 AM',
-                        assignedTechnician: 'Ahmad Rahim',
-                        damageCategory: 'Bathroom Fixture',
-                        inventoryDamage: 'Shower head damage',
-                        expectedDuration: '~1 hour 30 minutes',
-                        reportedOn: '20 Nov 2025, 12:40 PM',
-                        onEditRequest: () {},
-                        onCancelRequest: () {},
+            // Scheduled Section (dynamic from Firestore: reportStatus == 'In Progress')
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(left: 4, bottom: 8),
+                    child: Text('Scheduled', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: StreamBuilder<QuerySnapshot>(
+                        stream: (() {
+                          final user = FirebaseAuth.instance.currentUser;
+                          final uid = user?.uid ?? '';
+                          final qBase = FirebaseFirestore.instance.collection('complaint').where('reportStatus', isEqualTo: 'In Progress');
+                          if (uid.isNotEmpty) {
+                            final possible = [uid, '/collection/student/$uid', '/collection/student'];
+                            return qBase.where('reportBy', whereIn: possible).snapshots();
+                          }
+                          return qBase.snapshots();
+                        })(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Padding(
+                              padding: EdgeInsets.all(24.0),
+                              child: Center(child: CircularProgressIndicator()),
+                            );
+                          }
+
+                          if (snapshot.hasError) {
+                            return Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Text('Error: ${snapshot.error}'),
+                            );
+                          }
+
+                          final user = FirebaseAuth.instance.currentUser;
+                          final uid = user?.uid ?? '';
+                          final email = user?.email ?? '';
+
+                          final docs = snapshot.data?.docs ?? [];
+
+                          final userDocs = docs.where((d) {
+                            final data = d.data() as Map<String, dynamic>;
+                            final reportBy = (data['reportBy'] ?? '').toString();
+                            final reportByEmail = (data['reportByEmail'] ?? data['email'] ?? '').toString();
+
+                            if (reportByEmail.isNotEmpty && email.isNotEmpty) {
+                              if (reportByEmail == email) return true;
+                            }
+
+                            if (uid.isNotEmpty && reportBy.contains(uid)) return true;
+                            if (email.isNotEmpty && reportBy.contains(email)) return true;
+
+                            // legacy handling
+                            if (reportBy == '/collection/student') return true;
+                            if (reportBy.contains('/student')) return true;
+
+                            return false;
+                          }).toList();
+
+                          if (userDocs.isEmpty) {
+                            return const Padding(
+                              padding: EdgeInsets.all(16.0),
+                              child: Text('No scheduled items.'),
+                            );
+                          }
+
+                          // helper to format like Firestore console: "November 27, 2025 at 10:58:26 PM UTC+8"
+                          String formatConsoleStyle(dynamic ts) {
+                            try {
+                              if (ts == null) return 'No date';
+                              DateTime dt;
+                              if (ts is Timestamp) dt = ts.toDate().toLocal();
+                              else if (ts is DateTime) dt = ts.toLocal();
+                              else dt = DateTime.tryParse(ts.toString())?.toLocal() ?? DateTime.now().toLocal();
+
+                              final formatted = DateFormat("MMMM d, yyyy 'at' hh:mm:ss a").format(dt);
+                              final offset = dt.timeZoneOffset.inHours;
+                              final sign = offset >= 0 ? '+' : '-';
+                              return '$formatted UTC${sign}${offset.abs()}';
+                            } catch (_) {
+                              return ts?.toString() ?? 'No date';
+                            }
+                          }
+
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: userDocs.map((d) {
+                              final data = d.data() as Map<String, dynamic>;
+                              final title = (data['inventoryDamage'] ?? data['damageCategory'] ?? data['complaintID'] ?? 'No title').toString();
+                              final reported = data['reportedDate'] ?? data['reportedOn'] ?? data['reportedAt'];
+                              final scheduledField = data['scheduledDate'];
+                              final dateToShow = scheduledField ?? reported;
+                              final dateStr = formatConsoleStyle(dateToShow);
+
+                              final item = ActivityItem(
+                                title: title,
+                                status: data['reportStatus']?.toString() ?? 'In Progress',
+                                date: dateStr,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ScheduledRepairScreen(
+                                      reportId: (data['complaintID'] ?? d.id).toString(),
+                                      status: data['reportStatus']?.toString() ?? 'In Progress',
+                                      scheduledDate: dateStr,
+                                      assignedTechnician: (data['assignedTechnicianName'] ?? data['assignedTo'] ?? '').toString(),
+                                      damageCategory: (data['damageCategory'] ?? '').toString(),
+                                      inventoryDamage: (data['inventoryDamage'] ?? '').toString(),
+                                      expectedDuration: (data['expectedDuration'] ?? '').toString(),
+                                      reportedOn: dateStr,
+                                      onEditRequest: () {},
+                                      onCancelRequest: () {},
+                                    ),
+                                  ),
+                                ),
+                              );
+
+                              return _buildActivityItem(context, item);
+                            }).toList(),
+                          );
+                        },
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 16),
 
