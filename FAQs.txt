@@ -1,0 +1,53 @@
+Q: How do I report a damage?
+A: To report a damage, go to the Complaints section and click "Add New Complaint". Fill in the details of the damage, such as location, type of issue, and any photos. Submit it and track its progress in the Complaints section.
+
+Q: How can I track my complaint?
+A: Track your complaint in the Complaints section. Each complaint shows a status like Pending, In Progress, or Completed. Notifications are sent when updates occur.
+
+Q: When will the technician arrive?
+A: The technician's arrival time is shown in the complaint details once scheduled. You will also receive notifications. Urgent complaints may be prioritized.
+
+Q: What are the repair costs?
+A: Repair costs vary depending on the type and extent of damage. You will receive a cost estimate before any work begins. You are never charged without confirmation.
+
+Q: How can I contact support?
+A: Contact support through the Help section in the app, by calling 1-800-SUPPORT, or via email. Live chat is also available for instant assistance.
+
+Q: How do I create a new account?
+A: Go to the Sign-Up page, provide personal details, choose a username and password, and select your user role (Technician, Staff, Admin). Verify your account through the email link.
+
+Q: What are the different user roles available?
+A: Roles include Technician (manage tasks), Staff (create and track complaints, manage tasks), and Admin (full access including analytics and user management). Each role has specific permissions.
+
+Q: How can I update my profile information?
+A: Go to the Profile section to edit personal details, contact info, or other relevant information. Changes are saved instantly.
+
+Q: How can I change my password?
+A: In the Profile section, click "Change Password". Enter your current password and choose a new one. Ensure it is strong and unique.
+
+Q: What should I do if I forget my password?
+A: Click "Forgot Password" on the login page. Follow the instructions sent to your registered email to reset your password.
+
+Q: How can I view my assigned tasks?
+A: Assigned tasks are listed in the Dashboard with status, due date, and details. You can filter by status to find pending, in progress, or completed tasks.
+
+Q: How can I view my work history?
+A: Go to the History or Completed Tasks section to see all completed tasks, along with dates and outcomes.
+
+Q: How do I accept or reject a task?
+A: When assigned a task, you will receive a notification. Open the task details and choose Accept or Reject. Rejection reasons are logged.
+
+Q: What do the different task statuses mean?
+A: Pending = waiting for acceptance, In Progress = task is being worked on, Completed = task finished, Rejected = task declined.
+
+Q: How can I communicate with the support team?
+A: Use the Help section to chat with the AI assistant, email the support team, or call the helpline for urgent issues.
+
+Q: Can I ask the AI assistant complex questions?
+A: Yes. The AI can handle troubleshooting, account issues, task-related queries, and general guidance.
+
+Q: Will I get human support if the AI cannot help me?
+A: Yes. Unresolved issues are escalated to human support agents for further assistance.
+
+Q: How fast will I get a response?
+A: AI responses are instant. Human support usually responds within 24 hours, depending on volume.

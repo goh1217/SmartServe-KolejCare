@@ -16,14 +16,51 @@ class _SignUpPageState extends State<SignUpPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _salaryController = TextEditingController();
+  final _matricController = TextEditingController();
+  final _collegeController = TextEditingController();
+  final _blockController = TextEditingController();
+  final _staffNoController = TextEditingController();
+  final _workCollegeController = TextEditingController();
 
   String? _selectedRole;
   final List<String> _roles = ['student', 'staff', 'technician'];
+
+  String? _selectedMaintenanceField;
+  final List<String> _maintenanceFields = ['Electrical', 'Plumbing', 'Furniture', 'HVAC'];
+
+  int? _selectedYear;
+  final List<int> _years = [1, 2, 3, 4];
+
+  String? _selectedStaffRank;
+  final List<String> _staffRanks = ["supervisor", "manager", "admin", "officer"];
 
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _acceptedTerms = false;
+
+  Future<bool> _isMatricNoUnique(String matricNo) async {
+    if (matricNo.isEmpty) return true; // Validator will handle empty case
+    final result = await FirebaseFirestore.instance
+        .collection('student')
+        .where('matricNo', isEqualTo: matricNo)
+        .limit(1)
+        .get();
+    return result.docs.isEmpty;
+  }
+
+  Future<bool> _isStaffNoUnique(String staffNo) async {
+    if (staffNo.isEmpty) return true;
+    final result = await FirebaseFirestore.instance
+        .collection('staff')
+        .where('staffNo', isEqualTo: staffNo)
+        .limit(1)
+        .get();
+    return result.docs.isEmpty;
+  }
+
 
   Future<void> _signUp() async {
     if (!_formKey.currentState!.validate()) return;
@@ -54,6 +91,30 @@ class _SignUpPageState extends State<SignUpPage> {
     });
 
     try {
+      if (_selectedRole == 'student') {
+        final isUnique = await _isMatricNoUnique(_matricController.text.trim());
+        if (!isUnique) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Matric number already exists.'), backgroundColor: Colors.red),
+            );
+          }
+          setState(() => _isLoading = false);
+          return;
+        }
+      } else if (_selectedRole == 'staff') {
+        final isUnique = await _isStaffNoUnique(_staffNoController.text.trim());
+        if (!isUnique) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Staff number already exists.'), backgroundColor: Colors.red),
+            );
+          }
+          setState(() => _isLoading = false);
+          return;
+        }
+      }
+
       UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
@@ -92,28 +153,67 @@ class _SignUpPageState extends State<SignUpPage> {
     }
   }
 
-  Future<void> _createFirestoreUserDocument(User user, String role) {
+  Future<void> _createFirestoreUserDocument(User user, String role) async {
     final firestore = FirebaseFirestore.instance;
-    final CollectionReference collection = firestore.collection(role);
 
-    Map<String, dynamic> userData = {
-      'email': user.email,
-      'uid': user.uid,
-    };
+    if (role == 'technician') {
+      final techCollection = firestore.collection('technician');
+      String newTechnicianNo;
+      final querySnapshot = await techCollection.orderBy('technicianNo', descending: true).limit(1).get();
 
-    if (role == 'staff') {
-      userData['staffName'] = _nameController.text.trim();
-      userData['staffNo'] = '';
-      userData['staffRank'] = '';
+      if (querySnapshot.docs.isEmpty) {
+        newTechnicianNo = 'TN0001';
+      } else {
+        final lastTechnicianNo = querySnapshot.docs.first.data()['technicianNo'] as String;
+        final lastNumber = int.parse(lastTechnicianNo.substring(2));
+        newTechnicianNo = 'TN${(lastNumber + 1).toString().padLeft(4, '0')}';
+      }
+
+      Map<String, dynamic> userData = {
+        'technicianName': _nameController.text.trim(),
+        'technicianNo': newTechnicianNo,
+        'email': user.email,
+        'phoneNo': _phoneController.text.trim(),
+        'maintenanceField': _selectedMaintenanceField,
+        'monthlySalary': int.tryParse(_salaryController.text.trim()) ?? 0,
+        'role': 'technician',
+        'availability': true,
+        'tasksAssigned': [],
+        'uid': user.uid,
+      };
+      await techCollection.add(userData);
     } else if (role == 'student') {
-      userData['studentName'] = _nameController.text.trim();
-      userData['matricNo'] = '';
-    } else if (role == 'technician') {
-      userData['technicianName'] = _nameController.text.trim();
-      userData['maintenanceField'] = '';
+      final studentCollection = firestore.collection('student');
+      Map<String, dynamic> studentData = {
+        'studentName': _nameController.text.trim(),
+        'matricNo': _matricController.text.trim(),
+        'email': user.email,
+        'phoneNo': _phoneController.text.trim(),
+        'residentCollege': _collegeController.text.trim(),
+        'block': _blockController.text.trim(),
+        'year': _selectedYear,
+        'role': 'student',
+        'complaintHistory': [],
+        'currentComplaint': [],
+        'donationHistory': [],
+        'uid': user.uid,
+      };
+      await studentCollection.doc(user.uid).set(studentData);
+    } else if (role == 'staff') {
+      final staffCollection = firestore.collection('staff');
+      Map<String, dynamic> staffData = {
+        'staffName': _nameController.text.trim(),
+        'staffNo': _staffNoController.text.trim(),
+        'email': user.email,
+        'phoneNo': _phoneController.text.trim(),
+        'staffRank': _selectedStaffRank,
+        'workCollege': _workCollegeController.text.trim(),
+        'role': 'staff',
+        'assignedComplaints': [],
+        'uid': user.uid,
+      };
+      await staffCollection.doc(user.uid).set(staffData);
     }
-
-    return collection.doc(user.uid).set(userData);
   }
 
   @override
@@ -122,6 +222,13 @@ class _SignUpPageState extends State<SignUpPage> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _phoneController.dispose();
+    _salaryController.dispose();
+    _matricController.dispose();
+    _collegeController.dispose();
+    _blockController.dispose();
+    _staffNoController.dispose();
+    _workCollegeController.dispose();
     super.dispose();
   }
 
@@ -190,10 +297,10 @@ class _SignUpPageState extends State<SignUpPage> {
                       style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87),
                     ),
                     const SizedBox(height: 32),
-                    _buildLabel('Name'),
+                    _buildLabel('Full Name'),
                     TextFormField(
                       controller: _nameController,
-                      decoration: _buildInputDecoration('Enter your name'),
+                      decoration: _buildInputDecoration('Enter your full name'),
                       validator: (value) => value == null || value.isEmpty ? 'Please enter your name' : null,
                     ),
                     const SizedBox(height: 20),
@@ -224,6 +331,147 @@ class _SignUpPageState extends State<SignUpPage> {
                       },
                       validator: (value) => value == null ? 'Please select a role' : null,
                     ),
+
+                    if (_selectedRole == 'student') ...[
+                      const SizedBox(height: 20),
+                      _buildLabel('Matric No'),
+                      TextFormField(
+                        controller: _matricController,
+                        decoration: _buildInputDecoration('e.g., A23CS1234'),
+                        validator: (value) => value == null || value.isEmpty ? 'Please enter your matric number' : null,
+                      ),
+                      const SizedBox(height: 20),
+                      _buildLabel('Phone Number'),
+                      TextFormField(
+                        controller: _phoneController,
+                        decoration: _buildInputDecoration('Enter your phone number'),
+                        keyboardType: TextInputType.phone,
+                        validator: (value) => value == null || value.isEmpty ? 'Please enter your phone number' : null,
+                      ),
+                      const SizedBox(height: 20),
+                      _buildLabel('Year of Study'),
+                      DropdownButtonFormField<int>(
+                        decoration: _buildInputDecoration(''),
+                        value: _selectedYear,
+                        hint: const Text('Choose your year'),
+                        isExpanded: true,
+                        items: _years.map((int value) {
+                          return DropdownMenuItem<int>(
+                            value: value,
+                            child: Text(value.toString()),
+                          );
+                        }).toList(),
+                        onChanged: (int? newValue) {
+                          setState(() {
+                            _selectedYear = newValue;
+                          });
+                        },
+                        validator: (value) => value == null ? 'Please select your year of study' : null,
+                      ),
+                      const SizedBox(height: 20),
+                      _buildLabel('Resident College'),
+                      TextFormField(
+                        controller: _collegeController,
+                        decoration: _buildInputDecoration('Enter your college name(e.g. KTDI)'),
+                        validator: (value) => value == null || value.isEmpty ? 'Please enter your college name' : null,
+                      ),
+                      const SizedBox(height: 20),
+                      _buildLabel('Block'),
+                      TextFormField(
+                        controller: _blockController,
+                        decoration: _buildInputDecoration('e.g., M20'),
+                        validator: (value) => value == null || value.isEmpty ? 'Please enter your block' : null,
+                      ),
+                    ],
+
+                    if (_selectedRole == 'staff') ...[
+                      const SizedBox(height: 20),
+                      _buildLabel('Staff No'),
+                      TextFormField(
+                        controller: _staffNoController,
+                        decoration: _buildInputDecoration('e.g., STNO001'),
+                        validator: (value) => value == null || value.isEmpty ? 'Please enter your staff number' : null,
+                      ),
+                      const SizedBox(height: 20),
+                      _buildLabel('Phone Number'),
+                      TextFormField(
+                        controller: _phoneController,
+                        decoration: _buildInputDecoration('Enter your phone number'),
+                        keyboardType: TextInputType.phone,
+                        validator: (value) => value == null || value.isEmpty ? 'Please enter your phone number' : null,
+                      ),
+                      const SizedBox(height: 20),
+                      _buildLabel('Staff Rank'),
+                      DropdownButtonFormField<String>(
+                        decoration: _buildInputDecoration(''),
+                        value: _selectedStaffRank,
+                        hint: const Text('Choose your rank'),
+                        isExpanded: true,
+                        items: _staffRanks.map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value[0].toUpperCase() + value.substring(1)),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            _selectedStaffRank = newValue;
+                          });
+                        },
+                        validator: (value) => value == null ? 'Please select a rank' : null,
+                      ),
+                      const SizedBox(height: 20),
+                      _buildLabel('Work College'),
+                      TextFormField(
+                        controller: _workCollegeController,
+                        decoration: _buildInputDecoration('Enter your work college'),
+                        validator: (value) => value == null || value.isEmpty ? 'Please enter your work college' : null,
+                      ),
+                    ],
+
+                    if (_selectedRole == 'technician') ...[
+                      const SizedBox(height: 20),
+                      _buildLabel('Phone Number'),
+                      TextFormField(
+                        controller: _phoneController,
+                        decoration: _buildInputDecoration('Enter your phone number'),
+                        keyboardType: TextInputType.phone,
+                        validator: (value) => value == null || value.isEmpty ? 'Please enter your phone number' : null,
+                      ),
+                      const SizedBox(height: 20),
+                      _buildLabel('Maintenance Field'),
+                      DropdownButtonFormField<String>(
+                        decoration: _buildInputDecoration(''),
+                        value: _selectedMaintenanceField,
+                        hint: const Text('Choose your specialization'),
+                        isExpanded: true,
+                        items: _maintenanceFields.map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            _selectedMaintenanceField = newValue;
+                          });
+                        },
+                        validator: (value) => value == null ? 'Please select a specialization' : null,
+                      ),
+                      const SizedBox(height: 20),
+                      _buildLabel('Monthly Salary'),
+                      TextFormField(
+                        controller: _salaryController,
+                        decoration: _buildInputDecoration('Enter your monthly salary'),
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return 'Please enter a salary';
+                          if (int.tryParse(value) == null) return 'Please enter a valid number';
+                          return null;
+                        },
+                      ),
+                    ],
+
                     const SizedBox(height: 20),
                     _buildLabel('Password'),
                     TextFormField(

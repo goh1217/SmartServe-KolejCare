@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'assign_technician.dart';
 
 // Re-using the Complaint model from the staff_portal
 // If this model is used in more places, consider moving it to its own file in `models/`
@@ -50,10 +51,35 @@ class StaffComplaintsPage extends StatefulWidget {
 class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
   String selectedFilter = 'ALL';
 
+  void _navigateToAssignTechnician(Complaint complaint) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AssignTechnicianPage(
+          complaintId: complaint.id,
+          complaint: complaint,
+        ),
+      ),
+    );
+
+    // Show success message if technician was assigned
+    if (result != null && result == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Technician assigned successfully!'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // The same client-side filtering logic as the dashboard
-    Query complaintsQuery = FirebaseFirestore.instance.collection('complaint').orderBy('reportedDate', descending: true);
+    Query complaintsQuery = FirebaseFirestore.instance
+        .collection('complaint')
+        .orderBy('reportedDate', descending: true);
 
     return Scaffold(
       appBar: AppBar(
@@ -97,14 +123,19 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
                   return const Center(child: Text('No complaints found.'));
                 }
 
-                var complaints = snapshot.data!.docs.map((doc) => Complaint.fromFirestore(doc)).toList();
+                var complaints = snapshot.data!.docs
+                    .map((doc) => Complaint.fromFirestore(doc))
+                    .toList();
 
                 if (selectedFilter != 'ALL') {
-                  complaints = complaints.where((c) => c.status == selectedFilter).toList();
+                  complaints = complaints
+                      .where((c) => c.status == selectedFilter)
+                      .toList();
                 }
 
                 if (complaints.isEmpty) {
-                  return Center(child: Text('No ${selectedFilter.toLowerCase()} complaints.'));
+                  return Center(
+                      child: Text('No ${selectedFilter.toLowerCase()} complaints.'));
                 }
 
                 return ListView.builder(
@@ -136,20 +167,33 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
       },
       backgroundColor: Colors.grey[200],
       selectedColor: _getStatusColor(label).withOpacity(0.2),
-      labelStyle: TextStyle(fontSize: 12, fontWeight: isSelected ? FontWeight.bold : FontWeight.w500, color: isSelected ? _getStatusColor(label) : Colors.grey[700]),
-      shape: StadiumBorder(side: isSelected ? BorderSide(color: _getStatusColor(label), width: 1.5) : BorderSide.none),
+      labelStyle: TextStyle(
+          fontSize: 12,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+          color: isSelected ? _getStatusColor(label) : Colors.grey[700]),
+      shape: StadiumBorder(
+          side: isSelected
+              ? BorderSide(color: _getStatusColor(label), width: 1.5)
+              : BorderSide.none),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
     );
   }
 
   Widget _buildComplaintCard(Complaint complaint) {
+    final showAssignButton = complaint.status == 'Pending';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2))
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -158,12 +202,23 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: Text(complaint.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
+                child: Text(complaint.title,
+                    style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87)),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(color: _getStatusColor(complaint.status).withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
-                child: Text(complaint.status, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: _getStatusColor(complaint.status))),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                    color: _getStatusColor(complaint.status).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12)),
+                child: Text(complaint.status,
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: _getStatusColor(complaint.status))),
               ),
             ],
           ),
@@ -172,9 +227,13 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
             text: TextSpan(
               style: TextStyle(fontSize: 13, color: Colors.grey[800]),
               children: [
-                const TextSpan(text: 'Student ID: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                const TextSpan(
+                    text: 'Student ID: ',
+                    style: TextStyle(fontWeight: FontWeight.w600)),
                 TextSpan(text: complaint.studentId),
-                const TextSpan(text: ' | Room: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                const TextSpan(
+                    text: ' | Room: ',
+                    style: TextStyle(fontWeight: FontWeight.w600)),
                 TextSpan(text: complaint.room),
               ],
             ),
@@ -184,15 +243,43 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
             text: TextSpan(
               style: TextStyle(fontSize: 13, color: Colors.grey[800]),
               children: [
-                const TextSpan(text: 'Category: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                const TextSpan(
+                    text: 'Category: ',
+                    style: TextStyle(fontWeight: FontWeight.w600)),
                 TextSpan(text: complaint.category),
-                const TextSpan(text: ' | Priority: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                const TextSpan(
+                    text: ' | Priority: ',
+                    style: TextStyle(fontWeight: FontWeight.w600)),
                 TextSpan(text: complaint.priority),
               ],
             ),
           ),
           const SizedBox(height: 8),
-          Text('Submitted: ${DateFormat.yMMMd().add_jm().format(complaint.submitted)}', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+          Text(
+              'Submitted: ${DateFormat.yMMMd().add_jm().format(complaint.submitted)}',
+              style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+          
+          // Assign Technician Button (only for Pending complaints)
+          if (showAssignButton) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _navigateToAssignTechnician(complaint),
+                icon: const Icon(Icons.person_add, size: 18),
+                label: const Text('Assign Technician'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF7C3AED),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  elevation: 2,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
