@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:owtest/technician/main.dart' show TechnicianDashboard;
 import 'package:owtest/sign_in_screen.dart';
 import 'package:owtest/staff_portal.dart';
 import 'package:owtest/student/home_page.dart';
-import 'package:owtest/technician/dashboard.dart';
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
