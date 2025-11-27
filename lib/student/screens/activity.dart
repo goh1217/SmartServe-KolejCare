@@ -193,10 +193,16 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(14),
                       child: StreamBuilder<QuerySnapshot>(
-                        stream: FirebaseFirestore.instance
-                            .collection('complaint')
-                            .where('reportStatus', isEqualTo: 'Rejected')
-                            .snapshots(),
+                        stream: (() {
+                          final user = FirebaseAuth.instance.currentUser;
+                          final uid = user?.uid ?? '';
+                          final qBase = FirebaseFirestore.instance.collection('complaint').where('reportStatus', isEqualTo: 'Rejected');
+                          if (uid.isNotEmpty) {
+                            final possible = [uid, '/collection/student/$uid', '/collection/student'];
+                            return qBase.where('reportBy', whereIn: possible).snapshots();
+                          }
+                          return qBase.snapshots();
+                        })(),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState == ConnectionState.waiting) {
                             return const Padding(
@@ -318,10 +324,16 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(14),
                       child: StreamBuilder<QuerySnapshot>(
-                        stream: FirebaseFirestore.instance
-                            .collection('complaint')
-                            .where('reportStatus', isEqualTo: 'Pending')
-                            .snapshots(),
+                        stream: (() {
+                          final user = FirebaseAuth.instance.currentUser;
+                          final uid = user?.uid ?? '';
+                          final qBase = FirebaseFirestore.instance.collection('complaint').where('reportStatus', isEqualTo: 'Pending');
+                          if (uid.isNotEmpty) {
+                            final possible = [uid, '/collection/student/$uid', '/collection/student'];
+                            return qBase.where('reportBy', whereIn: possible).snapshots();
+                          }
+                          return qBase.snapshots();
+                        })(),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState == ConnectionState.waiting) {
                             return const Padding(
@@ -432,10 +444,16 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(14),
                       child: StreamBuilder<QuerySnapshot>(
-                        stream: FirebaseFirestore.instance
-                            .collection('complaint')
-                            .where('reportStatus', isEqualTo: 'Completed')
-                            .snapshots(),
+                        stream: (() {
+                          final user = FirebaseAuth.instance.currentUser;
+                          final uid = user?.uid ?? '';
+                          final qBase = FirebaseFirestore.instance.collection('complaint').where('reportStatus', isEqualTo: 'Completed');
+                          if (uid.isNotEmpty) {
+                            final possible = [uid, '/collection/student/$uid', '/collection/student'];
+                            return qBase.where('reportBy', whereIn: possible).snapshots();
+                          }
+                          return qBase.snapshots();
+                        })(),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState == ConnectionState.waiting) {
                             return const Padding(
