@@ -9,6 +9,28 @@ import 'notification_page.dart';
 import 'donate_page.dart';
 import 'screens/activity.dart';
 
+// Simple model to hold complaint summary information for UI
+class ComplaintSummary {
+  final String id;
+  final String rawStatus;
+  final double progress;
+  final String displayText;
+  final String description;
+  final String category;
+  final int? createdAt;
+
+  ComplaintSummary({
+    required this.id,
+    required this.rawStatus,
+    required this.progress,
+    required this.displayText,
+    required this.description,
+    required this.category,
+    this.createdAt,
+  });
+}
+
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -34,6 +56,8 @@ class _HomePageState extends State<HomePage> {
   String complaintRawStatus = '';
   // damage category from complaint doc (e.g. "Electrical", "Furniture")
   String complaintDamageCategory = '';
+  // List of complaint summaries for multi-complaint support
+  List<ComplaintSummary> complaintSummaries = [];
 
   @override
   void initState() {
@@ -122,154 +146,287 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Future<void> _loadComplaintProgress() async {
-  try {
-    final user = FirebaseAuth.instance.currentUser;
-    final email = user?.email;
+  // Build a status bar for a specific complaint summary
+  Widget _buildStatusBarFor(ComplaintSummary c) {
+    final label = c.displayText.replaceAll('\n', ' ');
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 6.0),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.06), blurRadius: 6)],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(c.description, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                      Text('${(c.progress * 100).round()}%', style: TextStyle(color: Colors.grey[700], fontSize: 12, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: LinearProgressIndicator(
+                      value: c.progress,
+                      minHeight: 8,
+                      backgroundColor: Colors.grey[200],
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        c.progress >= 1.0 ? Colors.green : (c.rawStatus.contains('rejected') ? Colors.red : Colors.deepPurple),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.deepPurple.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                c.category.isNotEmpty ? c.category : 'No category',
+                style: TextStyle(
+                  color: c.category.isNotEmpty ? Colors.deepPurple : Colors.grey[600],
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-    if (kDebugMode) print('Loading complaint progress for user email: $email');
+  // Helper to build a ComplaintSummary from a Firestore doc map
+  ComplaintSummary _buildSummaryFromDoc(String id, Map<String, dynamic> data) {
+    final statusRaw = (data['status'] ?? data['reportStatus'] ?? data['Status'] ?? data['ReportStatus'] ?? '').toString();
+    final status = statusRaw.trim();
+    final s = status.toLowerCase();
 
-    if (email == null || email.isEmpty) {
-      if (kDebugMode) print('No user logged in');
-      setState(() {
-        complaintProgress = 0.0;
-        complaintStatusLabel = 'No reports';
-        complaintStatusDescription = '';
-      });
-      return;
+    double progress = 0.0;
+    String displayText = '';
+
+    if (s == 'submitted') {
+      progress = 0.15;
+      displayText = 'Report Submitted';
+    } else if (s == 'pending') {
+      progress = 0.30;
+      displayText = 'Under Review';
+    } else if (s == 'reviewed') {
+      progress = 0.50;
+      displayText = 'Being Reviewed';
+    } else if (s.contains('approved') || s == 'approved') {
+      progress = 0.70;
+      displayText = 'Report Approved';
+    } else if (s == 'rejected') {
+      progress = 0.70;
+      displayText = 'Report Rejected';
+    } else if (s == 'assigned') {
+      progress = 0.90;
+      displayText = 'Technician On The Way';
+    } else if (s == 'completed') {
+      progress = 1.0;
+      displayText = 'Work Completed';
+    } else {
+      progress = 0.0;
+      displayText = status.isNotEmpty ? status : 'No Reports';
     }
 
-    final studentQuery = await FirebaseFirestore.instance
-        .collection('student')
-        .where('email', isEqualTo: email)
-        .limit(1)
-        .get();
-
-    if (studentQuery.docs.isEmpty) {
-      if (kDebugMode) print('No student document found for $email');
-      setState(() {
-        complaintProgress = 0.0;
-        complaintStatusLabel = 'No reports';
-        complaintStatusDescription = '';
-      });
-      return;
-    }
-
-    final studentData = studentQuery.docs.first.data();
-    if (kDebugMode) print('Student data: $studentData');
-
-    // Look for common complaint id fields inside student document
-    String complaintIdRaw = (studentData['complaintID'] ?? studentData['complaintId'] ?? studentData['complaint'] ?? studentData['latestComplaintId'] ?? studentData['latestComplaint'] ?? '').toString();
-    String? complaintId = complaintIdRaw.isNotEmpty ? complaintIdRaw : null;
-
-    if (kDebugMode) print('Found complaintId in student doc: $complaintId');
-
-    if (complaintId == null) {
-      // No linked complaint id found
-      setState(() {
-        complaintProgress = 0.0;
-        complaintStatusLabel = 'No reports';
-        complaintStatusDescription = '';
-      });
-      return;
-    }
-
-    // Fetch the complaint document by its document id
-    final complaintDoc = await FirebaseFirestore.instance.collection('complaint').doc(complaintId).get();
-    if (!complaintDoc.exists) {
-      if (kDebugMode) print('Complaint doc $complaintId not found');
-      setState(() {
-        complaintProgress = 0.0;
-        complaintStatusLabel = 'No reports';
-        complaintStatusDescription = '';
-      });
-      return;
-    }
-
-    final data = complaintDoc.data() ?? {};
-    if (kDebugMode) print('Complaint data: $data');
-
-    // Try different field names for damage/category
     final categoryRaw = (data['damageCategory'] ?? data['damage_category'] ?? data['category'] ?? data['damage'] ?? '').toString();
     final category = categoryRaw.isNotEmpty ? categoryRaw : '';
 
-    // Try different field names for status
-    final statusRaw = (data['status'] ?? data['reportStatus'] ?? data['Status'] ?? data['ReportStatus'] ?? '').toString();
-    final status = statusRaw.trim();
-
-    if (kDebugMode) print('Status found: "$status"');
-
-    // Map status to progress and description
-    double progress = 0.0;
-    String desc = '';
-    String displayText = '';
-    
-    final s = status.toLowerCase();
-    
-    if (s == 'submitted') {
-      progress = 0.15;
-      desc = 'Submitted';
-      displayText = 'Report\nSubmitted';
-    } else if (s == 'pending') {
-      progress = 0.30;
-      desc = 'Pending';
-      displayText = 'Under\nReview';
-    } else if (s == 'reviewed') {
-      progress = 0.50;
-      desc = 'Reviewed';
-      displayText = 'Being\nReviewed';
-    } else if (s.contains('approved') || s == 'approved') {
-      progress = 0.70;
-      desc = 'Approved';
-      displayText = 'Report\nApproved';
-    } else if (s == 'rejected') {
-      progress = 0.70;
-      desc = 'Rejected';
-      displayText = 'Report\nRejected';
-    } else if (s == 'assigned') {
-      progress = 0.90;
-      desc = 'Assigned';
-      displayText = 'Technician\nOn The Way';
-    } else if (s == 'completed') {
-      progress = 1.0;
-      desc = 'Completed';
-      displayText = 'Work\nCompleted';
-    } else {
-      // Fallback
-      progress = 0.0;
-      desc = status.isNotEmpty ? status : 'No reports';
-      displayText = status.isNotEmpty ? status : 'No\nReports';
+    int? createdMs;
+    final createdVal = data['createdAt'] ?? data['timestamp'] ?? data['created'];
+    if (createdVal != null) {
+      if (createdVal is int) createdMs = createdVal;
+      else if (createdVal is double) createdMs = createdVal.toInt();
+      else if (createdVal is String) {
+        createdMs = int.tryParse(createdVal);
+      } else if (createdVal is Timestamp) {
+        createdMs = createdVal.millisecondsSinceEpoch;
+      }
     }
 
-    if (kDebugMode) print('Setting progress: $progress, label: $desc');
-
-    setState(() {
-      complaintProgress = progress;
-      complaintStatusLabel = displayText;
-      complaintRawStatus = s;
-      complaintStatusDescription = '${(progress * 100).round()}%';
-      complaintDamageCategory = category;
-    });
-
-    // Show alert only when status is 'assigned' and we haven't shown it yet
-    if (s == 'assigned' && showAlert && mounted) {
-      // prevent multiple displays
-      setState(() {
-        showAlert = false;
-      });
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _showAlertDialog();
-      });
-    }
-  } catch (e) {
-    if (kDebugMode) print('ERROR loading complaint progress: $e');
-    setState(() {
-      complaintProgress = 0.0;
-      complaintStatusLabel = 'Error';
-      complaintStatusDescription = '';
-    });
+    return ComplaintSummary(
+      id: id,
+      rawStatus: s,
+      progress: progress,
+      displayText: displayText,
+      description: '${(progress * 100).round()}%',
+      category: category,
+      createdAt: createdMs,
+    );
   }
-}
+
+  Future<void> _loadComplaintProgress() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final uid = user?.uid;
+
+      if (kDebugMode) print('Loading complaint progress for user uid: $uid');
+
+      if (uid == null) {
+        if (kDebugMode) print('No user logged in');
+        setState(() {
+          complaintSummaries = [];
+          complaintProgress = 0.0;
+          complaintStatusLabel = 'No reports';
+          complaintStatusDescription = '';
+          complaintRawStatus = '';
+          complaintDamageCategory = '';
+        });
+        return;
+      }
+
+      // Find the student document for this user (we assume student doc has an 'authUid' or uses same email)
+      final studentQuery = await FirebaseFirestore.instance
+          .collection('student')
+          .where('authUid', isEqualTo: uid)
+          .limit(1)
+          .get();
+
+      String? studentDocId;
+      if (studentQuery.docs.isNotEmpty) {
+        studentDocId = studentQuery.docs.first.id;
+      } else {
+        // fallback: try matching by email if authUid not present
+        final userEmail = FirebaseAuth.instance.currentUser?.email ?? '';
+        if (userEmail.isNotEmpty) {
+          final byEmail = await FirebaseFirestore.instance
+              .collection('student')
+              .where('email', isEqualTo: userEmail)
+              .limit(1)
+              .get();
+          if (byEmail.docs.isNotEmpty) studentDocId = byEmail.docs.first.id;
+        }
+      }
+
+      // Query complaints where reportBy equals the student doc id (preferred) or the auth uid
+      final Set<String> complaintIds = <String>{};
+      final List<ComplaintSummary> summaries = [];
+
+      if (studentDocId != null && studentDocId.isNotEmpty) {
+        final studentRef = FirebaseFirestore.instance.collection('student').doc(studentDocId);
+
+        // First try where reportBy is stored as a DocumentReference
+        final qRef = await FirebaseFirestore.instance
+            .collection('complaint')
+            .where('reportBy', isEqualTo: studentRef)
+            .get();
+        for (final d in qRef.docs) {
+          complaintIds.add(d.id);
+          summaries.add(_buildSummaryFromDoc(d.id, d.data()));
+        }
+
+        // Some systems store the reportBy as a path/string. Try common variants.
+        final pathVariants = [
+          'student/$studentDocId',
+          '/student/$studentDocId',
+          'collection/student/$studentDocId',
+          '/collection/student/$studentDocId',
+          studentDocId,
+        ];
+        for (final variant in pathVariants) {
+          if (variant.isEmpty) continue;
+          final qS = await FirebaseFirestore.instance
+              .collection('complaint')
+              .where('reportBy', isEqualTo: variant)
+              .get();
+          for (final d in qS.docs) {
+            if (!complaintIds.contains(d.id)) {
+              complaintIds.add(d.id);
+              summaries.add(_buildSummaryFromDoc(d.id, d.data()));
+            }
+          }
+        }
+      }
+
+      // also check where reportBy equals auth uid (some apps store auth uid)
+      final q2 = await FirebaseFirestore.instance.collection('complaint').where('reportBy', isEqualTo: uid).get();
+      for (final d in q2.docs) {
+        if (!complaintIds.contains(d.id)) {
+          complaintIds.add(d.id);
+          summaries.add(_buildSummaryFromDoc(d.id, d.data()));
+        }
+      }
+
+      // If still empty, fall back to complaints referenced in student doc fields (complaintId(s))
+      if (summaries.isEmpty && studentDocId != null) {
+        final studentDoc = await FirebaseFirestore.instance.collection('student').doc(studentDocId).get();
+        final studentData = studentDoc.data() ?? {};
+        final singleId = (studentData['complaintID'] ?? studentData['complaintId'] ?? studentData['complaint'] ?? '').toString();
+        if (singleId.isNotEmpty) complaintIds.add(singleId);
+        final listField = studentData['complaintIds'] ?? studentData['complaintList'] ?? studentData['complaints'];
+        if (listField is List) {
+          for (final item in listField) {
+            final sId = item?.toString() ?? '';
+            if (sId.isNotEmpty) complaintIds.add(sId);
+          }
+        }
+        for (final id in complaintIds) {
+          final doc = await FirebaseFirestore.instance.collection('complaint').doc(id).get();
+          if (doc.exists) summaries.add(_buildSummaryFromDoc(doc.id, doc.data() ?? {}));
+        }
+      }
+
+      if (summaries.isEmpty) {
+        setState(() {
+          complaintSummaries = [];
+          complaintProgress = 0.0;
+          complaintStatusLabel = 'No reports';
+          complaintStatusDescription = '';
+          complaintRawStatus = '';
+          complaintDamageCategory = '';
+        });
+        return;
+      }
+
+      // sort by createdAt descending
+      summaries.sort((a, b) => (b.createdAt ?? 0).compareTo(a.createdAt ?? 0));
+
+      final primary = summaries.first;
+      setState(() {
+        complaintSummaries = summaries;
+        complaintProgress = primary.progress;
+        complaintStatusLabel = primary.displayText;
+        complaintRawStatus = primary.rawStatus;
+        complaintStatusDescription = primary.description;
+        complaintDamageCategory = primary.category;
+      });
+
+      final anyAssigned = summaries.any((c) => c.rawStatus == 'assigned');
+      if (anyAssigned && showAlert && mounted) {
+        setState(() => showAlert = false);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _showAlertDialog();
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) print('ERROR loading complaint progress: $e');
+      setState(() {
+        complaintSummaries = [];
+        complaintProgress = 0.0;
+        complaintStatusLabel = 'Error';
+        complaintStatusDescription = '';
+        complaintRawStatus = '';
+        complaintDamageCategory = '';
+      });
+    }
+  }
 
 
   // Load weather data
@@ -310,9 +467,10 @@ class _HomePageState extends State<HomePage> {
       if (user == null) {
         throw Exception("Not logged in");
       }
-      final doc = await FirebaseFirestore.instance
+        final userEmail = FirebaseAuth.instance.currentUser?.email ?? '';
+        final doc = await FirebaseFirestore.instance
           .collection('student')
-          .where('email', isEqualTo: user.email)
+          .where('email', isEqualTo: userEmail)
           .limit(1)
           .get();
 
@@ -538,21 +696,18 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const SizedBox(height: 12),
-            // Show status bar only when there is a linked complaint (status or category available)
-            (complaintRawStatus.isNotEmpty || complaintDamageCategory.isNotEmpty)
-                ? Column(
-                    children: [
-                      _buildStatusBar(),
-                      const SizedBox(height: 12),
-                    ],
-                  )
-                : const SizedBox.shrink(),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Status bars moved here so they scroll with the page
+                    if (complaintSummaries.isNotEmpty) ...[
+                      ...complaintSummaries.map((c) => _buildStatusBarFor(c)),
+                      const SizedBox(height: 12),
+                    ],
+
                     // Donate Card
                     GestureDetector(
                       onTap: () {
@@ -777,7 +932,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         InkWell(
-                          onTap: complaintRawStatus == 'assigned' ? _showAlertDialog : null,
+                          onTap: complaintSummaries.any((c) => c.rawStatus == 'assigned') ? _showAlertDialog : null,
                           child: Container(
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
@@ -786,7 +941,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                             child: Icon(
                               Icons.info_outline,
-                              color: complaintRawStatus == 'assigned' ? Colors.deepPurple : Colors.grey,
+                              color: complaintSummaries.any((c) => c.rawStatus == 'assigned') ? Colors.deepPurple : Colors.grey,
                               size: 20,
                             ),
                           ),
