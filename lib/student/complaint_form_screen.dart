@@ -1,77 +1,77 @@
-import 'dart:convert';
-import 'dart:typed_data';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:http/http.dart' as http;
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ComplaintFormScreen extends StatefulWidget {
-  const ComplaintFormScreen({super.key});
+const ComplaintFormScreen({super.key});
 
-  @override
-  State<ComplaintFormScreen> createState() => _ComplaintFormScreenState();
+@override
+State<ComplaintFormScreen> createState() => _ComplaintFormScreenState();
 }
 
 class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
-  final TextEditingController _titleController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
+final TextEditingController _titleController = TextEditingController();
+final TextEditingController _descriptionController = TextEditingController();
 
-  String? _selectedMaintenanceType;
-  String? _selectedUrgency;
-  bool _consentGiven = true;
+String? _selectedMaintenanceType;
+String? _selectedUrgency;
+bool _consentGiven = true;
 
-  bool _isSubmitted = false;
-  bool _isSubmitting = false;
+bool _isSubmitted = false; //successful submit?
+bool _isSubmitting = false; //Firebase
 
-  final List<XFile> _pickedImages = [];
+final List<String> _maintenanceOptions = ['Furniture', 'Electrical', 'Plumbing', 'Other'];
+final List<String> _urgencyOptions = ['Minor', 'Medium', 'High'];
 
-  final List<String> _maintenanceOptions = ['Furniture', 'Electrical', 'Plumbing', 'Other'];
-  final List<String> _urgencyOptions = ['Minor', 'Medium', 'High'];
+@override
+void dispose() {
+_titleController.dispose();
+_descriptionController.dispose();
+super.dispose();
+}
 
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _descriptionController.dispose();
-    super.dispose();
-  }
+BoxDecoration _cardDecoration() {
+return BoxDecoration(
+color: Colors.white,
+borderRadius: BorderRadius.circular(16),
+boxShadow: [
+BoxShadow(
+color: Colors.black.withOpacity(0.05),
+blurRadius: 12,
+offset: const Offset(0, 4),
+),
+],
+);
+}
 
-  BoxDecoration _cardDecoration() => BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(16),
-    boxShadow: [
-      BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 4))
-    ],
-  );
+// --- MODIFIED: Updated _handleSubmit to use current logged-in student as reportBy ---
+Future<void> _handleSubmit() async {
+final title = _titleController.text.trim();
+final desc = _descriptionController.text.trim();
 
-  Future<void> _pickImages() async {
-    if (_pickedImages.length >= 3) return;
-    final ImagePicker picker = ImagePicker();
-    final XFile? img = await picker.pickImage(source: ImageSource.gallery);
-    if (img != null) setState(() => _pickedImages.add(img));
-  }
+if (title.isEmpty ||
+desc.isEmpty ||
+_selectedUrgency == null ||
+_selectedMaintenanceType == null) {
+showDialog(
+context: context,
+builder: (c) => AlertDialog(
+title: const Text('Incomplete'),
+content: const Text(
+'Please fill title, description, maintenance type, and urgency level.'),
+actions: [
+TextButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))
+],
+),
+);
+return;
+}
 
-  Future<void> _handleSubmit() async {
-    final title = _titleController.text.trim();
-    final desc = _descriptionController.text.trim();
-
-
-    if (title.isEmpty || desc.isEmpty || _selectedUrgency == null || _selectedMaintenanceType == null) {
-    showDialog(
-    context: context,
-    builder: (c) => AlertDialog(
-    title: const Text('Incomplete'),
-    content: const Text('Please fill all required fields.'),
-    actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))],
-    ),
-    );
-    return;
-    }
-
-    setState(() => _isSubmitting = true);
+setState(() {
+_isSubmitting = true;
+});
 
 try {
 final firestore = FirebaseFirestore.instance;
