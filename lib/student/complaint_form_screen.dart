@@ -73,26 +73,31 @@ setState(() {
 _isSubmitting = true;
 });
 
-    try {
-      final firestore = FirebaseFirestore.instance;
+try {
+final firestore = FirebaseFirestore.instance;
+final user = FirebaseAuth.instance.currentUser;
 
-      // Let firestore generate a unique ID
-      final docRef = await firestore.collection('complaint').add({
-        'assignedTo': '/collection/technician', //not done yet
-        'damageCategory': _selectedMaintenanceType,
-        'damagePic': null, //not done yet
-        'feedbackRating': 0,
-        'inventoryDamage': desc,
-        'rejectionReason': '',
-        'reportBy': '/collection/student', //not done yet
-        'reportStatus': 'Pending',
-        'reportedDate': FieldValue.serverTimestamp(),
-        'reviewedBy': '/collection/staff', //not done yet
-        'roomEntryConsent': _consentGiven,
-        'scheduledDate': null,
-        'technicianTip': 0,
-        'urgencyLevel': _selectedUrgency,
-      });
+if (user == null) {
+throw 'User not logged in';
+}
+
+// Let firestore generate a unique ID
+final docRef = await firestore.collection('complaint').add({
+'assignedTo': '/collection/technician', //still placeholder
+'damageCategory': _selectedMaintenanceType,
+'damagePic': null, //still placeholder for future image upload
+'feedbackRating': 0,
+'inventoryDamage': desc,
+'rejectionReason': '',
+'reportBy': '/collection/student/${user.uid}', // --- MODIFIED: dynamically set current student ID
+'reportStatus': 'Pending',
+'reportedDate': FieldValue.serverTimestamp(),
+'reviewedBy': '/collection/staff', //still placeholder
+'roomEntryConsent': _consentGiven,
+'scheduledDate': null,
+'technicianTip': 0,
+'urgencyLevel': _selectedUrgency,
+});
 
 // Get the generated ID and update the document
 await docRef.update({'complaintID': docRef.id});

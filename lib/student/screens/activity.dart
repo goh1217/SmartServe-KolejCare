@@ -168,32 +168,128 @@ class _ActivityScreenState extends State<ActivityScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Rejected Section
-            _buildSectionCard(
-              context,
-              title: 'Rejected',
-              backgroundColor: Colors.transparent,
-              items: [
-                ActivityItem(
-                  title: 'Ceiling fan',
-                  status: 'Rejected on',
-                  date: '20 Nov 2025, 09:11 AM',
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => RejectedRepairScreen(
-                        status: 'Rejected',
-                        damageCategory: 'Ceiling Fan',
-                        inventoryDamage: 'The fan rotates too slowly',
-                        reportedOn: '19 Nov 2025, 11:58 PM',
-                        reviewedOn: '20 Nov 2025, 09:11 AM',
-                        reviewedBy: 'Mr. Amirul',
-                        rejectionReason: 'The issue is not considered a valid maintenance case. The fan speed is functioning normally based on inspection.',
+            // Rejected Section (dynamic from Firestore)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(left: 4, bottom: 8),
+                    child: Text('Rejected', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('complaint')
+                            .where('reportStatus', isEqualTo: 'Rejected')
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Padding(
+                              padding: EdgeInsets.all(20),
+                              child: Center(child: CircularProgressIndicator()),
+                            );
+                          }
+
+                          if (snapshot.hasError) {
+                            return Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Center(child: Text('Error: \\${snapshot.error}')),
+                            );
+                          }
+
+                          final user = FirebaseAuth.instance.currentUser;
+                          final uid = user?.uid ?? '';
+                          final email = user?.email ?? '';
+
+                          final docs = snapshot.data?.docs ?? [];
+
+                          final userDocs = docs.where((d) {
+                            final data = d.data() as Map<String, dynamic>;
+                            final reportBy = (data['reportBy'] ?? '').toString();
+                            final reportByEmail = (data['reportByEmail'] ?? data['email'] ?? '').toString();
+
+                            // Prefer exact email match when available
+                            if (reportByEmail.isNotEmpty && email.isNotEmpty) {
+                              if (reportByEmail == email) return true;
+                            }
+
+                            // Match new-style reportBy that contains uid or email
+                            if (uid.isNotEmpty && reportBy.contains(uid)) return true;
+                            if (email.isNotEmpty && reportBy.contains(email)) return true;
+
+                            // --- Legacy data handling ---
+                            // Some older documents stored reportBy as a literal path
+                            // like '/collection/student' or '/student/<id>'. Include
+                            // those entries so they are visible to the user until
+                            // a DB migration is done.
+                            if (reportBy == '/collection/student') return true;
+                            if (reportBy.contains('/student')) return true;
+
+                            return false;
+                          }).toList();
+
+                          if (userDocs.isEmpty) {
+                            return const Padding(
+                              padding: EdgeInsets.all(20),
+                              child: Center(child: Text('No rejected complaints.')),
+                            );
+                          }
+
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: userDocs.map((d) {
+                              final data = d.data() as Map<String, dynamic>;
+                              final title = (data['inventoryDamage'] ?? data['damageCategory'] ?? 'No title').toString();
+
+                              // Use the stored DB value exactly as-is (string if stored as string).
+                              final rawDate = data['reportedDate'] ?? data['reportedOn'];
+                              final String dateText = rawDate == null ? 'No date' : rawDate.toString();
+
+                              return _buildActivityItem(
+                                context,
+                                ActivityItem(
+                                  title: title,
+                                  status: 'Rejected on',
+                                  date: dateText,
+                                  onTap: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => RejectedRepairScreen(
+                                        status: data['reportStatus'] ?? 'Rejected',
+                                        damageCategory: data['damageCategory'] ?? '',
+                                        inventoryDamage: data['inventoryDamage'] ?? '',
+                                        reportedOn: dateText,
+                                        reviewedOn: (data['reviewedOn'] ?? '').toString(),
+                                        reviewedBy: (data['reviewedBy'] ?? '').toString(),
+                                        rejectionReason: (data['rejectionReason'] ?? '').toString(),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          );
+                        },
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 16),
 
