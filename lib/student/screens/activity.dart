@@ -212,15 +212,15 @@ class _ActivityScreenState extends State<ActivityScreen> {
                         builder: (context, snapshot) {
                           if (snapshot.connectionState == ConnectionState.waiting) {
                             return const Padding(
-                              padding: EdgeInsets.all(24.0),
+                              padding: EdgeInsets.all(20),
                               child: Center(child: CircularProgressIndicator()),
                             );
                           }
 
                           if (snapshot.hasError) {
                             return Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Text('Error: ${snapshot.error}'),
+                              padding: const EdgeInsets.all(20),
+                              child: Center(child: Text('Error: ${snapshot.error}')),
                             );
                           }
 
@@ -251,8 +251,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
                           if (userDocs.isEmpty) {
                             return const Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: Text('No scheduled items.'),
+                              padding: EdgeInsets.all(20),
+                              child: Center(child: Text('No scheduled items.')),
                             );
                           }
 
