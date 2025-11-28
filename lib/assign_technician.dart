@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AssignTechnicianPage extends StatefulWidget {
   final String complaintId;
@@ -183,9 +184,47 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
     });
 
     try {
+      // Resolve staff display name for reviewedBy
+      String reviewedByName = '';
+      try {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          // try direct doc lookup by uid
+          final docById = await _firestore.collection('staff').doc(user.uid).get();
+          if (docById.exists) {
+            final d = docById.data();
+            reviewedByName = (d?['staffName'] ?? d?['name'] ?? d?['displayName'] ?? '').toString();
+          }
+
+          // fallback: query by authUid field
+          if (reviewedByName.isEmpty) {
+            final q = await _firestore.collection('staff').where('authUid', isEqualTo: user.uid).limit(1).get();
+            if (q.docs.isNotEmpty) {
+              final d = q.docs.first.data();
+              reviewedByName = (d['staffName'] ?? d['name'] ?? d['displayName'] ?? '').toString();
+            }
+          }
+
+          // fallback: query by email
+          if (reviewedByName.isEmpty && (user.email ?? '').isNotEmpty) {
+            final q2 = await _firestore.collection('staff').where('email', isEqualTo: user.email).limit(1).get();
+            if (q2.docs.isNotEmpty) {
+              final d = q2.docs.first.data();
+              reviewedByName = (d['staffName'] ?? d['name'] ?? d['displayName'] ?? '').toString();
+            }
+          }
+
+          // final fallback to uid
+          if (reviewedByName.isEmpty) reviewedByName = user.uid;
+        }
+      } catch (_) {
+        reviewedByName = '';
+      }
+
       await _firestore.collection('complaint').doc(widget.complaintId).update({
         'reportStatus': 'Rejected',
         'rejectionReason': reason,
+        'reviewedBy': reviewedByName,
       });
 
       if (mounted) {
