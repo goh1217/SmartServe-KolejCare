@@ -225,6 +225,7 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
         'reportStatus': 'Rejected',
         'rejectionReason': reason,
         'reviewedBy': reviewedByName,
+        'reviewedOn': FieldValue.serverTimestamp(),
       });
 
       if (mounted) {
