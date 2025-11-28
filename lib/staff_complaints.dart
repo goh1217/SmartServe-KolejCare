@@ -9,6 +9,7 @@ class Complaint {
   final String id;
   final String title;
   final String studentId;
+  final String studentName; // Added field
   final String room;
   final String category;
   final String priority;
@@ -19,6 +20,7 @@ class Complaint {
     required this.id,
     required this.title,
     required this.studentId,
+    required this.studentName, // Added to constructor
     required this.room,
     required this.category,
     required this.priority,
@@ -26,13 +28,52 @@ class Complaint {
     required this.status,
   });
 
-  factory Complaint.fromFirestore(DocumentSnapshot doc) {
+  // This is now an async static method to fetch related data
+  static Future<Complaint> fromFirestore(DocumentSnapshot doc) async {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+    String studentName = 'Unknown Student';
+    String studentId = 'Unknown ID';
+    String room = 'N/A';
+
+    // Handle reportBy being a String path instead of a DocumentReference
+    final reportByPath = data['reportBy'] as String?;
+    if (reportByPath != null && reportByPath.isNotEmpty) {
+      try {
+        // Extract the student ID from the path string
+        final studentIdFromPath = reportByPath.split('/').last;
+        studentId = studentIdFromPath;
+
+        if (studentId.isNotEmpty) {
+          // Manually create the DocumentReference to fetch student data
+          DocumentReference studentRef = FirebaseFirestore.instance.collection('student').doc(studentId);
+          DocumentSnapshot studentDoc = await studentRef.get();
+
+          if (studentDoc.exists) {
+            final studentData = studentDoc.data() as Map<String, dynamic>;
+            studentName = studentData['studentName'] ?? 'Unnamed Student';
+
+            // Construct room from student's college and block
+            final college = studentData['residentCollege'] ?? '';
+            final block = studentData['block'] ?? '';
+            final tempRoom = '$college $block'.trim();
+            if (tempRoom.isNotEmpty) {
+              room = tempRoom;
+            }
+          }
+        }
+      } catch (e) {
+        // Log error for debugging purposes
+        print('Error parsing student ref or fetching details for complaint ${doc.id}: $e');
+      }
+    }
+
     return Complaint(
       id: doc.id,
       title: data['inventoryDamage'] ?? 'No Title',
-      studentId: (data['reportedBy'] as DocumentReference?)?.id ?? 'Unknown Student',
-      room: 'N/A', // Placeholder
+      studentId: studentId, // Keep the ID for internal use
+      studentName: studentName, // Display this in the UI
+      room: room, // Use the constructed room
       category: data['damageCategory'] ?? 'Uncategorized',
       priority: data['urgencyLevel'] ?? 'Low',
       submitted: (data['reportedDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
@@ -64,6 +105,7 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
 
     // Show success message if technician was assigned
     if (result != null && result == true) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Technician assigned successfully!'),
@@ -123,26 +165,46 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
                   return const Center(child: Text('No complaints found.'));
                 }
 
-                var complaints = snapshot.data!.docs
+                // Map docs to a list of Futures
+                var complaintFutures = snapshot.data!.docs
                     .map((doc) => Complaint.fromFirestore(doc))
                     .toList();
 
-                if (selectedFilter != 'ALL') {
-                  complaints = complaints
-                      .where((c) => c.status == selectedFilter)
-                      .toList();
-                }
+                // Use a FutureBuilder to wait for all complaint data to be fetched
+                return FutureBuilder<List<Complaint>>(
+                  future: Future.wait(complaintFutures),
+                  builder: (context, complaintSnapshot) {
+                    if (complaintSnapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (complaintSnapshot.hasError) {
+                      return Center(
+                          child: Text('Error loading details: ${complaintSnapshot.error}'));
+                    }
+                    if (!complaintSnapshot.hasData || complaintSnapshot.data!.isEmpty) {
+                      return const Center(child: Text('No complaints to display.'));
+                    }
 
-                if (complaints.isEmpty) {
-                  return Center(
-                      child: Text('No ${selectedFilter.toLowerCase()} complaints.'));
-                }
+                    var complaints = complaintSnapshot.data!;
 
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: complaints.length,
-                  itemBuilder: (context, index) {
-                    return _buildComplaintCard(complaints[index]);
+                    if (selectedFilter != 'ALL') {
+                      complaints = complaints
+                          .where((c) => c.status == selectedFilter)
+                          .toList();
+                    }
+
+                    if (complaints.isEmpty) {
+                      return Center(
+                          child: Text('No ${selectedFilter.toLowerCase()} complaints.'));
+                    }
+
+                    return ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: complaints.length,
+                      itemBuilder: (context, index) {
+                        return _buildComplaintCard(complaints[index]);
+                      },
+                    );
                   },
                 );
               },
@@ -228,13 +290,13 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
               style: TextStyle(fontSize: 13, color: Colors.grey[800]),
               children: [
                 const TextSpan(
-                    text: 'Student ID: ',
+                    text: 'Student: ', // Changed from "Student ID"
                     style: TextStyle(fontWeight: FontWeight.w600)),
-                TextSpan(text: complaint.studentId),
+                TextSpan(text: complaint.studentName), // Display student name
                 const TextSpan(
                     text: ' | Room: ',
                     style: TextStyle(fontWeight: FontWeight.w600)),
-                TextSpan(text: complaint.room),
+                TextSpan(text: complaint.room), // Display constructed room
               ],
             ),
           ),

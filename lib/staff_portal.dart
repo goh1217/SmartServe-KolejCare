@@ -16,21 +16,23 @@ class StaffPortalApp extends StatelessWidget {
   }
 }
 
-// Updated Complaint model to match Firestore
+// Updated Complaint model to fetch student details asynchronously
 class Complaint {
   final String id;
-  final String title; // from inventoryDamage
-  final String studentId; // from reportedBy
-  final String room; // Assuming this comes from student data later
-  final String category; // from damageCategory
-  final String priority; // from urgencyLevel
-  final DateTime submitted; // from reportedDate
-  final String status; // from reportStatus
+  final String title;
+  final String studentId;
+  final String studentName; // Added for displaying name
+  final String room;
+  final String category;
+  final String priority;
+  final DateTime submitted;
+  final String status;
 
   Complaint({
     required this.id,
     required this.title,
     required this.studentId,
+    required this.studentName,
     required this.room,
     required this.category,
     required this.priority,
@@ -39,13 +41,47 @@ class Complaint {
   });
 
   // Factory constructor to create a Complaint from a Firestore document
-  factory Complaint.fromFirestore(DocumentSnapshot doc) {
+  static Future<Complaint> fromFirestore(DocumentSnapshot doc) async {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+    String studentName = 'Unknown Student';
+    String studentId = 'Unknown ID';
+    String room = 'N/A';
+
+    // Handle reportBy being a String path instead of a DocumentReference
+    final reportByPath = data['reportBy'] as String?;
+    if (reportByPath != null && reportByPath.isNotEmpty) {
+      try {
+        final studentIdFromPath = reportByPath.split('/').last;
+        studentId = studentIdFromPath;
+
+        if (studentId.isNotEmpty) {
+          DocumentReference studentRef = FirebaseFirestore.instance.collection('student').doc(studentId);
+          DocumentSnapshot studentDoc = await studentRef.get();
+
+          if (studentDoc.exists) {
+            final studentData = studentDoc.data() as Map<String, dynamic>;
+            studentName = studentData['studentName'] ?? 'Unnamed Student';
+
+            final college = studentData['residentCollege'] ?? '';
+            final block = studentData['block'] ?? '';
+            final tempRoom = '$college $block'.trim();
+            if (tempRoom.isNotEmpty) {
+              room = tempRoom;
+            }
+          }
+        }
+      } catch (e) {
+        print('Error parsing student ref or fetching details for complaint ${doc.id}: $e');
+      }
+    }
+
     return Complaint(
       id: doc.id,
       title: data['inventoryDamage'] ?? 'No Title',
-      studentId: (data['reportedBy'] as DocumentReference?)?.id ?? 'Unknown Student',
-      room: 'N/A', // Placeholder, you might need another lookup for this
+      studentId: studentId,
+      studentName: studentName,
+      room: room,
       category: data['damageCategory'] ?? 'Uncategorized',
       priority: data['urgencyLevel'] ?? 'Low',
       submitted: (data['reportedDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
@@ -246,18 +282,35 @@ class _StaffPortalDashboardState extends State<StaffPortalDashboard> {
               return const Center(child: Padding(padding: EdgeInsets.all(32), child: Text('No complaints found', style: TextStyle(fontSize: 16, color: Colors.grey))));
             }
 
-            var complaints = snapshot.data!.docs.map((doc) => Complaint.fromFirestore(doc)).toList();
+            var complaintFutures = snapshot.data!.docs.map((doc) => Complaint.fromFirestore(doc)).toList();
 
-            if (selectedFilter != 'ALL') {
-              complaints = complaints.where((c) => c.status == selectedFilter).toList();
-            }
+            return FutureBuilder<List<Complaint>>(
+              future: Future.wait(complaintFutures),
+              builder: (context, complaintSnapshot) {
+                 if (complaintSnapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (complaintSnapshot.hasError) {
+                  return Center(child: Text('Error loading details: ${complaintSnapshot.error}'));
+                }
+                if (!complaintSnapshot.hasData || complaintSnapshot.data!.isEmpty) {
+                  return const Center(child: Text('No complaints to display.'));
+                }
 
-            if (complaints.isEmpty) {
-              return Center(child: Padding(padding: const EdgeInsets.all(32), child: Text('No ${selectedFilter.toLowerCase()} complaints', style: TextStyle(fontSize: 16, color: Colors.grey[600]))));
-            }
+                var complaints = complaintSnapshot.data!;
 
-            return Column(
-              children: complaints.map((complaint) => _buildComplaintCard(complaint)).toList(),
+                if (selectedFilter != 'ALL') {
+                  complaints = complaints.where((c) => c.status == selectedFilter).toList();
+                }
+
+                if (complaints.isEmpty) {
+                  return Center(child: Padding(padding: const EdgeInsets.all(32), child: Text('No ${selectedFilter.toLowerCase()} complaints', style: TextStyle(fontSize: 16, color: Colors.grey[600]))));
+                }
+
+                return Column(
+                  children: complaints.take(5).map((complaint) => _buildComplaintCard(complaint)).toList(), // Show top 5
+                );
+              },
             );
           },
         ),
@@ -332,10 +385,10 @@ class _StaffPortalDashboardState extends State<StaffPortalDashboard> {
             text: TextSpan(
               style: TextStyle(fontSize: 13, color: Colors.grey[800]),
               children: [
-                const TextSpan(text: 'Student ID: ', style: TextStyle(fontWeight: FontWeight.w600)),
-                TextSpan(text: complaint.studentId),
+                const TextSpan(text: 'Student: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                TextSpan(text: complaint.studentName), // Use student name
                 const TextSpan(text: ' | Room: ', style: TextStyle(fontWeight: FontWeight.w600)),
-                TextSpan(text: complaint.room),
+                TextSpan(text: complaint.room), // Use fetched room
               ],
             ),
           ),

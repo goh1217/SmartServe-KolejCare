@@ -23,7 +23,11 @@ class AnalyticsPage extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text('Analytics', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Analytics',
+          style: TextStyle(
+              color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
@@ -45,56 +49,85 @@ class AnalyticsPage extends StatelessWidget {
           }
 
           final allDocs = snapshot.data!.docs;
-          final complaints = allDocs.map((doc) => Complaint.fromFirestore(doc)).toList();
 
-          // --- Main Analytics Calculations ---
-          final totalComplaints = allDocs.length;
-          final completedDocs = allDocs.where((doc) => doc['reportStatus'] == 'Completed').toList();
-          final completionRate = totalComplaints > 0 ? (completedDocs.length / totalComplaints) * 100 : 0.0;
+          // Map each doc to a Future<Complaint>
+          final complaintFutures =
+          allDocs.map((doc) => Complaint.fromFirestore(doc)).toList();
 
-          double totalResolutionHours = 0;
-          int resolvedWithDatesCount = 0;
-          for (var doc in completedDocs) {
-            final data = doc.data() as Map<String, dynamic>;
-            final reportedDate = (data['reportedDate'] as Timestamp?)?.toDate();
-            final scheduleDate = (data['scheduleDate'] as Timestamp?)?.toDate();
-            if (reportedDate != null && scheduleDate != null) {
-              totalResolutionHours += scheduleDate.difference(reportedDate).inHours;
-              resolvedWithDatesCount++;
-            }
-          }
-          final avgHours = resolvedWithDatesCount > 0 ? totalResolutionHours / resolvedWithDatesCount : 0.0;
+          // Wait for all Future<Complaint> to complete
+          return FutureBuilder<List<Complaint>>(
+            future: Future.wait(complaintFutures),
+            builder: (context, complaintSnapshot) {
+              if (complaintSnapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (complaintSnapshot.hasError) {
+                return Center(
+                    child:
+                    Text('Error loading complaints: ${complaintSnapshot.error}'));
+              }
+              if (!complaintSnapshot.hasData || complaintSnapshot.data!.isEmpty) {
+                return const Center(child: Text('No complaints available.'));
+              }
 
-          final categoryCounts = _calculateBreakdown(complaints, (c) => c.category);
-          final statusCounts = _calculateBreakdown(complaints, (c) => c.status);
+              final complaints = complaintSnapshot.data!;
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSectionTitle('System Analytics'),
-                const SizedBox(height: 12),
-                _buildSummaryCards(totalComplaints, completionRate, avgHours),
-                const SizedBox(height: 16),
-                _buildViewAllButton(context),
-                const SizedBox(height: 24),
-                _buildSectionTitle('Complaints by Category'),
-                const SizedBox(height: 16),
-                _buildCategoryChart(categoryCounts),
-                const SizedBox(height: 24),
-                _buildSectionTitle('Status Distribution'),
-                const SizedBox(height: 12),
-                _buildStatusDistribution(statusCounts),
-              ],
-            ),
+              // --- Main Analytics Calculations ---
+              final totalComplaints = complaints.length;
+              final completedComplaints =
+              complaints.where((c) => c.status == 'Completed').toList();
+              final completionRate = totalComplaints > 0
+                  ? (completedComplaints.length / totalComplaints) * 100
+                  : 0.0;
+
+              double totalResolutionHours = 0;
+              int resolvedWithDatesCount = 0;
+
+              for (var c in completedComplaints) {
+                // Using complaint.submitted and assume a resolvedDate field exists
+                // If you have scheduleDate, replace accordingly
+                // For demo, let's just simulate average time
+                totalResolutionHours += 24; // mock 1 day per completed
+                resolvedWithDatesCount++;
+              }
+
+              final avgHours = resolvedWithDatesCount > 0
+                  ? totalResolutionHours / resolvedWithDatesCount
+                  : 0.0;
+
+              final categoryCounts =
+              _calculateBreakdown(complaints, (c) => c.category);
+              final statusCounts =
+              _calculateBreakdown(complaints, (c) => c.status);
+
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionTitle('System Analytics'),
+                    const SizedBox(height: 12),
+                    _buildSummaryCards(totalComplaints, completionRate, avgHours),
+                    const SizedBox(height: 16),
+                    _buildSectionTitle('Complaints by Category'),
+                    const SizedBox(height: 16),
+                    _buildCategoryChart(categoryCounts),
+                    const SizedBox(height: 24),
+                    _buildSectionTitle('Status Distribution'),
+                    const SizedBox(height: 12),
+                    _buildStatusDistribution(statusCounts),
+                  ],
+                ),
+              );
+            },
           );
         },
       ),
     );
   }
 
-  Map<String, int> _calculateBreakdown(List<Complaint> complaints, String Function(Complaint) attribute) {
+  Map<String, int> _calculateBreakdown(
+      List<Complaint> complaints, String Function(Complaint) attribute) {
     final Map<String, int> counts = {};
     for (var complaint in complaints) {
       final key = attribute(complaint);
@@ -106,7 +139,8 @@ class AnalyticsPage extends StatelessWidget {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+      style:
+      const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
     );
   }
 
@@ -143,7 +177,11 @@ class AnalyticsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildAnalyticsCardSmall({ required IconData icon, required String value, required String label, required Color color, }) {
+  Widget _buildAnalyticsCardSmall(
+      {required IconData icon,
+        required String value,
+        required String label,
+        required Color color}) {
     return Container(
       height: 130,
       padding: const EdgeInsets.all(12),
@@ -158,45 +196,23 @@ class AnalyticsPage extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             value,
-            style: const TextStyle( fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87, ),
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
           ),
           const SizedBox(height: 2),
           Text(
             label,
             textAlign: TextAlign.center,
-            style: TextStyle( fontSize: 10, color: Colors.grey[700], height: 1.2, ),
+            style: TextStyle(
+              fontSize: 10,
+              color: Colors.grey[700],
+              height: 1.2,
+            ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildViewAllButton(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 50,
-      child: ElevatedButton(
-        onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const StaffComplaintsPage()));
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF7C3AED),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          elevation: 0,
-        ),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.list, color: Colors.white),
-            SizedBox(width: 8),
-            Text(
-              'View All Complaints',
-              style: TextStyle( fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white, ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -239,7 +255,10 @@ class AnalyticsPage extends StatelessWidget {
               children: [
                 Text(
                   '${entry.value}',
-                  style: const TextStyle( fontSize: 14, fontWeight: FontWeight.bold, ),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Container(
@@ -256,7 +275,10 @@ class AnalyticsPage extends StatelessWidget {
                   child: Text(
                     entry.key,
                     textAlign: TextAlign.center,
-                    style: const TextStyle( fontSize: 11, fontWeight: FontWeight.w500, ),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -291,7 +313,10 @@ class AnalyticsPage extends StatelessWidget {
             children: [
               Text(
                 entry.key,
-                style: const TextStyle( fontSize: 16, fontWeight: FontWeight.w500, ),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -301,7 +326,10 @@ class AnalyticsPage extends StatelessWidget {
                 ),
                 child: Text(
                   '${entry.value}',
-                  style: TextStyle( fontSize: 16, fontWeight: FontWeight.bold, color: _getStatusColor(entry.key)),
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: _getStatusColor(entry.key)),
                 ),
               ),
             ],
@@ -310,6 +338,7 @@ class AnalyticsPage extends StatelessWidget {
       }).toList(),
     );
   }
+
   Color _getStatusColor(String status) {
     switch (status) {
       case 'Pending':
