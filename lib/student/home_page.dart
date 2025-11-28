@@ -39,6 +39,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  int _selectedIndex = 0;
   bool showAlert = true;
   WeatherData? weatherData;
   bool isLoadingWeather = true;
@@ -145,6 +146,8 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
+
 
   // Build a status bar for a specific complaint summary
   Widget _buildStatusBarFor(ComplaintSummary c) {
@@ -610,6 +613,103 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // Empty state widget shown when there are no active reports
+  Widget _buildEmptyReportsState() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.08),
+            spreadRadius: 2,
+            blurRadius: 8,
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Illustration
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: Colors.deepPurple.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Icon(
+                  Icons.assignment_outlined,
+                  size: 60,
+                  color: Colors.deepPurple.withOpacity(0.3),
+                ),
+                Positioned(
+                  bottom: 25,
+                  right: 25,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.check,
+                      size: 20,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'No Active Reports',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[800],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'You don\'t have any pending complaints.\nEverything looks good!',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 20),
+          OutlinedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ComplaintFormScreen(),
+                ),
+              );
+            },
+            icon: Icon(Icons.add, size: 18),
+            label: const Text('Report an Issue'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.deepPurple,
+              side: BorderSide(color: Colors.deepPurple),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -702,11 +802,7 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Status bars moved here so they scroll with the page
-                    if (complaintSummaries.isNotEmpty) ...[
-                      ...complaintSummaries.map((c) => _buildStatusBarFor(c)),
-                      const SizedBox(height: 12),
-                    ],
+                    // (Status bars will be shown in the "Active Reports" section below)
 
                     // Donate Card
                     GestureDetector(
@@ -921,11 +1017,12 @@ class _HomePageState extends State<HomePage> {
 
                     const SizedBox(height: 24),
 
+                    // Active reports section - status bars render here and scroll with the page
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          "Today's Schedule",
+                          'Active Reports',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -949,32 +1046,16 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
 
-                    ScheduleItem(
-                      icon: Icons.weekend,
-                      iconColor: Colors.pink,
-                      title: 'Furniture reparation',
-                      subtitle: 'Level 1',
-                      time: '10:00 AM',
-                    ),
-                    const SizedBox(height: 12),
-                    ScheduleItem(
-                      icon: Icons.electrical_services,
-                      iconColor: Colors.deepPurple,
-                      title: 'Electrical maintenance',
-                      subtitle: 'Level 5',
-                      time: '02:00 PM',
-                    ),
-                    const SizedBox(height: 12),
-                    ScheduleItem(
-                      icon: Icons.local_laundry_service,
-                      iconColor: Colors.orange,
-                      title: 'Washing machine reparation',
-                      subtitle: 'Lobby',
-                      time: '02:00 PM',
-                    ),
-                    const SizedBox(height: 100),
+                    if (complaintSummaries.isNotEmpty) ...[
+                      ...complaintSummaries.map((c) => _buildStatusBarFor(c)),
+                      const SizedBox(height: 24),
+                    ] else ...[
+                      const SizedBox(height: 12),
+                      _buildEmptyReportsState(),
+                      const SizedBox(height: 24),
+                    ],
                   ],
                 ),
               ),
@@ -991,40 +1072,95 @@ class _HomePageState extends State<HomePage> {
             ),
           );
         },
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: const Color(0xFF5E4DB2),
         child: const Icon(Icons.add, color: Colors.white),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 8,
-        color: Colors.white,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            IconButton(
-              icon: Icon(Icons.home, color: Colors.deepPurple),
-              onPressed: () {},
-            ),
-            IconButton(
-              icon: Icon(Icons.calendar_today, color: Colors.grey),
-              onPressed: () {},
-            ),
-            const SizedBox(width: 40),
-            IconButton(
-              icon: Icon(Icons.description, color: Colors.grey),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ActivityScreen()),
-                );
-              },
-            ),
-            IconButton(
-              icon: Icon(Icons.settings, color: Colors.grey),
-              onPressed: () {},
+      bottomNavigationBar: _buildBottomNavBar(),
+    );
+  }
+
+  // Bottom navigation bar matching `ActivityScreen` style
+  Widget _buildBottomNavBar() {
+    return ClipRRect(
+      borderRadius: const BorderRadius.only(
+        topLeft: Radius.circular(30),
+        topRight: Radius.circular(30),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFEAE4F9), // Light purple background
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 20,
+              offset: const Offset(0, -4),
             ),
           ],
+        ),
+        child: BottomAppBar(
+          color: Colors.transparent,
+          elevation: 0,
+          shape: const CircularNotchedRectangle(),
+          notchMargin: 8,
+          child: SizedBox(
+            height: 65,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildNavItem(Icons.home_rounded, 0),
+                _buildNavItem(Icons.calendar_today_rounded, 1),
+                const SizedBox(width: 60),
+                _buildNavItem(Icons.description_rounded, 2),
+                _buildNavItem(Icons.settings, 3),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, int index) {
+    final bool isActive = _selectedIndex == index;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedIndex = index;
+        });
+        switch (index) {
+          case 0:
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const HomePage()),
+            );
+            break;
+          case 1:
+            Navigator.pushNamed(context, '/schedule');
+            break;
+          case 2:
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ActivityScreen()),
+            );
+            break;
+          case 3:
+            Navigator.pushNamed(context, '/settings');
+            break;
+        }
+      },
+      child: AnimatedScale(
+        scale: isActive ? 1.1 : 1.0,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          child: Icon(
+            icon,
+            color: isActive ? const Color(0xFF6C4DF0) : const Color(0xFFA18CF0),
+            size: 28,
+          ),
         ),
       ),
     );
