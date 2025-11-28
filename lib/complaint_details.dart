@@ -31,7 +31,7 @@ class ComplaintDetailsPage extends StatelessWidget {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => AssignTechnicianPage(complaint: complaint)),
+                  MaterialPageRoute(builder: (context) => AssignTechnicianPage(complaintId: complaint.id, complaint: complaint)),
                 );
               },
               child: const Text('Reassign Technician'),
