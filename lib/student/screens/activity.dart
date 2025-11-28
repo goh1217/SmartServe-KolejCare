@@ -905,9 +905,18 @@ class _ActivityScreenState extends State<ActivityScreen> {
           Text(item.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
           const SizedBox(height: 8),
           Row(children: [
-            Text(item.status, style: const TextStyle(color: Colors.grey)),
-            const Spacer(),
-            Text(item.date, style: const TextStyle(color: Colors.grey)),
+            Expanded(
+              child: Text(
+                item.status,
+                style: const TextStyle(color: Colors.grey),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              flex: 0,
+              child: Text(item.date, style: const TextStyle(color: Colors.grey)),
+            ),
           ]),
           if (item.showActions)
             Padding(
