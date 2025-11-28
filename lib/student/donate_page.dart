@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-// Main Tips Page - Image 1
+// Main Tips Page - Updated Design
 class TipsPage extends StatefulWidget {
   const TipsPage({super.key});
 
@@ -14,18 +14,18 @@ class _TipsPageState extends State<TipsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: const Color(0xFFF3E5F5), // Light purple background
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFF9C27B0), // Purple
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           'Donation',
           style: TextStyle(
-            color: Colors.black,
+            color: Colors.white,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
@@ -35,42 +35,33 @@ class _TipsPageState extends State<TipsPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            const SizedBox(height: 20),
+            const SizedBox(height: 30),
 
-            // Profile Image
+            // DONATE Image (Replace with your image)
             Container(
-              width: 100,
-              height: 100,
+              width: 150,
+              height: 150,
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.grey[300]!, width: 3),
-                image: const DecorationImage(
-                  image: NetworkImage('https://via.placeholder.com/100'),
-                  fit: BoxFit.cover,
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.purple.withOpacity(0.2),
+                    spreadRadius: 3,
+                    blurRadius: 10,
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Image.asset(
+                  'assets/donate.png',
+                  fit: BoxFit.contain,
                 ),
               ),
             ),
 
-            const SizedBox(height: 16),
-
-            // Name and College
-            const Text(
-              'Gregory Smith',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            Text(
-              'KK2 - UNM',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
-            ),
-
-            const SizedBox(height: 30),
+            const SizedBox(height: 40),
 
             // Card Container
             Container(
@@ -81,9 +72,9 @@ class _TipsPageState extends State<TipsPage> {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
+                    color: Colors.purple.withOpacity(0.15),
                     spreadRadius: 2,
-                    blurRadius: 8,
+                    blurRadius: 10,
                   ),
                 ],
               ),
@@ -95,7 +86,7 @@ class _TipsPageState extends State<TipsPage> {
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: Color(0xFF6A1B9A), // Dark purple
                       height: 1.3,
                     ),
                   ),
@@ -114,7 +105,7 @@ class _TipsPageState extends State<TipsPage> {
 
                   const SizedBox(height: 30),
 
-                  // Amount Selection
+                  // Amount Selection - More Visible
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -148,12 +139,13 @@ class _TipsPageState extends State<TipsPage> {
                         ),
                       );
                     },
-                    child: Text(
+                    child: const Text(
                       'Choose other amount',
                       style: TextStyle(
-                        color: Colors.purple[300],
+                        color: Color(0xFF9C27B0), // Purple
                         fontSize: 14,
                         decoration: TextDecoration.underline,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
@@ -177,12 +169,13 @@ class _TipsPageState extends State<TipsPage> {
                       }
                           : null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurple,
+                        backgroundColor: const Color(0xFF7B1FA2), // Deep purple
                         disabledBackgroundColor: Colors.grey[300],
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
+                        elevation: 3,
                       ),
                       child: const Text(
                         'Done',
@@ -197,16 +190,25 @@ class _TipsPageState extends State<TipsPage> {
 
                   const SizedBox(height: 12),
 
-                  Text(
-                    'Maybe next time',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey[400],
+                  // Maybe next time - Connected to home page
+                  TextButton(
+                    onPressed: () {
+                      // Navigate back to home page
+                      Navigator.popUntil(context, (route) => route.isFirst);
+                    },
+                    child: Text(
+                      'Maybe next time',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey[500],
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -230,26 +232,42 @@ class _AmountButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 80,
-        height: 80,
+        width: 85,
+        height: 85,
         decoration: BoxDecoration(
-          color: isSelected ? Colors.purple[100] : Colors.grey[100],
+          gradient: isSelected 
+              ? const LinearGradient(
+                  colors: [Color(0xFF9C27B0), Color(0xFF7B1FA2)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          color: isSelected ? null : const Color(0xFFE1BEE7), // Light purple
           shape: BoxShape.circle,
           border: Border.all(
-            color: isSelected ? Colors.deepPurple : Colors.transparent,
-            width: 2,
+            color: isSelected ? const Color(0xFF7B1FA2) : const Color(0xFF9C27B0),
+            width: 3,
           ),
+          boxShadow: [
+            if (isSelected)
+              BoxShadow(
+                color: const Color(0xFF9C27B0).withOpacity(0.4),
+                spreadRadius: 2,
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+          ],
         ),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'RM\$amount',
+                'RM$amount',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: isSelected ? Colors.deepPurple : Colors.black87,
+                  color: isSelected ? Colors.white : const Color(0xFF6A1B9A),
                 ),
               ),
             ],
@@ -260,7 +278,7 @@ class _AmountButton extends StatelessWidget {
   }
 }
 
-// Enter Amount Page - Image 2
+// Enter Amount Page - Updated with Purple Theme
 class EnterAmountPage extends StatefulWidget {
   const EnterAmountPage({super.key});
 
@@ -290,27 +308,33 @@ class _EnterAmountPageState extends State<EnterAmountPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: const Color(0xFFF3E5F5), // Light purple background
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFF9C27B0), // Purple
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           'Tips',
           style: TextStyle(
-            color: Colors.black,
+            color: Colors.white,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
         ),
         centerTitle: true,
       ),
-      body: Column(
-        children: [
-          const SizedBox(height: 40),
+      body: SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: MediaQuery.of(context).size.height - AppBar().preferredSize.height - MediaQuery.of(context).padding.top,
+          ),
+          child: IntrinsicHeight(
+            child: Column(
+              children: [
+                const SizedBox(height: 40),
 
           // Enter Amount Label
           const Text(
@@ -318,7 +342,7 @@ class _EnterAmountPageState extends State<EnterAmountPage> {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: Colors.black87,
+              color: Color(0xFF6A1B9A), // Dark purple
             ),
           ),
 
@@ -333,7 +357,7 @@ class _EnterAmountPageState extends State<EnterAmountPage> {
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: Color(0xFF6A1B9A),
                 ),
               ),
               const SizedBox(width: 8),
@@ -341,8 +365,9 @@ class _EnterAmountPageState extends State<EnterAmountPage> {
                 width: 100,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: Colors.grey[200],
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF9C27B0), width: 2),
                 ),
                 child: Center(
                   child: Text(
@@ -350,7 +375,7 @@ class _EnterAmountPageState extends State<EnterAmountPage> {
                     style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: Color(0xFF6A1B9A),
                     ),
                   ),
                 ),
@@ -388,12 +413,12 @@ class _EnterAmountPageState extends State<EnterAmountPage> {
                       child: Container(
                         width: 70,
                         height: 70,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFE1BEE7), // Light purple
                           shape: BoxShape.circle,
                         ),
-                        child: Center(
-                          child: Icon(Icons.backspace_outlined, color: Colors.grey[400]),
+                        child: const Center(
+                          child: Icon(Icons.backspace_outlined, color: Color(0xFF6A1B9A)),
                         ),
                       ),
                     ),
@@ -404,7 +429,7 @@ class _EnterAmountPageState extends State<EnterAmountPage> {
                     Container(
                       width: 70,
                       height: 70,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: Colors.transparent,
                         shape: BoxShape.circle,
                       ),
@@ -415,46 +440,50 @@ class _EnterAmountPageState extends State<EnterAmountPage> {
             ),
           ),
 
-          const Spacer(),
+                const Spacer(),
 
-          // Done Button
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: enteredAmount.isNotEmpty
-                    ? () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => PaymentMethodPage(
-                        amount: int.parse(enteredAmount),
+                // Done Button
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: enteredAmount.isNotEmpty
+                          ? () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PaymentMethodPage(
+                              amount: int.parse(enteredAmount),
+                            ),
+                          ),
+                        );
+                      }
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF7B1FA2), // Deep purple
+                        disabledBackgroundColor: Colors.grey[300],
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 3,
+                      ),
+                      child: const Text(
+                        'Done',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
-                  );
-                }
-                    : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple,
-                  disabledBackgroundColor: Colors.grey[300],
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  'Done',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -498,8 +527,20 @@ class _NumberButton extends StatelessWidget {
         width: 70,
         height: 70,
         decoration: BoxDecoration(
-          color: Colors.purple[50],
+          gradient: const LinearGradient(
+            colors: [Color(0xFFCE93D8), Color(0xFFBA68C8)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF9C27B0).withOpacity(0.3),
+              spreadRadius: 1,
+              blurRadius: 5,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Center(
           child: Text(
@@ -507,7 +548,7 @@ class _NumberButton extends StatelessWidget {
             style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w600,
-              color: Colors.black87,
+              color: Colors.white,
             ),
           ),
         ),
@@ -516,7 +557,7 @@ class _NumberButton extends StatelessWidget {
   }
 }
 
-// Payment Method Page - Image 3
+// Payment Method Page - Updated with Purple Theme
 class PaymentMethodPage extends StatefulWidget {
   final int amount;
 
@@ -541,18 +582,18 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF3E5F5), // Light purple background
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFF9C27B0), // Purple
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.black),
+          icon: const Icon(Icons.close, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           'Payment',
           style: TextStyle(
-            color: Colors.black,
+            color: Colors.white,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
@@ -569,7 +610,7 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: Color(0xFF6A1B9A), // Dark purple
               ),
             ),
 
@@ -611,9 +652,9 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                 margin: const EdgeInsets.only(top: 12, left: 16),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.grey[50],
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[200]!),
+                  border: Border.all(color: const Color(0xFF9C27B0)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -630,16 +671,17 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: const Color(0xFFF3E5F5),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey[300]!),
+                        border: Border.all(color: const Color(0xFF9C27B0)),
                       ),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
                           value: selectedBank,
                           hint: const Text('Select Bank'),
                           isExpanded: true,
-                          icon: const Icon(Icons.keyboard_arrow_down),
+                          icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF9C27B0)),
+                          dropdownColor: const Color(0xFFF3E5F5),
                           items: banks.map((String bank) {
                             return DropdownMenuItem<String>(
                               value: bank,
@@ -667,18 +709,37 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                 onPressed: (selectedPaymentMethod == 'card' ||
                     (selectedPaymentMethod == 'fpx' && selectedBank != null))
                     ? () {
-                  // Show success dialog or navigate to success page
+                  // Show success dialog
                   showDialog(
                     context: context,
                     builder: (context) => AlertDialog(
-                      title: const Text('Payment Successful'),
-                      content: Text('RM${widget.amount} has been processed successfully!'),
+                      backgroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      title: const Text(
+                        'Payment Successful',
+                        style: TextStyle(
+                          color: Color(0xFF7B1FA2),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      content: Text(
+                        'RM${widget.amount} has been processed successfully!',
+                        style: TextStyle(color: Colors.grey[700]),
+                      ),
                       actions: [
                         TextButton(
                           onPressed: () {
                             Navigator.of(context).popUntil((route) => route.isFirst);
                           },
-                          child: const Text('OK'),
+                          child: const Text(
+                            'OK',
+                            style: TextStyle(
+                              color: Color(0xFF7B1FA2),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -686,12 +747,13 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                 }
                     : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
+                  backgroundColor: const Color(0xFF7B1FA2), // Deep purple
                   disabledBackgroundColor: Colors.grey[300],
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
+                  elevation: 3,
                 ),
                 child: const Text(
                   'Proceed',
@@ -737,15 +799,23 @@ class _PaymentOption extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? Colors.blue : Colors.grey[300]!,
+            color: isSelected ? const Color(0xFF7B1FA2) : const Color(0xFFE1BEE7),
             width: isSelected ? 2 : 1,
           ),
+          boxShadow: [
+            if (isSelected)
+              BoxShadow(
+                color: const Color(0xFF9C27B0).withOpacity(0.2),
+                spreadRadius: 2,
+                blurRadius: 5,
+              ),
+          ],
         ),
         child: Row(
           children: [
             Icon(
               icon,
-              color: Colors.blue,
+              color: const Color(0xFF9C27B0),
               size: 24,
             ),
             const SizedBox(width: 12),
@@ -755,14 +825,14 @@ class _PaymentOption extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
-                  color: Colors.black87,
+                  color: Color(0xFF6A1B9A),
                 ),
               ),
             ),
             if (showDropdown)
               Icon(
                 isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                color: Colors.grey[600],
+                color: const Color(0xFF9C27B0),
               ),
           ],
         ),
