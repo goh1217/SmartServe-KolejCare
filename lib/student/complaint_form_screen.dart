@@ -97,6 +97,8 @@ final docRef = await firestore.collection('complaint').add({
 'scheduledDate': null,
 'technicianTip': 0,
 'urgencyLevel': _selectedUrgency,
+'isRead': false,
+'isArchived': false,
 });
 
 // Get the generated ID and update the document
