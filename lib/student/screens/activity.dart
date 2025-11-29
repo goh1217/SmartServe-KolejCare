@@ -22,6 +22,19 @@ class ActivityScreen extends StatefulWidget {
 }
 
 class _ActivityScreenState extends State<ActivityScreen> {
+  // Format Firestore timestamps and other date values into a readable string.
+  String formatTimestampFriendly(dynamic ts) {
+    try {
+      if (ts == null) return 'No date';
+      DateTime dt;
+      if (ts is Timestamp) dt = ts.toDate().toLocal();
+      else if (ts is DateTime) dt = ts.toLocal();
+      else dt = DateTime.tryParse(ts.toString())?.toLocal() ?? DateTime.now().toLocal();
+      return DateFormat('d MMM yyyy, hh:mm a').format(dt);
+    } catch (_) {
+      return ts?.toString() ?? 'No date';
+    }
+  }
   int _selectedIndex = 2; // default to activity tab
 
   // Resolve a technician name for display. Prefer stored assignedTechnicianName,
@@ -212,15 +225,15 @@ class _ActivityScreenState extends State<ActivityScreen> {
                         builder: (context, snapshot) {
                           if (snapshot.connectionState == ConnectionState.waiting) {
                             return const Padding(
-                              padding: EdgeInsets.all(24.0),
+                              padding: EdgeInsets.all(20),
                               child: Center(child: CircularProgressIndicator()),
                             );
                           }
 
                           if (snapshot.hasError) {
                             return Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Text('Error: ${snapshot.error}'),
+                              padding: const EdgeInsets.all(20),
+                              child: Center(child: Text('Error: ${snapshot.error}')),
                             );
                           }
 
@@ -251,28 +264,12 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
                           if (userDocs.isEmpty) {
                             return const Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: Text('No scheduled items.'),
+                              padding: EdgeInsets.all(20),
+                              child: Center(child: Text('No scheduled items.')),
                             );
                           }
 
-                          // helper to format like Firestore console: "November 27, 2025 at 10:58:26 PM UTC+8"
-                          String formatConsoleStyle(dynamic ts) {
-                            try {
-                              if (ts == null) return 'No date';
-                              DateTime dt;
-                              if (ts is Timestamp) dt = ts.toDate().toLocal();
-                              else if (ts is DateTime) dt = ts.toLocal();
-                              else dt = DateTime.tryParse(ts.toString())?.toLocal() ?? DateTime.now().toLocal();
-
-                              final formatted = DateFormat("MMMM d, yyyy 'at' hh:mm:ss a").format(dt);
-                              final offset = dt.timeZoneOffset.inHours;
-                              final sign = offset >= 0 ? '+' : '-';
-                              return '$formatted UTC${sign}${offset.abs()}';
-                            } catch (_) {
-                              return ts?.toString() ?? 'No date';
-                            }
-                          }
+                          
 
                           return Column(
                             mainAxisSize: MainAxisSize.min,
@@ -282,7 +279,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                               final reported = data['reportedDate'] ?? data['reportedOn'] ?? data['reportedAt'];
                               final scheduledField = data['scheduledDate'];
                               final dateToShow = scheduledField ?? reported;
-                              final dateStr = formatConsoleStyle(dateToShow);
+                              final dateStr = formatTimestampFriendly(dateToShow);
 
                               final item = ActivityItem(
                                 title: title,
@@ -419,7 +416,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
                               // Use the stored DB value exactly as-is (string if stored as string).
                               final rawDate = data['reportedDate'] ?? data['reportedOn'];
-                              final String dateText = rawDate == null ? 'No date' : rawDate.toString();
+                              final String dateText = formatTimestampFriendly(rawDate);
 
                               return _buildActivityItem(
                                 context,
@@ -435,7 +432,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                         damageCategory: data['damageCategory'] ?? '',
                                         inventoryDamage: data['inventoryDamage'] ?? '',
                                         reportedOn: dateText,
-                                        reviewedOn: (data['reviewedOn'] ?? '').toString(),
+                                        reviewedOn: formatTimestampFriendly(data['reviewedOn']),
                                         reviewedBy: (data['reviewedBy'] ?? '').toString(),
                                         rejectionReason: (data['rejectionReason'] ?? '').toString(),
                                       ),

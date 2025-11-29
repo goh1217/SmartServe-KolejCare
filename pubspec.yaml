@@ -26,6 +26,7 @@ dependencies:
   tflite_flutter: ^0.10.0
   url_launcher: ^6.1.10
   http: ^1.5.0
+  flutter_webrtc: ^1.2.1  # Updated WebRTC version (includes Android namespace)
 
 dev_dependencies:
   flutter_test:
