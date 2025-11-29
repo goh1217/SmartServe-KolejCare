@@ -90,6 +90,8 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
     'scheduledDate': null,
     'technicianTip': 0,
     'urgencyLevel': _selectedUrgency,
+    'isRead': false,
+    'isArchived': false,
     });
 
     await docRef.update({'complaintID': docRef.id});

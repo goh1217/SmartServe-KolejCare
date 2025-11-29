@@ -127,6 +127,8 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
         'assignedTechnicianName': selectedTechnicianData!['technicianName'],
         'assignedTechnicianNo': selectedTechnicianData!['technicianNo'],
         'assignedDate': FieldValue.serverTimestamp(),
+        'isRead': false,
+        'lastStatusUpdate': FieldValue.serverTimestamp(),
       });
 
       await _firestore.collection('technician').doc(selectedTechnicianId).update({
@@ -186,6 +188,8 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
       await _firestore.collection('complaint').doc(widget.complaintId).update({
         'reportStatus': 'Rejected',
         'rejectionReason': reason,
+        'isRead': false,
+        'lastStatusUpdate': FieldValue.serverTimestamp(),
       });
 
       if (mounted) {
