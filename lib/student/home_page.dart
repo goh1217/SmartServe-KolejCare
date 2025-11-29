@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -59,13 +60,21 @@ class _HomePageState extends State<HomePage> {
   String complaintDamageCategory = '';
   // List of complaint summaries for multi-complaint support
   List<ComplaintSummary> complaintSummaries = [];
+  StreamSubscription<QuerySnapshot>? _complaintSub;
+  String? _studentDocId;
 
   @override
   void initState() {
     super.initState();
     _loadWeather();
-    _loadComplaintProgress();
+    _startComplaintListener();
     fetchStudentData();
+  }
+
+  @override
+  void dispose() {
+    _complaintSub?.cancel();
+    super.dispose();
   }
 
   // Small status bar widget that reflects complaint progress and status
@@ -149,9 +158,14 @@ class _HomePageState extends State<HomePage> {
 
 
 
-  // Build a status bar for a specific complaint summary
-  Widget _buildStatusBarFor(ComplaintSummary c) {
+  // Build a status bar for a specific complaint summary with remove option
+  Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback onRemove) {
     final label = c.displayText.replaceAll('\n', ' ');
+    final isCompleted = c.rawStatus == 'completed';
+    final isRejected = c.rawStatus == 'rejected';
+    // allow removal for completed or rejected reports (users remove rejected reports themselves)
+    final isRemovable = isCompleted || isRejected;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 6.0),
       child: Container(
@@ -162,52 +176,138 @@ class _HomePageState extends State<HomePage> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.06), blurRadius: 6)],
         ),
-        child: Row(
+        child: Column(
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 6),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(c.description, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-                      Text('${(c.progress * 100).round()}%', style: TextStyle(color: Colors.grey[700], fontSize: 12, fontWeight: FontWeight.w600)),
+                      Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(c.description, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                          Text('${(c.progress * 100).round()}%', style: TextStyle(color: Colors.grey[700], fontSize: 12, fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: LinearProgressIndicator(
+                          value: c.progress,
+                          minHeight: 8,
+                          backgroundColor: Colors.grey[200],
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            c.progress >= 1.0 ? Colors.green : (c.rawStatus.contains('rejected') ? Colors.red : Colors.deepPurple),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: LinearProgressIndicator(
-                      value: c.progress,
-                      minHeight: 8,
-                      backgroundColor: Colors.grey[200],
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        c.progress >= 1.0 ? Colors.green : (c.rawStatus.contains('rejected') ? Colors.red : Colors.deepPurple),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.deepPurple.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        c.category.isNotEmpty ? c.category : 'No category',
+                        style: TextStyle(
+                          color: c.category.isNotEmpty ? Colors.deepPurple : Colors.grey[600],
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
+                    if (isRemovable) ...[
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: onRemove,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: Colors.red.shade200),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.delete_outline, size: 14, color: Colors.red.shade700),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Remove',
+                                style: TextStyle(
+                                  color: Colors.red.shade700,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.deepPurple.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                c.category.isNotEmpty ? c.category : 'No category',
-                style: TextStyle(
-                  color: c.category.isNotEmpty ? Colors.deepPurple : Colors.grey[600],
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                    if (isCompleted) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: Colors.green.shade200),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.check_circle, size: 16, color: Colors.green.shade700),
+                    const SizedBox(width: 6),
+                    Text(
+                      'This report has been completed. You can remove it from your list.',
+                      style: TextStyle(
+                        color: Colors.green.shade700,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
+            ] else if (isRejected) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: Colors.red.shade200),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.report_problem, size: 16, color: Colors.red.shade700),
+                    const SizedBox(width: 6),
+                    Text(
+                      'This report was rejected. You can remove it from your list.',
+                      style: TextStyle(
+                        color: Colors.red.shade700,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -236,7 +336,8 @@ class _HomePageState extends State<HomePage> {
       progress = 0.70;
       displayText = 'Report Approved';
     } else if (s == 'rejected') {
-      progress = 0.70;
+      // Treat rejected reports as completed for UI purposes (100%)
+      progress = 1.0;
       displayText = 'Report Rejected';
     } else if (s == 'assigned') {
       progress = 0.90;
@@ -431,6 +532,171 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+    // Add this method to your _HomePageState class
+    Future<void> _removeCompletedReport(String complaintId) async {
+      // Show confirmation dialog
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Row(
+              children: [
+                Icon(Icons.delete_outline, color: Colors.red.shade700),
+                const SizedBox(width: 8),
+                const Text('Remove Report?'),
+              ],
+            ),
+            content: const Text(
+              'This report is completed. Are you sure you want to remove it from your list?\n\nNote: This will not delete the report from the system, only hide it from your view.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Remove'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (confirm == true) {
+        try {
+          // Option 1: Mark as archived (recommended - doesn't delete data)
+          await FirebaseFirestore.instance.collection('complaint').doc(complaintId).update({
+            'isArchived': true,
+            'archivedAt': FieldValue.serverTimestamp(),
+          });
+
+          // Listener updates UI in real-time; no need to reload manually
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Report removed from your list'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        } catch (e) {
+          if (kDebugMode) print('Error archiving complaint: $e');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Failed to remove report'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      }
+      
+    }
+
+  // Start a real-time listener for complaints and update UI automatically
+  Future<void> _startComplaintListener() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final uid = user?.uid;
+      String sid = '';
+      if (uid != null) {
+        final q = await FirebaseFirestore.instance.collection('student').where('authUid', isEqualTo: uid).limit(1).get();
+        if (q.docs.isNotEmpty) sid = q.docs.first.id;
+        else {
+          final email = user?.email ?? '';
+          if (email.isNotEmpty) {
+            final qe = await FirebaseFirestore.instance.collection('student').where('email', isEqualTo: email).limit(1).get();
+            if (qe.docs.isNotEmpty) sid = qe.docs.first.id;
+          }
+        }
+      }
+
+      _studentDocId = sid.isNotEmpty ? sid : null;
+
+      // cancel previous subscription if any
+      await _complaintSub?.cancel();
+
+      // Listen to complaint collection and filter client-side for student matches
+      _complaintSub = FirebaseFirestore.instance.collection('complaint').snapshots().listen((snap) {
+        try {
+          final List<ComplaintSummary> summaries = [];
+          for (final d in snap.docs) {
+            final data = d.data() as Map<String, dynamic>? ?? {};
+            // Skip archived
+            if (data['isArchived'] == true) continue;
+
+            final rb = data['reportBy'] ?? data['reportedBy'];
+            bool matches = false;
+
+            // Auto-archive disabled: users must delete/remove rejected reports themselves.
+
+            if (_studentDocId != null && _studentDocId!.isNotEmpty) {
+              final sidLocal = _studentDocId!;
+              if (rb == null) {
+                matches = false;
+              } else if (rb is DocumentReference) {
+                final path = rb.path;
+                if (path.endsWith('/$sidLocal') || path.contains(sidLocal)) matches = true;
+              } else {
+                final s = rb.toString();
+                if (s.contains(sidLocal)) matches = true;
+              }
+            }
+
+            if (!matches && uid != null) {
+              if (rb == uid) matches = true;
+              else if (rb is String && rb.contains(uid)) matches = true;
+            }
+
+            if (matches) {
+              summaries.add(_buildSummaryFromDoc(d.id, data));
+            }
+          }
+
+          // sort and update state
+          summaries.sort((a, b) => (b.createdAt ?? 0).compareTo(a.createdAt ?? 0));
+          if (kDebugMode) print('Complaint listener: found ${summaries.length} matching items');
+
+          if (summaries.isEmpty) {
+            if (mounted) setState(() {
+              complaintSummaries = [];
+              complaintProgress = 0.0;
+              complaintStatusLabel = 'No reports';
+              complaintStatusDescription = '';
+              complaintRawStatus = '';
+              complaintDamageCategory = '';
+            });
+          } else {
+            final primary = summaries.first;
+            if (mounted) setState(() {
+              complaintSummaries = summaries;
+              complaintProgress = primary.progress;
+              complaintStatusLabel = primary.displayText;
+              complaintRawStatus = primary.rawStatus;
+              complaintStatusDescription = primary.description;
+              complaintDamageCategory = primary.category;
+            });
+          }
+        } catch (e) {
+          if (kDebugMode) print('Error processing complaint snapshot: $e');
+        }
+      }, onError: (e) {
+        if (kDebugMode) print('Complaint listener error: $e');
+      });
+    } catch (e) {
+      if (kDebugMode) print('Error starting complaint listener: $e');
+    }
+  }
+
 
   // Load weather data
   Future<void> _loadWeather() async {
@@ -456,6 +722,87 @@ class _HomePageState extends State<HomePage> {
       });
       if (kDebugMode) print('Weather error: $e');
     }
+  }
+
+  // Bell icon with unread badge (real-time)
+  Widget _buildBellIcon() {
+    return FutureBuilder<String>(
+      future: () async {
+        final user = FirebaseAuth.instance.currentUser;
+        final uid = user?.uid;
+        if (uid == null) return '';
+        final q = await FirebaseFirestore.instance.collection('student').where('authUid', isEqualTo: uid).limit(1).get();
+        if (q.docs.isNotEmpty) return q.docs.first.id;
+        final email = user?.email ?? '';
+        if (email.isNotEmpty) {
+          final qe = await FirebaseFirestore.instance.collection('student').where('email', isEqualTo: email).limit(1).get();
+          if (qe.docs.isNotEmpty) return qe.docs.first.id;
+        }
+        return '';
+      }(),
+      builder: (context, snap) {
+        final sid = snap.data ?? '';
+        if (snap.connectionState == ConnectionState.waiting) {
+          return Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+            child: const SizedBox(width: 28, height: 28, child: Center(child: CircularProgressIndicator(strokeWidth: 2))),
+          );
+        }
+
+        final stream = sid.isNotEmpty
+            ? FirebaseFirestore.instance.collection('complaint').where('reportBy', isEqualTo: '/collection/student/$sid').where('isRead', isEqualTo: false).snapshots()
+            : FirebaseFirestore.instance.collection('complaint').where('isRead', isEqualTo: false).where('reportBy', isEqualTo: FirebaseAuth.instance.currentUser?.uid ?? '').snapshots();
+
+        return StreamBuilder<QuerySnapshot>(
+          stream: stream,
+          builder: (context, s2) {
+            final unread = s2.data?.docs.length ?? 0;
+            final hasUnread = unread > 0;
+            return InkWell(
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (c) => const NotificationPage()));
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Icon(
+                      Icons.notifications,
+                      color: hasUnread ? Colors.deepPurple : Colors.grey.shade600,
+                      size: 28,
+                    ),
+                    if (hasUnread)
+                      Positioned(
+                        right: -6,
+                        top: -6,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                            boxShadow: [BoxShadow(color: Colors.red.withOpacity(0.45), blurRadius: 8, spreadRadius: 2)],
+                          ),
+                          constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+                          child: Center(
+                            child: Text(
+                              unread > 99 ? '99+' : '$unread',
+                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   // Fetch data from Firestore
@@ -765,25 +1112,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   Row(
                     children: [
-                      InkWell(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const NotificationPage(),
-                            ),
-                          );
-                        },
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(Icons.notifications, color: Colors.deepPurple),
-                        ),
-                      ),
+                      _buildBellIcon(),
                       IconButton(
                         icon: const Icon(Icons.logout),
                         onPressed: () {
@@ -1049,7 +1378,11 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(height: 12),
 
                     if (complaintSummaries.isNotEmpty) ...[
-                      ...complaintSummaries.map((c) => _buildStatusBarFor(c)),
+                      ...complaintSummaries.map((c) => _buildStatusBarFor(
+                            context,
+                            c,
+                            () => _removeCompletedReport(c.id),
+                          )),
                       const SizedBox(height: 24),
                     ] else ...[
                       const SizedBox(height: 12),
