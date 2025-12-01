@@ -1,6 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-class ScheduledRepairScreen extends StatelessWidget {
+class ScheduledRepairScreen extends StatefulWidget {
   final String reportId;
   final String status;
   final String scheduledDate;
@@ -9,8 +10,6 @@ class ScheduledRepairScreen extends StatelessWidget {
   final String inventoryDamage;
   final String expectedDuration;
   final String reportedOn;
-  final VoidCallback? onEditRequest;
-  final VoidCallback? onCancelRequest;
 
   const ScheduledRepairScreen({
     super.key,
@@ -22,9 +21,120 @@ class ScheduledRepairScreen extends StatelessWidget {
     required this.inventoryDamage,
     required this.expectedDuration,
     required this.reportedOn,
-    this.onEditRequest,
-    this.onCancelRequest,
   });
+
+  @override
+  State<ScheduledRepairScreen> createState() => _ScheduledRepairScreenState();
+}
+
+class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
+  late String currentScheduledDate;
+  bool isEditingDate = false;
+
+  @override
+  void initState() {
+    super.initState();
+    currentScheduledDate = widget.scheduledDate;
+  }
+
+  Future<void> _editRequest() async {
+    // Convert currentScheduledDate string to DateTime
+    DateTime initialDate = DateTime.now();
+    try {
+      final parts = currentScheduledDate.split(' ');
+      final day = int.parse(parts[0]);
+      final month = _monthNumber(parts[1]);
+      final year = int.parse(parts[2]);
+      initialDate = DateTime(year, month, day);
+    } catch (_) {
+      initialDate = DateTime.now();
+    }
+
+    // Show date picker
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime(DateTime.now().year + 2),
+      helpText: 'Select New Scheduled Date',
+    );
+
+    if (pickedDate != null) {
+      setState(() {
+        currentScheduledDate =
+        "${pickedDate.day.toString().padLeft(2, '0')} ${_monthName(pickedDate.month)} ${pickedDate.year} (Time to be scheduled)";
+      });
+
+      // Update Firestore
+      await FirebaseFirestore.instance
+          .collection('complaint')
+          .doc(widget.reportId)
+          .update({'scheduledDate': currentScheduledDate});
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Scheduled date updated successfully!')),
+      );
+    }
+  }
+
+  Future<void> _cancelRequest() async {
+    // Optional: You can reuse existing cancel logic if needed
+    await FirebaseFirestore.instance
+        .collection('complaint')
+        .doc(widget.reportId)
+        .update({'reportStatus': 'Cancelled'});
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Request has been cancelled')),
+    );
+
+    Navigator.pop(context); // go back after cancelling
+  }
+
+  int _monthNumber(String shortName) {
+    const months = [
+      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return months.indexOf(shortName);
+  }
+
+  String _monthName(int month) {
+    const months = [
+      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return months[month];
+  }
+
+  Widget _buildDetailItem(String label, String value,
+      {bool isFirst = false, bool isLast = false}) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 15,
+              color: Colors.black,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,21 +176,21 @@ class ScheduledRepairScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildDetailItem('Report ID', reportId, isFirst: true),
+                      _buildDetailItem('Report ID', widget.reportId),
                       const Divider(height: 1),
-                      _buildDetailItem('Repair Status', status),
+                      _buildDetailItem('Repair Status', widget.status),
                       const Divider(height: 1),
-                      _buildDetailItem('Scheduled Date', scheduledDate),
+                      _buildDetailItem('Scheduled Date', currentScheduledDate),
                       const Divider(height: 1),
-                      _buildDetailItem('Assigned Technician', assignedTechnician),
+                      _buildDetailItem('Assigned Technician', widget.assignedTechnician),
                       const Divider(height: 1),
-                      _buildDetailItem('Damage Category', damageCategory),
+                      _buildDetailItem('Damage Category', widget.damageCategory),
                       const Divider(height: 1),
-                      _buildDetailItem('Inventory Damage', inventoryDamage),
+                      _buildDetailItem('Inventory Damage', widget.inventoryDamage),
                       const Divider(height: 1),
-                      _buildDetailItem('Expected Duration', expectedDuration),
+                      _buildDetailItem('Expected Duration', widget.expectedDuration),
                       const Divider(height: 1),
-                      _buildDetailItem('Reported On', reportedOn, isLast: true),
+                      _buildDetailItem('Reported On', widget.reportedOn),
                     ],
                   ),
                 ),
@@ -103,7 +213,7 @@ class ScheduledRepairScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: onEditRequest,
+                    onPressed: _editRequest,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF7C4DFF),
                       foregroundColor: Colors.white,
@@ -125,7 +235,7 @@ class ScheduledRepairScreen extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: onCancelRequest,
+                    onPressed: _cancelRequest,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFEF5350),
                       foregroundColor: Colors.white,
@@ -151,58 +261,4 @@ class ScheduledRepairScreen extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildDetailItem(String label, String value,
-      {bool isFirst = false, bool isLast = false}) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 15,
-              color: Colors.black,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
-
-// Example usage:
-// Navigator.push(
-//   context,
-//   MaterialPageRoute(
-//     builder: (context) => ScheduledRepairScreen(
-//       reportId: 'RPT-20251125-0234',
-//       status: 'Scheduled',
-//       scheduledDate: '25 Nov 2025, 10:00 AM',
-//       assignedTechnician: 'Ahmad Rahim',
-//       damageCategory: 'Bathroom Fixture',
-//       inventoryDamage: 'Shower head damage',
-//       expectedDuration: '~1 hour 30 minutes',
-//       reportedOn: '20 Nov 2025, 12:40 PM',
-//       onEditRequest: () {
-//         // Handle edit request
-//         print('Edit request tapped');
-//       },
-//       onCancelRequest: () {
-//         // Handle cancel request
-//         print('Cancel request tapped');
-//       },
-//     ),
-//   ),
-// );

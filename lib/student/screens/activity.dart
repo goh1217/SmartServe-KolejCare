@@ -269,7 +269,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                             );
                           }
 
-                          
+
 
                           return Column(
                             mainAxisSize: MainAxisSize.min,
@@ -295,20 +295,27 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                         reportId: (data['complaintID'] ?? d.id).toString(),
                                         status: data['reportStatus']?.toString() ?? 'Approved',
                                         scheduledDate: dateStr,
-                                        assignedTechnician: techName.isNotEmpty ? techName : (data['assignedTechnicianName'] ?? data['assignedTo'] ?? '').toString(),
+                                        assignedTechnician: techName.isNotEmpty
+                                            ? techName
+                                            : (data['assignedTechnicianName'] ?? data['assignedTo'] ?? '').toString(),
                                         damageCategory: (data['damageCategory'] ?? '').toString(),
                                         inventoryDamage: (data['inventoryDamage'] ?? '').toString(),
                                         expectedDuration: (data['expectedDuration'] ?? '').toString(),
                                         reportedOn: dateStr,
-                                        onEditRequest: () {},
-                                        onCancelRequest: () {},
+                                        // onEditRequest: () async {
+                                        //   // Call function inside ScheduledRepairScreen to pick date and update Firestore
+                                        //   _editScheduledDate(context, d.id, scheduledField);
+                                        // },
+                                        // onCancelRequest: () {
+                                        //   // optional cancel logic
+                                        // },
                                       ),
                                     ),
                                   );
                                 },
                               );
 
-                              return _buildActivityItem(context, item);
+                              return _buildActivityItem(context, item); // <- inside map closure
                             }).toList(),
                           );
                         },
