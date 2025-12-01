@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:io';
+import 'dart:convert';
+import 'package:image_picker/image_picker.dart'; // Assuming image_picker is available or I will add logic.
+import 'package:http/http.dart' as http;
 import 'main.dart'; // For navigation if needed
 import 'calendar.dart'; // For navigation if needed
 import 'profile.dart'; // For navigation if needed
@@ -42,6 +46,9 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   String studentImage = 'https://via.placeholder.com/150';
   String taskImage = 'https://via.placeholder.com/300x200';
   String studentId = '';
+  
+  // For proof submission
+  String? proofImage; // Placeholder for proof image URL or path logic if implemented
 
   @override
   void initState() {
@@ -69,6 +76,10 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
           // If there is a damagePic field
           if (data['damagePic'] != null) {
              taskImage = data['damagePic'];
+          }
+          // If there is a proof pic
+          if (data['proofPic'] != null) {
+            proofImage = data['proofPic'];
           }
 
           // Date handling
@@ -146,6 +157,37 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
     } catch (e) {
       print("Error fetching student info: $e");
     }
+  }
+
+  Future<String?> uploadToCloudinary(File file) async {
+    const cloudName = "deaju8keu";
+    const uploadPreset = "flutter upload";
+
+    final url =
+        "https://api.cloudinary.com/v1_1/$cloudName/image/upload";
+
+    final request = http.MultipartRequest("POST", Uri.parse(url))
+      ..fields['upload_preset'] = uploadPreset
+      ..files.add(await http.MultipartFile.fromPath('file', file.path));
+
+    final response = await request.send();
+    final resString = await response.stream.bytesToString();
+    final jsonData = json.decode(resString);
+
+    if (jsonData["secure_url"] != null) {
+      return jsonData["secure_url"];
+    }
+    return null;
+  }
+
+  Future<File?> pickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+
+    if (picked != null) {
+      return File(picked.path);
+    }
+    return null;
   }
 
   @override
@@ -331,7 +373,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                   ),
                   const SizedBox(height: 20),
                   const Text(
-                    'Images',
+                    'Damaged Images',
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey,
@@ -361,6 +403,57 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
             ),
 
             const SizedBox(height: 16),
+            
+            // Proof submission display if completed
+            if (proofImage != null)
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Submit proof photo of completed task',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        proofImage!,
+                        width: 160,
+                        height: 120,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: 160,
+                            height: 120,
+                            color: Colors.grey.shade300,
+                            child: const Icon(Icons.image, size: 50),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            
+            if (proofImage != null) const SizedBox(height: 16),
 
             // Assignment Notes / Rejection Reason Card
             Container(
@@ -407,30 +500,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        // TODO: Implement start repair functionality
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6C63FF),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 2,
-                      ),
-                      child: const Text(
-                        'Start Repair',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
+                  _buildActionButton(),
                   const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
@@ -627,6 +697,202 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
     );
   }
 
+  Widget _buildActionButton() {
+    // Check if status is In Progress (case insensitive)
+    bool isInProgress = status.toLowerCase() == 'in progress';
+    bool isCompleted = status.toLowerCase() == 'completed';
+
+    if (isCompleted) {
+      return const SizedBox.shrink(); // Button disappears when completed
+    }
+
+    if (isInProgress) {
+      return SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: () async {
+            File? image = await pickImage();
+
+            if (image == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("No image selected.")),
+              );
+              return;
+            }
+
+            // Show loading indicator? For now, just wait.
+            ScaffoldMessenger.of(context).showSnackBar(
+               const SnackBar(content: Text("Uploading image...")),
+            );
+
+            String? url = await uploadToCloudinary(image);
+
+            if (url == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Image upload failed.")),
+              );
+              return;
+            }
+
+            await FirebaseFirestore.instance
+                .collection("complaint")
+                .doc(widget.taskId)
+                .update({
+              'proofPic': url,
+              'reportStatus': "Completed",
+            });
+
+            setState(() {
+              proofImage = url; // Update the displayed proof image
+              status = "Completed";
+            });
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Task marked as completed with image.")),
+            );
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF00C853), // Green color for completed
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            elevation: 2,
+          ),
+          child: const Text(
+            'Mark as completed',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      );
+    } else {
+      // Default state: Start Repair
+      return SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: () {
+            _showStartRepairDialog();
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF6C63FF),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            elevation: 2,
+          ),
+          child: const Text(
+            'Start Repair',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      );
+    }
+  }
+
+  void _showStartRepairDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
+                  color: Colors.black,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.build, // Wrench icon
+                  color: Colors.white,
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Are you sure you want to start your repair task?',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context); // Close dialog
+                        _updateComplaintStatus('In Progress');
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFD32F2F), // Red
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Text(
+                        'Yes',
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey[700], // Dark Grey
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Text(
+                        'No',
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _updateComplaintStatus(String newStatus) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('complaint')
+          .doc(widget.taskId)
+          .update({'reportStatus': newStatus});
+      
+      setState(() {
+        status = newStatus;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update status: $e')),
+      );
+    }
+  }
+
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'pending':
@@ -642,3 +908,5 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
     }
   }
 }
+
+// Removed ProofSubmissionDialog since we are using direct upload flow in the button now
