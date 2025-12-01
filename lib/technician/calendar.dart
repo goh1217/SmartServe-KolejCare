@@ -16,15 +16,42 @@ class _CalendarPageState extends State<CalendarPage> {
   DateTime selectedDate = DateTime.now();
   double timeSlotHeight = 120.0;
   final ScrollController _scrollController = ScrollController();
-  final String? currentUserId = FirebaseAuth.instance.currentUser?.uid;
+  String? technicianDocId;
 
   @override
   void initState() {
     super.initState();
+    _fetchTechnicianDocId();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Scroll to 8 AM by default for better view
       _scrollController.jumpTo(8 * timeSlotHeight);
     });
+  }
+
+  // Fetch the technician's document ID from the technician collection
+  Future<void> _fetchTechnicianDocId() async {
+    try {
+      final email = FirebaseAuth.instance.currentUser?.email;
+      if (email == null) return;
+      
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('technician')
+          .where('email', isEqualTo: email)
+          .limit(1)
+          .get();
+      
+      if (querySnapshot.docs.isNotEmpty) {
+        final docId = querySnapshot.docs.first.id;
+        print('Calendar - Technician Doc ID: $docId');
+        if (mounted) {
+          setState(() {
+            technicianDocId = docId;
+          });
+        }
+      }
+    } catch (e) {
+      print('Error fetching technician doc ID: $e');
+    }
   }
 
   @override
@@ -35,12 +62,12 @@ class _CalendarPageState extends State<CalendarPage> {
 
   // Fetch tasks for the selected day
   Stream<QuerySnapshot> getTaskStream() {
-    if (currentUserId == null) {
+    if (technicianDocId == null) {
       return const Stream.empty();
     }
     return FirebaseFirestore.instance
         .collection('complaint')
-        .where('assignedTo', isEqualTo: '/collection/technician/$currentUserId')
+        .where('assignedTo', isEqualTo: '/collection/technician/$technicianDocId')
         .snapshots();
   }
 

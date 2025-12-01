@@ -31,13 +31,15 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        final doc = await FirebaseFirestore.instance
+        // Query by uid field instead of using uid as document ID
+        final querySnapshot = await FirebaseFirestore.instance
             .collection('technician')
-            .doc(user.uid)
+            .where('uid', isEqualTo: user.uid)
+            .limit(1)
             .get();
 
-        if (doc.exists) {
-          final data = doc.data() as Map<String, dynamic>;
+        if (querySnapshot.docs.isNotEmpty) {
+          final data = querySnapshot.docs.first.data();
           setState(() {
             userName = data['technicianName'] ?? 'No Name';
             category = data['maintenanceField'] ?? 'Unassigned';
@@ -45,6 +47,10 @@ class _ProfilePageState extends State<ProfilePage> {
             email = data['email'] ?? user.email ?? 'No Email';
             // If there is a profile image field, update it here.
             // profileImage = data['profileImage'] ?? profileImage;
+          });
+        } else {
+          setState(() {
+            userName = 'Profile not found';
           });
         }
       }
