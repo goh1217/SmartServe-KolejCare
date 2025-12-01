@@ -122,6 +122,10 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
       DocumentReference complaintRef =
       _firestore.collection('complaint').doc(widget.complaintId);
 
+      // Record which staff reviewed/assigned this complaint as a staff doc path
+      final currentUser = FirebaseAuth.instance.currentUser;
+      final String reviewedByPath = currentUser != null ? '/collection/staff/${currentUser.uid}' : '';
+
       await complaintRef.update({
         'reportStatus': 'In Progress',
         'assignedTechnicianId': selectedTechnicianId,
@@ -130,6 +134,8 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
         'assignedDate': FieldValue.serverTimestamp(),
         'isRead': false,
         'lastStatusUpdate': FieldValue.serverTimestamp(),
+        'reviewedBy': reviewedByPath,
+        'reviewedOn': FieldValue.serverTimestamp(),
       });
 
       await _firestore.collection('technician').doc(selectedTechnicianId).update({
