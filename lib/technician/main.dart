@@ -37,20 +37,50 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
   int selectedTab = 0;
   int selectedNavIndex = 0;
   String? currentUserId;
+  String? technicianDocId; // The actual technician document ID
 
   @override
   void initState() {
     super.initState();
-    // Listen to auth changes to ensure we have the user ID and trigger a rebuild if it changes.
-    // This handles cases where the dashboard might be initialized before auth is fully ready or when logging in.
     currentUserId = FirebaseAuth.instance.currentUser?.uid;
+    _fetchTechnicianDocId();
+    
     FirebaseAuth.instance.authStateChanges().listen((User? user) {
       if (mounted) {
         setState(() {
           currentUserId = user?.uid;
         });
+        if (user != null) {
+          _fetchTechnicianDocId();
+        }
       }
     });
+  }
+
+  // Fetch the technician's document ID from the technician collection
+  Future<void> _fetchTechnicianDocId() async {
+    try {
+      final email = FirebaseAuth.instance.currentUser?.email;
+      if (email == null) return;
+      
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('technician')
+          .where('email', isEqualTo: email)
+          .limit(1)
+          .get();
+      
+      if (querySnapshot.docs.isNotEmpty) {
+        final docId = querySnapshot.docs.first.id;
+        print('Technician Doc ID: $docId');
+        if (mounted) {
+          setState(() {
+            technicianDocId = docId;
+          });
+        }
+      }
+    } catch (e) {
+      print('Error fetching technician doc ID: $e');
+    }
   }
 
   @override
@@ -106,59 +136,17 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
                     ],
                   ),
                   const Spacer(),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF6C63FF),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.notifications,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      // Logout button
-                      GestureDetector(
-                        onTap: () async {
-                          final should = await showDialog<bool>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Log out'),
-                              content: const Text('Are you sure you want to sign out?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(context).pop(false),
-                                  child: const Text('Cancel'),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.of(context).pop(true),
-                                  child: const Text('Log out'),
-                                ),
-                              ],
-                            ),
-                          );
-                          if (should == true) {
-                            await FirebaseAuth.instance.signOut();
-                          }
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.logout,
-                            color: Color(0xFF6C63FF),
-                            size: 22,
-                          ),
-                        ),
-                      ),
-                    ],
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6C63FF),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.notifications,
+                      color: Colors.white,
+                      size: 24,
+                    ),
                   ),
                 ],
               ),
@@ -269,25 +257,28 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
 
             // Tasks List Section
             Expanded(
-              child: currentUserId == null 
-              ? const Center(child: Text("Please log in to view tasks"))
+              child: technicianDocId == null 
+              ? const Center(child: Text("Loading technician info..."))
               : StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection('complaint')
-                    .where('assignedTo', isEqualTo: '/collection/technician/$currentUserId')
+                    .where('assignedTo', isEqualTo: '/collection/technician/$technicianDocId')
                     .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
                   }
                   if (snapshot.hasError) {
+                    print('Query Error: ${snapshot.error}');
                     return Center(child: Text('Error: ${snapshot.error}'));
                   }
                   if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    print('No tasks found for technician: $technicianDocId');
                     return const Center(child: Text('No tasks assigned to you.'));
                   }
 
                   final tasks = snapshot.data!.docs;
+                  print('Found ${tasks.length} tasks for technician: $technicianDocId');
 
                   return ListView.builder(
                     itemCount: tasks.length,
@@ -310,7 +301,7 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
                         child: _buildTaskCard(
                           task['complaintID'] ?? tasks[index].id,
                           task['inventoryDamage'] ?? 'No title',
-                          task['roomEntryConsent'] == true ? 'Room Entry Allowed' : 'Wait for student', // Placeholder location logic
+                          task['roomEntryConsent'] == true ? 'Room Entry Allowed' : 'Wait for student',
                           dateStr,
                           Colors.pink.shade50,
                           Icons.inbox_rounded,
