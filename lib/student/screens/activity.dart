@@ -195,7 +195,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                 children: [
                   const Padding(
                     padding: EdgeInsets.only(left: 4, bottom: 8),
-                    child: Text('Scheduled', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    child: Text('Approved', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   ),
                   Container(
                     decoration: BoxDecoration(
@@ -215,7 +215,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                         stream: (() {
                           final user = FirebaseAuth.instance.currentUser;
                           final uid = user?.uid ?? '';
-                          final qBase = FirebaseFirestore.instance.collection('complaint').where('reportStatus', isEqualTo: 'In Progress');
+                          final qBase = FirebaseFirestore.instance.collection('complaint').where('reportStatus', isEqualTo: 'Approved');
                           if (uid.isNotEmpty) {
                             final possible = [uid, '/collection/student/$uid', '/collection/student'];
                             return qBase.where('reportBy', whereIn: possible).snapshots();
@@ -265,7 +265,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                           if (userDocs.isEmpty) {
                             return const Padding(
                               padding: EdgeInsets.all(20),
-                              child: Center(child: Text('No scheduled items.')),
+                              child: Center(child: Text('No approved items.')),
                             );
                           }
 
@@ -283,7 +283,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
                               final item = ActivityItem(
                                 title: title,
-                                status: data['reportStatus']?.toString() ?? 'In Progress',
+                                status: data['reportStatus']?.toString() ?? 'Approved',
                                 date: dateStr,
                                 onTap: () async {
                                   final techName = await _getTechnicianName(data);
@@ -293,7 +293,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                     MaterialPageRoute(
                                       builder: (context) => ScheduledRepairScreen(
                                         reportId: (data['complaintID'] ?? d.id).toString(),
-                                        status: data['reportStatus']?.toString() ?? 'In Progress',
+                                        status: data['reportStatus']?.toString() ?? 'Approved',
                                         scheduledDate: dateStr,
                                         assignedTechnician: techName.isNotEmpty ? techName : (data['assignedTechnicianName'] ?? data['assignedTo'] ?? '').toString(),
                                         damageCategory: (data['damageCategory'] ?? '').toString(),
