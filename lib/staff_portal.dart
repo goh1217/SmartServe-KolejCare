@@ -265,6 +265,10 @@ class _StaffPortalDashboardState extends State<StaffPortalDashboard> {
               _buildFilterChip('In Progress'),
               const SizedBox(width: 8),
               _buildFilterChip('Completed'),
+              const SizedBox(width: 8),
+              _buildFilterChip('Rejected'),
+              const SizedBox(width: 8),
+              _buildFilterChip('Cancelled'),
             ],
           ),
         ),
@@ -435,6 +439,10 @@ class _StaffPortalDashboardState extends State<StaffPortalDashboard> {
         return Colors.blue[700]!;
       case 'Completed':
         return Colors.green[700]!;
+      case 'Rejected':
+        return Colors.red[700]!;
+      case 'Cancelled':
+        return Colors.grey[700]!;
       default:
         return const Color(0xFF7C3AED);
     }
