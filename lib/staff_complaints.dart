@@ -125,7 +125,7 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('All Complaints'),
+        title: const Text('All Complaints', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600)),
         backgroundColor: const Color(0xFF7C3AED),
         elevation: 0,
       ),
