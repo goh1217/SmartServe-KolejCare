@@ -339,7 +339,7 @@ class _HomePageState extends State<HomePage> {
       // Treat rejected reports as completed for UI purposes (100%)
       progress = 1.0;
       displayText = 'Report Rejected';
-    } else if (s == 'assigned') {
+    } else if (s == 'ongoing') {
       progress = 0.90;
       displayText = 'Technician On The Way';
     } else if (s == 'completed') {
@@ -512,7 +512,7 @@ class _HomePageState extends State<HomePage> {
         complaintDamageCategory = primary.category;
       });
 
-      final anyAssigned = summaries.any((c) => c.rawStatus == 'assigned');
+      final anyAssigned = summaries.any((c) => c.rawStatus == 'ongoing');
       if (anyAssigned && showAlert && mounted) {
         setState(() => showAlert = false);
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1358,7 +1358,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         InkWell(
-                          onTap: complaintSummaries.any((c) => c.rawStatus == 'assigned') ? _showAlertDialog : null,
+                          onTap: complaintSummaries.any((c) => c.rawStatus == 'ongoing') ? _showAlertDialog : null,
                           child: Container(
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
@@ -1367,7 +1367,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                             child: Icon(
                               Icons.info_outline,
-                              color: complaintSummaries.any((c) => c.rawStatus == 'assigned') ? Colors.deepPurple : Colors.grey,
+                              color: complaintSummaries.any((c) => c.rawStatus == 'ongoing') ? Colors.deepPurple : Colors.grey,
                               size: 20,
                             ),
                           ),

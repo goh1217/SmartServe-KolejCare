@@ -410,7 +410,7 @@ class _NotificationPageState extends State<NotificationPage> {
 
   Color _colorForStatus(String s) {
     if (s.contains('reject') || s == 'rejected') return Colors.red;
-    if (s == 'assigned') return Colors.orange.shade700;
+    if (s == 'ongoing') return Colors.orange.shade700;
     if (s.contains('approve') || s == 'approved') return Colors.green;
     if (s == 'completed') return Colors.green.shade700;
     if (s == 'pending') return Colors.grey;
@@ -419,7 +419,7 @@ class _NotificationPageState extends State<NotificationPage> {
 
   IconData _iconForStatus(String s) {
     if (s.contains('reject') || s == 'rejected') return Icons.cancel;
-    if (s == 'assigned') return Icons.engineering;
+    if (s == 'ongoing') return Icons.engineering;
     if (s.contains('approve') || s == 'approved') return Icons.check_circle;
     if (s == 'completed') return Icons.done_all;
     if (s == 'pending') return Icons.hourglass_top;

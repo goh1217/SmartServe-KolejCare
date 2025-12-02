@@ -166,28 +166,123 @@ class _ActivityScreenState extends State<ActivityScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Ongoing Repairs Section
-            _buildSectionCard(
-              context,
-              title: 'Ongoing Repairs',
-              backgroundColor: Colors.transparent,
-              items: [
-                ActivityItem(
-                  title: 'Furniture reparation',
-                  status: 'Technician coming',
-                  date: '20 Nov 2025, 12:40 PM',
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const OngoingRepairScreen(),
+            // Ongoing Repairs Section (dynamic from Firestore)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(left: 4, bottom: 8),
+                    child: Text('Ongoing Repairs', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: StreamBuilder<QuerySnapshot>(
+                        stream: (() {
+                          final user = FirebaseAuth.instance.currentUser;
+                          final uid = user?.uid ?? '';
+                          final qBase = FirebaseFirestore.instance.collection('complaint').where('reportStatus', isEqualTo: 'Ongoing');
+                          if (uid.isNotEmpty) {
+                            final possible = [uid, '/collection/student/$uid', '/collection/student'];
+                            return qBase.where('reportBy', whereIn: possible).snapshots();
+                          }
+                          return qBase.snapshots();
+                        })(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Padding(
+                              padding: EdgeInsets.all(20),
+                              child: Center(child: CircularProgressIndicator()),
+                            );
+                          }
+
+                          if (snapshot.hasError) {
+                            return Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Center(child: Text('Error: ${snapshot.error}')),
+                            );
+                          }
+
+                          final user = FirebaseAuth.instance.currentUser;
+                          final uid = user?.uid ?? '';
+                          final email = user?.email ?? '';
+
+                          final docs = snapshot.data?.docs ?? [];
+
+                          final userDocs = docs.where((d) {
+                            final data = d.data() as Map<String, dynamic>;
+                            final reportBy = (data['reportBy'] ?? '').toString();
+                            final reportByEmail = (data['reportByEmail'] ?? data['email'] ?? '').toString();
+
+                            if (reportByEmail.isNotEmpty && email.isNotEmpty) {
+                              if (reportByEmail == email) return true;
+                            }
+
+                            if (uid.isNotEmpty && reportBy.contains(uid)) return true;
+                            if (email.isNotEmpty && reportBy.contains(email)) return true;
+
+                            // legacy handling
+                            if (reportBy == '/collection/student') return true;
+                            if (reportBy.contains('/student')) return true;
+
+                            return false;
+                          }).toList();
+
+                          if (userDocs.isEmpty) {
+                            return const Padding(
+                              padding: EdgeInsets.all(20),
+                              child: Center(child: Text('No ongoing repairs.')),
+                            );
+                          }
+
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: userDocs.map((d) {
+                              final data = d.data() as Map<String, dynamic>;
+                              // Title: leave blank when no field present
+                              final title = (data['inventoryDamage'] ?? data['damageCategory'] ?? data['complaintID'] ?? '').toString();
+
+                              final dateField = data['assignedDate'] ?? data['scheduledDate'] ?? data['reportedDate'] ?? data['reportedOn'];
+                              final dateStr = formatTimestampFriendly(dateField);
+
+                              final item = ActivityItem(
+                                title: title,
+                                status: data['reportStatus']?.toString() ?? 'Ongoing',
+                                date: dateStr,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => OngoingRepairScreen(complaintId: d.id),
+                                  ),
+                                ),
+                              );
+
+                              return _buildActivityItem(context, item);
+                            }).toList(),
+                          );
+                        },
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 16),
 
-            // Scheduled Section (dynamic from Firestore: reportStatus == 'In Progress')
+            // Scheduled Section (dynamic from Firestore: reportStatus == 'Ongoing')
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
               child: Column(

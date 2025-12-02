@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 import 'technician_tracking.dart';
 
 class OngoingRepairScreen extends StatelessWidget {
-  const OngoingRepairScreen({super.key});
+  final String? complaintId;
+
+  const OngoingRepairScreen({super.key, this.complaintId});
 
   @override
   Widget build(BuildContext context) {
@@ -68,46 +71,60 @@ class OngoingRepairScreen extends StatelessWidget {
                                 technicianName: 'Ahmad Rahim',
                               ),
                             ),
-                          );
-                        },
-                        child: Container(
-                          padding:
-                          const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: const [
-                              Text(
-                                'By 1:00 pm',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.blue,
-                                  fontWeight: FontWeight.w500,
+                          const SizedBox(width: 8),
+                          InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => TechnicianTrackingScreen(
+                                    technicianName: technician.isNotEmpty ? technician : 'Technician',
+                                    complaintId: complaintId,
+                                  ),
                                 ),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              SizedBox(width: 4),
-                              Icon(Icons.map_outlined, size: 14, color: Colors.blue),
-                            ],
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  Text(
+                                    'By 1:00 pm',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.blue,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  SizedBox(width: 4),
+                                  Icon(Icons.map_outlined, size: 14, color: Colors.blue),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-                const Divider(height: 1),
-                _buildDetailItem('Service Category', 'Furniture'),
-                const Divider(height: 1),
-                _buildDetailItem('Issue Description', 'Bed frame unstable and squeaky'),
-                const Divider(height: 1),
-                _buildDetailItem('Estimated Duration', '~1 hour'),
-                const Divider(height: 1),
-                _buildDetailItem('Assigned Technician', 'Ahmad Rahim'),
-                const Divider(height: 1),
-                _buildDetailItem('Reported On', '18 Nov 2025, 2:45 PM', isLast: true),
-              ],
+                    ),
+                    const Divider(height: 1),
+                    _buildDetailItem('Service Category', serviceCategory),
+                    const Divider(height: 1),
+                    _buildDetailItem('Issue Description', issue),
+                    const Divider(height: 1),
+                    // Estimated Duration intentionally left blank initially
+                    _buildDetailItem('Estimated Duration', estimatedDuration),
+                    const Divider(height: 1),
+                    _buildDetailItem('Assigned Technician', technician),
+                    const Divider(height: 1),
+                    _buildDetailItem('Reported On', reportedText, isLast: true),
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -155,15 +172,5 @@ class OngoingRepairScreen extends StatelessWidget {
     );
   }
 
-  // kept for optional external maps link
-  static Future<void> _openMaps(BuildContext context, String destination) async {
-    final encoded = Uri.encodeComponent(destination);
-    final uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$encoded');
-
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open maps')),
-      );
-    }
-  }
+  // (no external maps helper - keep the UI simple for now)
 }
