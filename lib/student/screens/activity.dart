@@ -194,7 +194,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                         stream: (() {
                           final user = FirebaseAuth.instance.currentUser;
                           final uid = user?.uid ?? '';
-                          final qBase = FirebaseFirestore.instance.collection('complaint').where('reportStatus', isEqualTo: 'In Progress');
+                          final qBase = FirebaseFirestore.instance.collection('complaint').where('reportStatus', isEqualTo: 'Ongoing');
                           if (uid.isNotEmpty) {
                             final possible = [uid, '/collection/student/$uid', '/collection/student'];
                             return qBase.where('reportBy', whereIn: possible).snapshots();
@@ -260,7 +260,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
                               final item = ActivityItem(
                                 title: title,
-                                status: data['reportStatus']?.toString() ?? 'In Progress',
+                                status: data['reportStatus']?.toString() ?? 'Ongoing',
                                 date: dateStr,
                                 onTap: () => Navigator.push(
                                   context,
@@ -282,7 +282,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Scheduled Section (dynamic from Firestore: reportStatus == 'In Progress')
+            // Scheduled Section (dynamic from Firestore: reportStatus == 'Ongoing')
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
               child: Column(
