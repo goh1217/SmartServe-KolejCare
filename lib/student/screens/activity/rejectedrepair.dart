@@ -5,6 +5,7 @@ class RejectedRepairScreen extends StatelessWidget {
   final String status;
   final String damageCategory;
   final String inventoryDamage;
+  final String inventoryDamageTitle;
   final String reportedOn;
   final String reviewedOn;
   final String reviewedBy;
@@ -16,6 +17,7 @@ class RejectedRepairScreen extends StatelessWidget {
     required this.status,
     required this.damageCategory,
     required this.inventoryDamage,
+    required this.inventoryDamageTitle,
     required this.reportedOn,
     required this.reviewedOn,
     required this.reviewedBy,
@@ -62,11 +64,13 @@ class RejectedRepairScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildDetailItem('Report ID', reportId ?? 'N/A', isFirst: true),
-                      const Divider(height: 1),
+                      // _buildDetailItem('Report ID', reportId ?? 'N/A', isFirst: true),
+                      // const Divider(height: 1),
                       _buildDetailItem('Report Status', status),
                       const Divider(height: 1),
                       _buildDetailItem('Damage Category', damageCategory),
+                      const Divider(height: 1),
+                      _buildDetailItem('Damage Title', inventoryDamageTitle),
                       const Divider(height: 1),
                       _buildDetailItem('Inventory Damage', inventoryDamage),
                       const Divider(height: 1),

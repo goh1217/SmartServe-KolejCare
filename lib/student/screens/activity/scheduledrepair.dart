@@ -8,6 +8,7 @@ class ScheduledRepairScreen extends StatefulWidget {
   final String assignedTechnician;
   final String damageCategory;
   final String inventoryDamage;
+  final String inventoryDamageTitle;
   final String expectedDuration;
   final String reportedOn;
 
@@ -18,6 +19,7 @@ class ScheduledRepairScreen extends StatefulWidget {
     required this.scheduledDate,
     required this.assignedTechnician,
     required this.damageCategory,
+    required this.inventoryDamageTitle,
     required this.inventoryDamage,
     required this.expectedDuration,
     required this.reportedOn,
@@ -176,8 +178,8 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildDetailItem('Report ID', widget.reportId),
-                      const Divider(height: 1),
+                      // _buildDetailItem('Report ID', widget.reportId),
+                      // const Divider(height: 1),
                       _buildDetailItem('Repair Status', widget.status),
                       const Divider(height: 1),
                       _buildDetailItem('Scheduled Date', currentScheduledDate),
@@ -185,6 +187,8 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
                       _buildDetailItem('Assigned Technician', widget.assignedTechnician),
                       const Divider(height: 1),
                       _buildDetailItem('Damage Category', widget.damageCategory),
+                      const Divider(height: 1),
+                      _buildDetailItem('Damage Title', widget.inventoryDamageTitle),
                       const Divider(height: 1),
                       _buildDetailItem('Inventory Damage', widget.inventoryDamage),
                       const Divider(height: 1),

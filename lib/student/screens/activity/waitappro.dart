@@ -4,6 +4,7 @@ class WaitingApprovalScreen extends StatelessWidget {
   final String reportStatus;
   final String damageCategory;
   final String inventoryDamage;
+  final String inventoryDamageTitle;
   final String reportedOn;
 
   const WaitingApprovalScreen({
@@ -11,6 +12,7 @@ class WaitingApprovalScreen extends StatelessWidget {
     required this.reportStatus,
     required this.damageCategory,
     required this.inventoryDamage,
+    required this.inventoryDamageTitle,
     required this.reportedOn,
   });
 
@@ -54,6 +56,8 @@ class WaitingApprovalScreen extends StatelessWidget {
                 _buildDetailItem('Report Status', reportStatus, isFirst: true),
                 const Divider(height: 1),
                 _buildDetailItem('Damage Category', damageCategory),
+                const Divider(height: 1),
+                _buildDetailItem('Damage Title', inventoryDamageTitle),
                 const Divider(height: 1),
                 _buildDetailItem('Inventory Damage', inventoryDamage),
                 const Divider(height: 1),

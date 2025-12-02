@@ -42,8 +42,8 @@ class OngoingRepairScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildDetailItem('Report ID', 'RPT-20251120-102', isFirst: true),
-                const Divider(height: 1),
+                // _buildDetailItem('Report ID', 'RPT-20251120-102', isFirst: true),
+                // const Divider(height: 1),
                 _buildDetailItem(
                   'Repair Status',
                   '',  // Empty since we'll use a custom layout

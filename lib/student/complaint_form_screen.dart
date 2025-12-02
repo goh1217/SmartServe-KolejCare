@@ -81,6 +81,7 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
         'damagePic': null,
         'feedbackRating': 0,
         'inventoryDamage': desc,
+        'inventoryDamageTitle': title,
         'rejectionReason': '',
         'reportBy': '/collection/student/${user.uid}',
         'reportStatus': 'Pending',
