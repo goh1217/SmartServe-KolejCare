@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:owtest/analytics_page.dart';
 import 'package:owtest/main.dart';
 import 'package:owtest/staff_complaints.dart';
+import 'package:owtest/settings_page.dart';
 
 class HelpPage extends StatefulWidget {
   const HelpPage({Key? key}) : super(key: key);
@@ -140,7 +141,7 @@ class _HelpPageState extends State<HelpPage> {
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.settings, color: Colors.white),
-                    onPressed: () {},
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsPage())),
                   ),
                 ],
               ),
