@@ -1,11 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'phonecall.dart'; // Adjust the path as needed
 
 
 class TechnicianTrackingScreen extends StatefulWidget {
   final String technicianName;
-  const TechnicianTrackingScreen({super.key, required this.technicianName});
+  final String? complaintId;
+
+  const TechnicianTrackingScreen({super.key, required this.technicianName, this.complaintId});
 
   @override
   State<TechnicianTrackingScreen> createState() => _TechnicianTrackingScreenState();
@@ -22,6 +25,8 @@ class _TechnicianTrackingScreenState extends State<TechnicianTrackingScreen> {
   ];
   int _posIndex = 0;
   Timer? _timer;
+  String? _studentHostel;
+  bool _loadingHostel = false;
 
   @override
   void initState() {
@@ -31,6 +36,66 @@ class _TechnicianTrackingScreenState extends State<TechnicianTrackingScreen> {
       setState(() {
         _posIndex = (_posIndex + 1) % _path.length;
       });
+    });
+    // start loading student hostel location if complaint id provided
+    if (widget.complaintId != null) {
+      _loadStudentHostel(widget.complaintId!);
+    }
+  }
+
+  Future<void> _loadStudentHostel(String complaintId) async {
+    setState(() {
+      _loadingHostel = true;
+      _studentHostel = null;
+    });
+
+    try {
+      final doc = await FirebaseFirestore.instance.collection('complaint').doc(complaintId).get();
+      if (!doc.exists) {
+        setState(() {
+          _studentHostel = null;
+          _loadingHostel = false;
+        });
+        return;
+      }
+
+      final data = doc.data() ?? {};
+      dynamic reportBy = data['reportBy'] ?? data['reportedBy'] ?? data['reporter'] ?? null;
+      String? studentId;
+
+      if (reportBy == null) {
+        final maybe = data['reportById'] ?? data['reportedById'] ?? data['reporterId'];
+        if (maybe != null) studentId = maybe.toString();
+      } else if (reportBy is DocumentReference) {
+        studentId = reportBy.id;
+      } else if (reportBy is String) {
+        final s = reportBy as String;
+        if (s.contains('/')) {
+          final parts = s.split('/').where((p) => p.isNotEmpty).toList();
+          if (parts.isNotEmpty) studentId = parts.last;
+        } else {
+          studentId = s;
+        }
+      }
+
+      if (studentId != null) {
+        final studentDoc = await FirebaseFirestore.instance.collection('student').doc(studentId).get();
+        final sdata = studentDoc.data() ?? {};
+        // Prefer residentCollege if available (DB uses this field)
+        final hostel = (sdata['residentCollege'] ?? sdata['block'] ?? sdata['hostel'] ?? sdata['hostelLocation'] ?? sdata['room'] ?? '').toString();
+        setState(() {
+          _studentHostel = hostel;
+          _loadingHostel = false;
+        });
+        return;
+      }
+    } catch (e) {
+      // ignore errors
+    }
+
+    setState(() {
+      _studentHostel = null;
+      _loadingHostel = false;
     });
   }
 
@@ -57,8 +122,9 @@ class _TechnicianTrackingScreenState extends State<TechnicianTrackingScreen> {
                 final w = constraints.maxWidth;
                 final h = constraints.maxHeight;
                 // compute marker position in px
-                final markerX = current.dx * w;
-                final markerY = current.dy * h;
+                // compute marker position in px (used implicitly by Positioned markers below)
+                // final markerX = current.dx * w;
+                // final markerY = current.dy * h;
                 return Stack(
                   children: [
                     // Map background pattern (simulated)
@@ -268,12 +334,14 @@ class _TechnicianTrackingScreenState extends State<TechnicianTrackingScreen> {
 
                       const SizedBox(height: 20),
 
-                      // Location Info
+                      // Location Info (student hostel, loaded from complaint -> student)
                       _InfoRow(
                         icon: Icons.location_on,
                         iconColor: const Color(0xFF6B46C1),
                         title: 'Hostel Location',
-                        subtitle: 'H08 KOLEJ TUN FATIMAH UTM',
+                        subtitle: _loadingHostel
+                            ? ''
+                            : (_studentHostel?.isNotEmpty == true ? _studentHostel! : 'Unknown'),
                       ),
 
                       const SizedBox(height: 16),
@@ -283,7 +351,7 @@ class _TechnicianTrackingScreenState extends State<TechnicianTrackingScreen> {
                         icon: Icons.access_time,
                         iconColor: const Color(0xFF6B46C1),
                         title: 'Estimated Arrival Time',
-                        subtitle: '01:00 PM (Max 20 min)',
+                        subtitle: '',
                       ),
                     ],
                   ),
