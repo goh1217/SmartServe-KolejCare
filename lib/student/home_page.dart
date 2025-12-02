@@ -79,7 +79,9 @@ class _HomePageState extends State<HomePage> {
 
   // Small status bar widget that reflects complaint progress and status
   Widget _buildStatusBar() {
-    final label = complaintStatusLabel.replaceAll('\n', ' ');
+    // Primary label is the inventory damage title; status will be shown below the progress bar
+    final titleLabel = complaintDamageCategory.replaceAll('\n', ' ');
+    final label = titleLabel.isNotEmpty ? titleLabel : complaintStatusLabel.replaceAll('\n', ' ');
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: Container(
@@ -103,19 +105,6 @@ class _HomePageState extends State<HomePage> {
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 6),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        complaintStatusDescription,
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                      ),
-                      Text(
-                        '${(complaintProgress * 100).round()}%',
-                        style: TextStyle(color: Colors.grey[700], fontSize: 12, fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
                   const SizedBox(height: 8),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(6),
@@ -130,24 +119,65 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 8),
+                  // Show status with icon and single percentage below the progress bar
+                  Row(
+                    children: [
+                      Icon(
+                        (complaintRawStatus.contains('ongo')
+                            ? Icons.build_circle
+                            : (complaintRawStatus.contains('completed') ? Icons.check_circle : (complaintRawStatus.contains('rejected') ? Icons.report_problem : Icons.info_outline))),
+                        size: 18,
+                        color: complaintRawStatus.contains('rejected') ? Colors.red.shade700 : Colors.deepPurple,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          complaintStatusLabel,
+                          style: TextStyle(color: Colors.grey[800], fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      Text(
+                        '${(complaintProgress * 100).round()}%',
+                        style: TextStyle(color: Colors.grey[700], fontSize: 12, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
             const SizedBox(width: 12),
-            // Show damage/category on the right so student knows which complaint this refers to
+            // Compact status badge on the right to avoid squeezing the status row
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.deepPurple.withOpacity(0.08),
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.withOpacity(0.12)),
+                boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.02), blurRadius: 2)],
               ),
-              child: Text(
-                complaintDamageCategory.isNotEmpty ? complaintDamageCategory : 'No category',
-                style: TextStyle(
-                  color: complaintDamageCategory.isNotEmpty ? Colors.deepPurple : Colors.grey[600],
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    // choose icon by status
+                    (complaintRawStatus.contains('ongo')
+                        ? Icons.build_circle
+                        : (complaintRawStatus.contains('completed') ? Icons.check_circle : (complaintRawStatus.contains('rejected') ? Icons.report_problem : Icons.info_outline))),
+                    size: 18,
+                    color: complaintRawStatus.contains('rejected') ? Colors.red.shade700 : Colors.deepPurple,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    // short status label (fallback trimmed)
+                    (complaintStatusLabel.length > 16 ? complaintStatusLabel.substring(0, 16) + '...' : complaintStatusLabel),
+                    style: TextStyle(
+                      color: Colors.grey[800],
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -159,160 +189,249 @@ class _HomePageState extends State<HomePage> {
 
 
   // Build a status bar for a specific complaint summary with remove option
-  Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback onRemove) {
-    final label = c.displayText.replaceAll('\n', ' ');
-    final isCompleted = c.rawStatus == 'completed';
-    final isRejected = c.rawStatus == 'rejected';
-    // allow removal for completed or rejected reports (users remove rejected reports themselves)
-    final isRemovable = isCompleted || isRejected;
+ 
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 6.0),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.06), blurRadius: 6)],
-        ),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 6),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(c.description, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-                          Text('${(c.progress * 100).round()}%', style: TextStyle(color: Colors.grey[700], fontSize: 12, fontWeight: FontWeight.w600)),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: LinearProgressIndicator(
-                          value: c.progress,
-                          minHeight: 8,
-                          backgroundColor: Colors.grey[200],
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            c.progress >= 1.0 ? Colors.green : (c.rawStatus.contains('rejected') ? Colors.red : Colors.deepPurple),
-                          ),
-                        ),
-                      ),
-                    ],
+Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback onRemove) {
+  final label = c.displayText.replaceAll('\n', ' ');
+  final isCompleted = c.rawStatus == 'completed';
+  final isRejected = c.rawStatus == 'rejected';
+  final isRemovable = isCompleted || isRejected;
+
+  // Get status description based on raw status
+  String statusDescription = '';
+  if (c.rawStatus == 'pending') {
+    statusDescription = 'Your report is being reviewed by our team';
+  } else if (c.rawStatus == 'approved') {
+    statusDescription = 'Report has been approved and assigned';
+  } else if (c.rawStatus == 'rejected') {
+    statusDescription = 'Report was not approved';
+  } else if (c.rawStatus == 'ongoing') {
+    statusDescription = 'Technician is on the way';
+  } else if (c.rawStatus == 'completed') {
+    statusDescription = 'Repair work has been completed';
+  }
+
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 6.0),
+    child: Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.06), blurRadius: 6)],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Top row: Category title and percentage
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  c.category.isNotEmpty ? c.category : 'Damage Report',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Column(
+              ),
+              const SizedBox(width: 8),
+              // Percentage badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: c.progress >= 1.0
+                      ? Colors.green.shade100
+                      : (c.rawStatus.contains('rejected') 
+                          ? Colors.red.shade100 
+                          : Colors.deepPurple.shade50),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: c.progress >= 1.0
+                        ? Colors.green.shade300
+                        : (c.rawStatus.contains('rejected') 
+                            ? Colors.red.shade300 
+                            : Colors.deepPurple.shade200),
+                  ),
+                ),
+                child: Text(
+                  '${(c.progress * 100).round()}%',
+                  style: TextStyle(
+                    color: c.progress >= 1.0
+                        ? Colors.green.shade700
+                        : (c.rawStatus.contains('rejected') 
+                            ? Colors.red.shade700 
+                            : Colors.deepPurple.shade700),
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 10),
+          
+          // Progress bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: c.progress,
+              minHeight: 8,
+              backgroundColor: Colors.grey[200],
+              valueColor: AlwaysStoppedAnimation<Color>(
+                c.progress >= 1.0 
+                    ? Colors.green 
+                    : (c.rawStatus.contains('rejected') 
+                        ? Colors.red 
+                        : Colors.deepPurple),
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 10),
+          
+          // Status row with icon and description
+          Row(
+            children: [
+              Icon(
+                (c.rawStatus.contains('ongo')
+                    ? Icons.build_circle
+                    : (c.rawStatus.contains('completed') 
+                        ? Icons.check_circle 
+                        : (c.rawStatus.contains('rejected') 
+                            ? Icons.report_problem 
+                            : Icons.info_outline))),
+                size: 18,
+                color: c.rawStatus.contains('rejected') 
+                    ? Colors.red.shade700 
+                    : Colors.deepPurple,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.deepPurple.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        c.category.isNotEmpty ? c.category : 'No category',
-                        style: TextStyle(
-                          color: c.category.isNotEmpty ? Colors.deepPurple : Colors.grey[600],
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    Text(
+                      label,
+                      style: TextStyle(
+                        color: Colors.grey[800],
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    if (isRemovable) ...[
-                      const SizedBox(height: 8),
-                      InkWell(
-                        onTap: onRemove,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.red.shade50,
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: Colors.red.shade200),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.delete_outline, size: 14, color: Colors.red.shade700),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Remove',
-                                style: TextStyle(
-                                  color: Colors.red.shade700,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
+                    if (statusDescription.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        statusDescription,
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 11,
                         ),
                       ),
                     ],
                   ],
                 ),
-              ],
-            ),
-                    if (isCompleted) ...[
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.green.shade50,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: Colors.green.shade200),
+              ),
+              if (isRemovable) ...[
+                const SizedBox(width: 8),
+                InkWell(
+                  onTap: onRemove,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: Colors.red.shade200),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.delete_outline, size: 14, color: Colors.red.shade700),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Remove',
+                          style: TextStyle(
+                            color: Colors.red.shade700,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.check_circle, size: 16, color: Colors.green.shade700),
-                    const SizedBox(width: 6),
-                    Text(
+              ],
+            ],
+          ),
+          
+          // Completion/Rejection message - now with flexible text wrapping
+          if (isCompleted) ...[
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: Colors.green.shade200),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.check_circle, size: 16, color: Colors.green.shade700),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
                       'This report has been completed. You can remove it from your list.',
                       style: TextStyle(
                         color: Colors.green.shade700,
                         fontSize: 11,
                       ),
+                      softWrap: true,
+                      overflow: TextOverflow.visible,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ] else if (isRejected) ...[
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: Colors.red.shade200),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.report_problem, size: 16, color: Colors.red.shade700),
-                    const SizedBox(width: 6),
-                    Text(
+            ),
+          ] else if (isRejected) ...[
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: Colors.red.shade200),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.report_problem, size: 16, color: Colors.red.shade700),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
                       'This report was rejected. You can remove it from your list.',
                       style: TextStyle(
                         color: Colors.red.shade700,
                         fontSize: 11,
                       ),
+                      softWrap: true,
+                      overflow: TextOverflow.visible,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ],
-        ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   // Helper to build a ComplaintSummary from a Firestore doc map
   ComplaintSummary _buildSummaryFromDoc(String id, Map<String, dynamic> data) {
@@ -323,17 +442,11 @@ class _HomePageState extends State<HomePage> {
     double progress = 0.0;
     String displayText = '';
 
-    if (s == 'submitted') {
-      progress = 0.15;
-      displayText = 'Report Submitted';
-    } else if (s == 'pending') {
+    if (s == 'pending') {
       progress = 0.30;
       displayText = 'Under Review';
-    } else if (s == 'reviewed') {
+    } else if (s == 'approved') {
       progress = 0.50;
-      displayText = 'Being Reviewed';
-    } else if (s.contains('approved') || s == 'approved') {
-      progress = 0.70;
       displayText = 'Report Approved';
     } else if (s == 'rejected') {
       // Treat rejected reports as completed for UI purposes (100%)
@@ -345,12 +458,14 @@ class _HomePageState extends State<HomePage> {
     } else if (s == 'completed') {
       progress = 1.0;
       displayText = 'Work Completed';
-    } else {
+    } 
+    /*else {
       progress = 0.0;
       displayText = status.isNotEmpty ? status : 'No Reports';
-    }
+    }*/
 
-    final categoryRaw = (data['damageCategory'] ?? data['damage_category'] ?? data['category'] ?? data['damage'] ?? '').toString();
+    // Prefer `inventoryDamageTitle` (canonical) over older damageCategory fields
+    final categoryRaw = (data['inventoryDamageTitle'] ?? data['inventory_damage_title'] ?? data['inventoryDamage'] ?? data['inventory_title'] ?? data['damageCategory'] ?? data['damage_category'] ?? data['category'] ?? data['damage'] ?? '').toString();
     final category = categoryRaw.isNotEmpty ? categoryRaw : '';
 
     int? createdMs;
