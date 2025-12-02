@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'activity/ongoingrepair.dart';
-import 'activity/completedrepair.dart';
+//import 'activity/completedrepair.dart';
 import 'activity/completedrepair2.dart';
 import 'activity/completed/rating.dart';
 import 'activity/completed/tips.dart';
@@ -370,7 +370,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: userDocs.map((d) {
                               final data = d.data() as Map<String, dynamic>;
-                              final title = (data['inventoryDamage'] ?? data['damageCategory'] ?? data['complaintID'] ?? 'No title').toString();
+                              final title = (data['inventoryDamageTitle'] ?? data['damageCategory'] ?? data['complaintID'] ?? 'No title').toString();
                               final reported = data['reportedDate'] ?? data['reportedOn'] ?? data['reportedAt'];
                               final scheduledField = data['scheduledDate'];
                               final dateToShow = scheduledField ?? reported;
@@ -394,6 +394,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                             ? techName
                                             : (data['assignedTechnicianName'] ?? data['assignedTo'] ?? '').toString(),
                                         damageCategory: (data['damageCategory'] ?? '').toString(),
+                                        inventoryDamageTitle: data['inventoryDamageTitle'] ?? '',
                                         inventoryDamage: (data['inventoryDamage'] ?? '').toString(),
                                         expectedDuration: (data['expectedDuration'] ?? '').toString(),
                                         reportedOn: dateStr,
@@ -514,7 +515,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: userDocs.map((d) {
                               final data = d.data() as Map<String, dynamic>;
-                              final title = (data['inventoryDamage'] ?? data['damageCategory'] ?? 'No title').toString();
+                              final title = (data['inventoryDamageTitle'] ?? data['damageCategory'] ?? 'No title').toString();
 
                               // Use the stored DB value exactly as-is (string if stored as string).
                               final rawDate = data['reportedDate'] ?? data['reportedOn'];
@@ -532,6 +533,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                       builder: (context) => RejectedRepairScreen(
                                         status: data['reportStatus'] ?? 'Rejected',
                                         damageCategory: data['damageCategory'] ?? '',
+                                        inventoryDamageTitle: data['inventoryDamageTitle'] ?? '',
                                         inventoryDamage: data['inventoryDamage'] ?? '',
                                         reportedOn: dateText,
                                         reviewedOn: formatTimestampFriendly(data['reviewedOn']),
@@ -636,7 +638,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: userDocs.map((d) {
                               final data = d.data() as Map<String, dynamic>;
-                              final title = (data['inventoryDamage'] ?? data['damageCategory'] ?? 'No title').toString();
+                              final title = (data['inventoryDamageTitle'] ?? data['damageCategory'] ?? 'No title').toString();
 
                               String dateText = 'No date';
                               final reportedTs = data['reportedDate'];
@@ -654,6 +656,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                     builder: (context) => WaitingApprovalScreen(
                                       reportStatus: data['reportStatus'] ?? 'Pending',
                                       damageCategory: data['damageCategory'] ?? '',
+                                      inventoryDamageTitle: data['inventoryDamageTitle'] ?? '',
                                       inventoryDamage: data['inventoryDamage'] ?? '',
                                       reportedOn: dateText,
                                     ),
@@ -752,7 +755,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: userDocs.map((d) {
                               final data = d.data() as Map<String, dynamic>;
-                              final title = (data['inventoryDamage'] ?? data['damageCategory'] ?? 'No title').toString();
+                              final title = (data['inventoryDamageTitle'] ?? data['damageCategory'] ?? 'No title').toString();
 
                               String dateText = 'No date';
                               final completedTs = data['completedDate'] ?? data['reportedDate'];
@@ -793,6 +796,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                             completedDate: dateText,
                                             assignedTechnician: techName.isNotEmpty ? techName : (data['assignedTo'] ?? '').toString(),
                                             damageCategory: data['damageCategory'] ?? '',
+                                            inventoryDamageTitle: data['inventoryDamageTitle'] ?? '',
                                             inventoryDamage: data['inventoryDamage'] ?? '',
                                             duration: data['duration'] ?? '',
                                             technicianNotes: data['technicianNotes'] ?? '',

@@ -7,6 +7,7 @@ class CompletedRepair2Screen extends StatelessWidget {
   final String assignedTechnician;
   final String damageCategory;
   final String inventoryDamage;
+  final String inventoryDamageTitle;
   final String duration;
   final String technicianNotes;
   final String reportedOn;
@@ -19,6 +20,7 @@ class CompletedRepair2Screen extends StatelessWidget {
     required this.assignedTechnician,
     required this.damageCategory,
     required this.inventoryDamage,
+    required this.inventoryDamageTitle,
     required this.duration,
     required this.technicianNotes,
     required this.reportedOn,
@@ -73,6 +75,8 @@ class CompletedRepair2Screen extends StatelessWidget {
                       _buildDetailItem('Assigned Technician', assignedTechnician),
                       const Divider(height: 1),
                       _buildDetailItem('Damage Category', damageCategory),
+                      const Divider(height: 1),
+                      _buildDetailItem('Damage Title', inventoryDamageTitle),
                       const Divider(height: 1),
                       _buildDetailItem('Inventory Damage', inventoryDamage),
                       const Divider(height: 1),
