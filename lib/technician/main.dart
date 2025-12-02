@@ -38,6 +38,7 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
   int selectedNavIndex = 0;
   String? currentUserId;
   String? technicianDocId; // The actual technician document ID
+  String technicianName = 'Technician';
 
   @override
   void initState() {
@@ -72,9 +73,13 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
       if (querySnapshot.docs.isNotEmpty) {
         final docId = querySnapshot.docs.first.id;
         print('Technician Doc ID: $docId');
+        final data = querySnapshot.docs.first.data() as Map<String, dynamic>;
+        final fetchedName = (data['name'] ?? data['fullName'] ?? data['technicianName'])?.toString();
+        final displayFallback = FirebaseAuth.instance.currentUser?.displayName ?? 'Technician';
         if (mounted) {
           setState(() {
             technicianDocId = docId;
+            technicianName = fetchedName ?? displayFallback;
           });
         }
       }
@@ -118,142 +123,187 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
                         'Hello!',
                         style: TextStyle(fontSize: 16, color: Colors.black54),
                       ),
-                      StreamBuilder<User?>(
-                        stream: FirebaseAuth.instance.authStateChanges(),
-                        builder: (context, snapshot) {
-                          final user = snapshot.data;
-                          final displayName = user?.displayName ?? 'Technician';
-                          return Text(
-                            displayName,
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          );
-                        },
+                      Text(
+                        technicianName,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
                       ),
                     ],
                   ),
                   const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF6C63FF),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.notifications,
-                      color: Colors.white,
-                      size: 24,
+                  GestureDetector(
+                    onTap: () async {
+                      await FirebaseAuth.instance.signOut();
+                      if (mounted) {
+                        Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF6C63FF),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.logout,
+                        color: Colors.white,
+                        size: 24,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
 
-            // Progress Card
+            // Progress Card - Dynamic based on today's completed tasks
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF6C63FF), Color(0xFF5A52E8)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('complaint')
+                    .where('assignedTo', isEqualTo: '/collection/technician/$technicianDocId')
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  int totalToday = 0;
+                  int completedToday = 0;
+                  if (snapshot.hasData) {
+                    final now = DateTime.now();
+                    final today = DateTime(now.year, now.month, now.day);
+                    final validStatuses = ['approved', 'ongoing', 'complete', 'completed'];
+                    for (var doc in snapshot.data!.docs) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      final status = (data['reportStatus'] ?? '').toString().toLowerCase();
+                      if (!validStatuses.contains(status)) continue;
+                      Timestamp? scheduledTs;
+                      if (data['scheduledDate'] != null && data['scheduledDate'] is Timestamp) {
+                        scheduledTs = data['scheduledDate'] as Timestamp;
+                      }
+                      if (scheduledTs != null) {
+                        final scheduled = scheduledTs.toDate().toUtc().add(const Duration(hours: 8));
+                        final sd = DateTime(scheduled.year, scheduled.month, scheduled.day);
+                        if (sd == today) {
+                          totalToday++;
+                          if (status == 'complete' || status == 'completed') {
+                            completedToday++;
+                          }
+                        }
+                      }
+                    }
+                  }
+                  final percentage = totalToday == 0 ? 0 : ((completedToday / totalToday) * 100).toInt();
+                  String progressMessage = "Come on, you got things to do!";
+                  if (percentage > 50 && percentage < 100) {
+                    progressMessage = "Your today's task almost done!";
+                  } else if (percentage == 100 && totalToday > 0) {
+                    progressMessage = "Well done! You have completed all tasks!";
+                  }
+                  return Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF6C63FF), Color(0xFF5A52E8)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Your today's task\nalmost done!",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w600,
-                                  height: 1.3,
-                                ),
-                              ),
-                              SizedBox(height: 20),
-                            ],
-                          ),
-                        ),
-                        Stack(
-                          alignment: Alignment.center,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            SizedBox(
-                              width: 90,
-                              height: 90,
-                              child: CircularProgressIndicator(
-                                value: 0.85,
-                                strokeWidth: 8,
-                                backgroundColor: Colors.white.withOpacity(0.3),
-                                valueColor: const AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
-                                ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    progressMessage,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w600,
+                                      height: 1.3,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '$completedToday/$totalToday',
+                                    style: const TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                ],
                               ),
                             ),
-                            const Text(
-                              '85%',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 90,
+                                  height: 90,
+                                  child: CircularProgressIndicator(
+                                    value: totalToday == 0 ? 0 : completedToday / totalToday,
+                                    strokeWidth: 8,
+                                    backgroundColor: Colors.white.withOpacity(0.3),
+                                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                ),
+                                Text(
+                                  '$percentage%',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(8),
+                        const SizedBox(height: 8),
+                        ElevatedButton(
+                          onPressed: () {},
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: const Color(0xFF6C63FF),
+                            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
-                          child: const Icon(
-                            Icons.more_horiz,
-                            color: Colors.white,
-                          ),
+                          child: const Text('View Task', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFF6C63FF),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 14,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        'View Task',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  );
+                },
               ),
             ),
 
             const SizedBox(height: 24),
+
+            // Tabs: Today's tasks / Approved / Ongoing / Completed
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildTab("Today's tasks", 0),
+                    const SizedBox(width: 8),
+                    _buildTab('Approved', 1),
+                    const SizedBox(width: 8),
+                    _buildTab('Ongoing', 2),
+                    const SizedBox(width: 8),
+                    _buildTab('Completed', 3),
+                  ],
+                ),
+              ),
+
+            const SizedBox(height: 12),
 
             // Tasks List Section
             Expanded(
@@ -277,29 +327,127 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
                     return const Center(child: Text('No tasks assigned to you.'));
                   }
 
-                  final tasks = snapshot.data!.docs;
-                  print('Found ${tasks.length} tasks for technician: $technicianDocId');
+                  final rawTasks = snapshot.data!.docs;
+                  print('Found ${rawTasks.length} tasks for technician: $technicianDocId');
+
+                  // Normalize tasks with metadata
+                  final now = DateTime.now();
+                  final today = DateTime(now.year, now.month, now.day);
+
+                  List<Map<String, dynamic>> normalized = rawTasks.map((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    DateTime? scheduled;
+                    if (data['scheduledDate'] != null && data['scheduledDate'] is Timestamp) {
+                      // Convert stored timestamp to UTC then apply UTC+8 (Malaysia timezone)
+                      scheduled = (data['scheduledDate'] as Timestamp).toDate().toUtc().add(const Duration(hours: 8));
+                    }
+                    DateTime? reported;
+                    if (data['reportedDate'] != null && data['reportedDate'] is Timestamp) {
+                      reported = (data['reportedDate'] as Timestamp).toDate().toUtc().add(const Duration(hours: 8));
+                    }
+                    final status = (data['reportStatus'] ?? '').toString();
+                    return {
+                      'id': doc.id,
+                      'data': data,
+                      'scheduled': scheduled,
+                      'reported': reported,
+                      'status': status,
+                    };
+                  }).toList();
+
+                  // Filter by valid statuses: Approved, Ongoing, Completed
+                  final validStatuses = ['approved', 'ongoing', 'complete', 'completed'];
+                  final validTasks = normalized.where((t) {
+                    final status = (t['status'] ?? '').toString().toLowerCase();
+                    return validStatuses.contains(status);
+                  }).toList();
+
+                  // Apply tab filters
+                  List<Map<String, dynamic>> filtered;
+                  if (selectedTab == 0) {
+                    // Today's tasks: scheduledDate is today AND valid status
+                    filtered = validTasks.where((t) {
+                      final s = t['scheduled'] as DateTime?;
+                      if (s == null) return false;
+                      final sd = DateTime(s.year, s.month, s.day);
+                      return sd == today;
+                    }).toList();
+                  } else if (selectedTab == 1) {
+                    // Approved
+                    filtered = validTasks.where((t) {
+                      final status = (t['status'] ?? '').toString().toLowerCase();
+                      return status == 'approved';
+                    }).toList();
+                    } else if (selectedTab == 2) {
+                      // Ongoing
+                      filtered = validTasks.where((t) {
+                        final status = (t['status'] ?? '').toString().toLowerCase();
+                        return status == 'ongoing';
+                      }).toList();
+                    } else {
+                      // Completed
+                    filtered = validTasks.where((t) {
+                      final status = (t['status'] ?? '').toString().toLowerCase();
+                        return status == 'complete' || status == 'completed';
+                    }).toList();
+                  }
+
+                  // Sort: pending and most recent at top, completed at bottom for Today's view
+                  filtered.sort((a, b) {
+                    final aStatus = (a['status'] ?? '').toString().toLowerCase();
+                    final bStatus = (b['status'] ?? '').toString().toLowerCase();
+
+                    if (selectedTab == 0) {
+                      // For today's tasks, put pending before completed
+                      if (aStatus == bStatus) {
+                        final aDate = (a['reported'] as DateTime?) ?? DateTime.fromMillisecondsSinceEpoch(0);
+                        final bDate = (b['reported'] as DateTime?) ?? DateTime.fromMillisecondsSinceEpoch(0);
+                        return bDate.compareTo(aDate); // most recent first
+                      }
+                      if (aStatus == 'pending') return -1;
+                      if (bStatus == 'pending') return 1;
+                      return aStatus.compareTo(bStatus);
+                    }
+
+                    // For other tabs, sort by reported date desc
+                    final aDate = (a['reported'] as DateTime?) ?? DateTime.fromMillisecondsSinceEpoch(0);
+                    final bDate = (b['reported'] as DateTime?) ?? DateTime.fromMillisecondsSinceEpoch(0);
+                    return bDate.compareTo(aDate);
+                  });
+
+                  if (filtered.isEmpty) {
+                    return const Center(child: Text('No tasks match the selected filter.'));
+                  }
 
                   return ListView.builder(
-                    itemCount: tasks.length,
+                    itemCount: filtered.length,
                     itemBuilder: (context, index) {
-                      final task = tasks[index].data() as Map<String, dynamic>;
-                      
-                      // Safe casting for Timestamp
+                      final t = filtered[index];
+                      final task = t['data'] as Map<String, dynamic>;
+
+                      // Use scheduledDate for display (fallback to reported)
                       String dateStr = '--/--/----';
-                      if (task['reportedDate'] != null) {
-                        if (task['reportedDate'] is Timestamp) {
-                          dateStr = (task['reportedDate'] as Timestamp)
-                              .toDate()
-                              .toString()
-                              .split(' ')[0];
-                        }
+                      String timeStr = '--:--';
+                      final scheduled = t['scheduled'] as DateTime?;
+                      final reported = t['reported'] as DateTime?;
+                      DateTime? displayDate = scheduled ?? reported;
+                      if (displayDate != null) {
+                        dateStr = '${displayDate.year}-${displayDate.month.toString().padLeft(2,'0')}-${displayDate.day.toString().padLeft(2,'0')}';
+                        final hour = displayDate.hour % 12 == 0 ? 12 : displayDate.hour % 12;
+                        final minute = displayDate.minute.toString().padLeft(2, '0');
+                        final ampm = displayDate.hour < 12 ? 'AM' : 'PM';
+                        timeStr = '$hour:$minute $ampm';
                       }
 
+                      // Combine date and time for display in the card (user requested both)
+                      final scheduledDisplay = dateStr != '--/--/----' ? '$dateStr  $timeStr' : timeStr;
+
+                      final imageUrl = (task['damagePic'] != null && task['damagePic'] is String) ? task['damagePic'] as String : null;
+
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.only(bottom: 16, left: 20, right: 20),
                         child: _buildTaskCard(
-                          task['complaintID'] ?? tasks[index].id,
+                          task['complaintID'] ?? t['id'] ?? 'unknown',
                           task['inventoryDamage'] ?? 'No title',
                           task['roomEntryConsent'] == true ? 'Room Entry Allowed' : 'Wait for student',
                           dateStr,
@@ -307,6 +455,9 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
                           Icons.inbox_rounded,
                           Colors.pink,
                           task['reportStatus'] ?? 'Unknown',
+                          imageUrl: imageUrl,
+                          scheduledTime: scheduledDisplay,
+                          statusColor: _getStatusColor(task['reportStatus'] ?? 'Unknown'),
                         ),
                       );
                     },
@@ -344,6 +495,18 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
     );
   }
 
+  Color _getStatusColor(String status) {
+    final lowerStatus = status.toLowerCase();
+    if (lowerStatus == 'approved') {
+      return Colors.purple; // Purple for Approved
+    } else if (lowerStatus == 'ongoing') {
+      return Colors.blue; // Blue for Ongoing
+    } else if (lowerStatus == 'complete' || lowerStatus == 'completed') {
+      return Colors.green; // Green for Completed
+    }
+    return Colors.grey; // Default fallback
+  }
+
   Widget _buildTab(String title, int index) {
     final isSelected = selectedTab == index;
     return GestureDetector(
@@ -379,6 +542,7 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
     IconData icon,
     Color iconColor,
     String status,
+    {String? imageUrl, String? scheduledTime, Color? statusColor}
   ) {
     return GestureDetector(
       onTap: () {
@@ -389,7 +553,7 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
               taskId: id,
               title: title,
               location: location,
-              time: time,
+              time: scheduledTime ?? time,
               status: status,
             ),
           ),
@@ -417,7 +581,18 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
                 color: bgColor,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: iconColor, size: 24),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: imageUrl != null
+                    ? Image.network(
+                        imageUrl,
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Icon(icon, color: iconColor, size: 24),
+                      )
+                    : Icon(icon, color: iconColor, size: 24),
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -458,37 +633,37 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.amber.shade100,
+                    color: statusColor?.withOpacity(0.2) ?? Colors.amber.shade100,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     status.toUpperCase(),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: Colors.amber,
+                      color: statusColor ?? Colors.amber,
                     ),
                   ),
                 ),
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.access_time,
-                      size: 16,
-                      color: Colors.black54,
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.access_time,
+                          size: 16,
+                          color: Colors.black54,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          scheduledTime ?? time,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      time,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ],
-                ),
               ],
             ),
           ],
