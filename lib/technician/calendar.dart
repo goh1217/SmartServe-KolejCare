@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'profile.dart';
 import 'main.dart';
+import 'taskDetail.dart';
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
@@ -60,6 +61,17 @@ class _CalendarPageState extends State<CalendarPage> {
     super.dispose();
   }
 
+  void _changeMonth(int deltaMonths) {
+    final int totalMonths = (selectedDate.year * 12) + (selectedDate.month - 1) + deltaMonths;
+    final int newYear = (totalMonths ~/ 12);
+    final int newMonth = (totalMonths % 12) + 1;
+    final int daysInNewMonth = DateTime(newYear, newMonth + 1, 0).day;
+    final int newDay = selectedDate.day <= daysInNewMonth ? selectedDate.day : daysInNewMonth;
+    setState(() {
+      selectedDate = DateTime(newYear, newMonth, newDay);
+    });
+  }
+
   // Fetch tasks for the selected day
   Stream<QuerySnapshot> getTaskStream() {
     if (technicianDocId == null) {
@@ -106,17 +118,17 @@ class _CalendarPageState extends State<CalendarPage> {
                       // Filter by date
                       final dayTasks = allTasks.where((doc) {
                         final data = doc.data() as Map<String, dynamic>;
-                        
+
                         Timestamp? timestamp;
-                        if (data['scheduledDate'] != null) {
+                        if (data['scheduledDate'] != null && data['scheduledDate'] is Timestamp) {
                           timestamp = data['scheduledDate'] as Timestamp;
-                        } else if (data['scheduledDate'] != null) {
-                          timestamp = data['scheduledDate'] as Timestamp;
+                        } else if (data['repairDate'] != null && data['repairDate'] is Timestamp) {
+                          timestamp = data['repairDate'] as Timestamp;
                         }
 
                         if (timestamp == null) return false;
 
-                        // FIX: Shift time to UTC+8 for Malaysia/Campus time
+                        // Shift time to UTC+8 for Malaysia/Campus time
                         final utcTime = timestamp.toDate().toUtc();
                         final taskDate = utcTime.add(const Duration(hours: 8));
 
@@ -178,11 +190,7 @@ class _CalendarPageState extends State<CalendarPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
-                onPressed: () {
-                  setState(() {
-                    selectedDate = selectedDate.subtract(const Duration(days: 30));
-                  });
-                },
+                onPressed: () => _changeMonth(-1),
                 icon: const Icon(Icons.arrow_back_ios, size: 20),
                 color: Colors.grey,
               ),
@@ -195,11 +203,7 @@ class _CalendarPageState extends State<CalendarPage> {
                 ),
               ),
               IconButton(
-                onPressed: () {
-                  setState(() {
-                    selectedDate = selectedDate.add(const Duration(days: 30));
-                  });
-                },
+                onPressed: () => _changeMonth(1),
                 icon: const Icon(Icons.arrow_forward_ios, size: 20),
                 color: Colors.grey,
               ),
@@ -211,12 +215,10 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 
   Widget _buildWeekRow() {
-    final now = DateTime.now();
-    final startOfWeek = now.subtract(Duration(days: now.weekday % 7));
-    final weekDays = List.generate(
-      7,
-          (i) => startOfWeek.add(Duration(days: i)),
-    );
+    // Show all days for the currently selected month
+    final firstOfMonth = DateTime(selectedDate.year, selectedDate.month, 1);
+    final daysInMonth = DateTime(selectedDate.year, selectedDate.month + 1, 0).day;
+    final monthDays = List.generate(daysInMonth, (i) => firstOfMonth.add(Duration(days: i)));
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10.0),
@@ -224,11 +226,10 @@ class _CalendarPageState extends State<CalendarPage> {
         height: 90,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
-          itemCount: weekDays.length,
+          itemCount: monthDays.length,
           itemBuilder: (context, i) {
-            final day = weekDays[i];
-            final isSelected = day.day == selectedDate.day &&
-                day.month == selectedDate.month;
+            final day = monthDays[i];
+            final isSelected = day.day == selectedDate.day && day.month == selectedDate.month;
             return GestureDetector(
               onTap: () {
                 setState(() => selectedDate = day);
@@ -314,18 +315,17 @@ class _CalendarPageState extends State<CalendarPage> {
       child: Stack(
         children: tasks.map((doc) {
           final data = doc.data() as Map<String, dynamic>;
-          
-          // Check both scheduledDate and repairDate as per prompt
+          // Check both scheduledDate and repairDate
           Timestamp? timestamp;
-          if (data['scheduledDate'] != null) {
+          if (data['scheduledDate'] != null && data['scheduledDate'] is Timestamp) {
             timestamp = data['scheduledDate'] as Timestamp;
-          } else if (data['scheduledDate'] != null) {
-            timestamp = data['scheduledDate'] as Timestamp;
+          } else if (data['repairDate'] != null && data['repairDate'] is Timestamp) {
+            timestamp = data['repairDate'] as Timestamp;
           }
-          
+
           if (timestamp == null) return const SizedBox.shrink();
 
-          // FIX: Shift time to UTC+8 for Malaysia/Campus time
+          // Shift time to UTC+8 for Malaysia/Campus time
           final utcTime = timestamp.toDate().toUtc();
           final start = utcTime.add(const Duration(hours: 8));
 
@@ -338,24 +338,28 @@ class _CalendarPageState extends State<CalendarPage> {
           if (data['urgencyLevel'] == 'Low') color = const Color(0xFF66BB6A);
 
           return _buildEventCard(
+            doc.id,
             data['inventoryDamage'] ?? 'No Title', // Using inventoryDamage as title
             data['roomEntryConsent'] == true ? 'Entry Allowed' : 'Wait for student', // Placeholder location
             start,
             duration,
             color,
+             data['reportStatus'], // Pass report status to event card
           );
         }).toList(),
       ),
     );
   }
 
-  Widget _buildEventCard(
+    Widget _buildEventCard(
+      String id,
       String title,
       String location,
       DateTime start,
       double duration,
       Color color,
-      ) {
+       String? reportStatus, // Add reportStatus parameter
+       ) {
     // The issue was using start.hour directly.
     // Flutter's Coordinate system starts from 0 at the top.
     // If the list of times starts from 12 AM (index 0), then index = hour.
@@ -374,51 +378,72 @@ class _CalendarPageState extends State<CalendarPage> {
       top: topPosition,
       left: 10,
       right: 10,
-      child: Container(
-        height: height,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [color, color.withOpacity(0.8)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  location,
-                  style: const TextStyle(fontSize: 14, color: Colors.white),
-                ),
-              ],
-            ),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Text(
-                '${_formatTime(start)} - $endTime',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
+      child: GestureDetector(
+        onTap: () {
+          // Navigate to TaskDetailPage with scheduled time
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TaskDetailPage(
+                taskId: id,
+                title: title,
+                location: location,
+                time: _formatTime(start),
               ),
             ),
-          ],
+          );
+        },
+        child: Container(
+          height: height,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [color, color.withOpacity(0.8)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    location,
+                    style: const TextStyle(fontSize: 14, color: Colors.white),
+                  ),
+                         if (reportStatus != null) // Display report status if available
+                           Text(
+                             reportStatus,
+                             style: const TextStyle(fontSize: 12, color: Colors.white),
+                           ),
+                ],
+              ),
+              Align(
+                alignment: Alignment.bottomRight,
+                child: Text(
+                  '${_formatTime(start)} - $endTime',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
