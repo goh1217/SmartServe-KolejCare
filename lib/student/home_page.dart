@@ -1566,7 +1566,7 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
                 _buildNavItem(Icons.calendar_today_rounded, 1),
                 const SizedBox(width: 60),
                 _buildNavItem(Icons.description_rounded, 2),
-                _buildNavItem(Icons.settings, 3),
+                _buildNavItem(Icons.person_outline, 3),
               ],
             ),
           ),
@@ -1599,7 +1599,7 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
               MaterialPageRoute(builder: (context) => const ActivityScreen()),
             );
             break;
-                case 3:
+          case 3:
             Navigator.push(
               context,
               MaterialPageRoute(

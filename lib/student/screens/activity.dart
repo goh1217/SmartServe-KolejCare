@@ -13,6 +13,7 @@ import '../home_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import '../profile.dart';
 
 class ActivityScreen extends StatefulWidget {
   const ActivityScreen({super.key});
@@ -845,7 +846,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
           MaterialPageRoute(builder: (c) => const ComplaintFormScreen()),
         ),
         backgroundColor: const Color(0xFF5E4DB2),
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       // replaced old bottom nav with modern rounded BottomAppBar
@@ -887,7 +888,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                 // Empty space for the central FAB
                 const SizedBox(width: 60),
                 _buildNavItem(Icons.description_rounded, 2),
-                _buildNavItem(Icons.people_rounded, 3),
+                _buildNavItem(Icons.person_outline, 3),
               ],
             ),
           ),
@@ -924,7 +925,12 @@ class _ActivityScreenState extends State<ActivityScreen> {
             );
             break;
           case 3:
-            Navigator.pushNamed(context, '/chat');
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProfilePage(userId: FirebaseAuth.instance.currentUser?.uid ?? ''),
+              ),
+            );
             break;
         }
       },
