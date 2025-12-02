@@ -306,21 +306,8 @@ class _StaffPortalDashboardState extends State<StaffPortalDashboard> {
 
             final totalComplaints = allDocs.length;
             final completedDocs = allDocs.where((doc) => doc['reportStatus'] == 'Completed').toList();
+            final pendingComplaints = allDocs.where((doc) => doc['reportStatus'] == 'Pending').toList();
             final completionRate = totalComplaints > 0 ? (completedDocs.length / totalComplaints) * 100 : 0.0;
-
-            double totalResolutionHours = 0;
-            int resolvedWithDatesCount = 0;
-            for (var doc in completedDocs) {
-              final data = doc.data() as Map<String, dynamic>;
-              final reportedDate = (data['reportedDate'] as Timestamp?)?.toDate();
-              final scheduleDate = (data['scheduleDate'] as Timestamp?)?.toDate();
-
-              if (reportedDate != null && scheduleDate != null) {
-                totalResolutionHours += scheduleDate.difference(reportedDate).inHours;
-                resolvedWithDatesCount++;
-              }
-            }
-            final avgHours = resolvedWithDatesCount > 0 ? totalResolutionHours / resolvedWithDatesCount : 0.0;
 
             return IntrinsicHeight(
               child: Row(
@@ -330,7 +317,7 @@ class _StaffPortalDashboardState extends State<StaffPortalDashboard> {
                   const SizedBox(width: 12),
                   Expanded(child: _buildAnalyticsCard(icon: Icons.percent, value: '${completionRate.toStringAsFixed(0)}%', label: 'Completion\nRate', color: const Color(0xFF7C3AED), textColor: Colors.black)),
                   const SizedBox(width: 12),
-                  Expanded(child: _buildAnalyticsCard(icon: Icons.access_time, value: '${avgHours.toStringAsFixed(1)}h', label: 'Avg.\nResolution\nTime', color: const Color(0xFF7C3AED), textColor: Colors.black)),
+                  Expanded(child: _buildAnalyticsCard(icon: Icons.pending_actions, value: pendingComplaints.length.toString(), label: 'Pending\nComplaints', color: const Color(0xFF7C3AED), textColor: Colors.black)),
                 ],
               ),
             );
