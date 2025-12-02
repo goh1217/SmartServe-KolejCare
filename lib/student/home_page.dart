@@ -9,6 +9,7 @@ import 'services/weatherService.dart';
 import 'notification_page.dart';
 import 'donate_page.dart';
 import 'screens/activity.dart';
+import 'profile.dart';
 
 // Simple model to hold complaint summary information for UI
 class ComplaintSummary {
@@ -49,6 +50,7 @@ class _HomePageState extends State<HomePage> {
   String studentName = '';
   String matricNo = '';
   bool isLoadingStudent = true;
+  String studentPhotoUrl = '';
 
   // Complaint progress
   double complaintProgress = 0.0; // 0.0 - 1.0
@@ -944,6 +946,7 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
         setState(() {
           studentName = (data['studentName'] ?? '').toString();
           matricNo = (data['matricNo'] ?? '').toString();
+          studentPhotoUrl = (data['photoUrl'] ?? data['photoURL'] ?? data['profilePic'] ?? '').toString();
           isLoadingStudent = false;
         });
         if (kDebugMode) {
@@ -1189,7 +1192,10 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
                       CircleAvatar(
                         radius: 24,
                         backgroundColor: Colors.teal,
-                        child: Icon(Icons.person, color: Colors.white, size: 28),
+                        backgroundImage: studentPhotoUrl.isNotEmpty ? NetworkImage(studentPhotoUrl) : null,
+                        child: (studentPhotoUrl.isEmpty)
+                            ? const Icon(Icons.person, color: Colors.white, size: 28)
+                            : null,
                       ),
                       const SizedBox(width: 12),
                       Column(
@@ -1593,8 +1599,13 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
               MaterialPageRoute(builder: (context) => const ActivityScreen()),
             );
             break;
-          case 3:
-            Navigator.pushNamed(context, '/settings');
+                case 3:
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProfilePage(userId: FirebaseAuth.instance.currentUser?.uid ?? ''),
+              ),
+            );
             break;
         }
       },
