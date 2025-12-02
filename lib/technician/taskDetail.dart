@@ -39,6 +39,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   String urgency = 'Loading...';
   String category = 'Loading...';
   String date = 'Loading...';
+  String scheduledTime = '--:--';
   String description = 'Loading...';
   String assignmentNotes = 'Loading...'; // Rejection reason or notes
   String studentName = 'Loading...';
@@ -93,10 +94,14 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
           }
 
           if (timestamp != null) {
-            // Convert to local time (or UTC+8 if we strictly followed the previous fix, 
-            // but usually Detail view can show standard local format)
-            final dt = timestamp.toDate();
-            date = "${dt.day}/${dt.month}/${dt.year}";
+              // Convert stored timestamp to UTC then apply UTC+8 (Malaysia timezone)
+              final dt = timestamp.toDate().toUtc().add(const Duration(hours: 8));
+              date = "${dt.day}/${dt.month}/${dt.year}";
+              // Also set scheduled time if scheduledDate provided
+              final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+              final minute = dt.minute.toString().padLeft(2, '0');
+              final ampm = dt.hour < 12 ? 'AM' : 'PM';
+              scheduledTime = '$hour:$minute $ampm';
           } else {
             date = widget.time;
           }
@@ -302,7 +307,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  widget.time, // Time passed from list might be sufficient
+                                  scheduledTime != '--:--' ? scheduledTime : widget.time,
                                   style: const TextStyle(
                                     fontSize: 14,
                                     color: Colors.black87,
