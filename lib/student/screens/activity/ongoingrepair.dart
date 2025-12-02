@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 import 'technician_tracking.dart';
 
 class OngoingRepairScreen extends StatelessWidget {
-  const OngoingRepairScreen({super.key});
+  final String? complaintId;
+
+  const OngoingRepairScreen({super.key, this.complaintId});
 
   @override
   Widget build(BuildContext context) {
@@ -39,75 +42,114 @@ class OngoingRepairScreen extends StatelessWidget {
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildDetailItem('Report ID', 'RPT-20251120-102', isFirst: true),
-                const Divider(height: 1),
-                _buildDetailItem(
-                  'Repair Status',
-                  '',  // Empty since we'll use a custom layout
-                  trailing: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Technician on route',
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: Colors.black,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      InkWell(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const TechnicianTrackingScreen(
-                                technicianName: 'Ahmad Rahim',
+            child: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>?>(
+              future: complaintId != null
+                  ? FirebaseFirestore.instance.collection('complaint').doc(complaintId).get()
+                  : Future<DocumentSnapshot<Map<String, dynamic>>?>.value(null),
+              builder: (context, snap) {
+                if (snap.connectionState == ConnectionState.waiting) {
+                  return const Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+
+                final Map<String, dynamic> data = snap.data?.data() ?? {};
+                final id = complaintId ?? data['complaintID'] ?? snap.data?.id ?? '—';
+                // derive fields from document
+                // (No ETA shown initially; keep parsing available for later if needed.)
+
+                final serviceCategory = (data['damageCategory'] ?? data['category'] ?? '').toString();
+                final issue = (data['inventoryDamage'] ?? data['description'] ?? data['damageDesc'] ?? '').toString();
+                // Estimated duration intentionally left blank initially
+                final estimatedDuration = (data['estimatedDuration'] ?? data['estimated_time'] ?? '').toString();
+                final technician = (data['assignedTechnicianName'] ?? data['assignedTechnician'] ?? data['assignedTechnicianId'] ?? '').toString();
+                final reportedOn = data['reportedDate'] ?? data['reportedOn'] ?? data['createdAt'];
+                String reportedText = '';
+                try {
+                  if (reportedOn != null) {
+                    if (reportedOn is Timestamp) reportedText = DateFormat('d MMM yyyy, hh:mm a').format(reportedOn.toDate().toLocal());
+                    else if (reportedOn is String) {
+                      final parsed = DateTime.tryParse(reportedOn);
+                      if (parsed != null) reportedText = DateFormat('d MMM yyyy, hh:mm a').format(parsed.toLocal());
+                    }
+                  }
+                } catch (_) {
+                  reportedText = '';
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildDetailItem('Report ID', id.toString(), isFirst: true),
+                    const Divider(height: 1),
+                    _buildDetailItem(
+                      'Repair Status',
+                      '',  // Empty since we'll use a custom layout
+                      trailing: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Technician on route',
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Colors.black,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => TechnicianTrackingScreen(
+                                    technicianName: technician.isNotEmpty ? technician : 'Technician',
+                                    complaintId: complaintId,
+                                  ),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  Text(
+                                    'By 1:00 pm',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.blue,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  SizedBox(width: 4),
+                                  Icon(Icons.map_outlined, size: 14, color: Colors.blue),
+                                ],
                               ),
                             ),
-                          );
-                        },
-                        child: Container(
-                          padding:
-                          const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: const [
-                              Text(
-                                'By 1:00 pm',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.blue,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              SizedBox(width: 4),
-                              Icon(Icons.map_outlined, size: 14, color: Colors.blue),
-                            ],
-                          ),
-                        ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-                const Divider(height: 1),
-                _buildDetailItem('Service Category', 'Furniture'),
-                const Divider(height: 1),
-                _buildDetailItem('Issue Description', 'Bed frame unstable and squeaky'),
-                const Divider(height: 1),
-                _buildDetailItem('Estimated Duration', '~1 hour'),
-                const Divider(height: 1),
-                _buildDetailItem('Assigned Technician', 'Ahmad Rahim'),
-                const Divider(height: 1),
-                _buildDetailItem('Reported On', '18 Nov 2025, 2:45 PM', isLast: true),
-              ],
+                    ),
+                    const Divider(height: 1),
+                    _buildDetailItem('Service Category', serviceCategory),
+                    const Divider(height: 1),
+                    _buildDetailItem('Issue Description', issue),
+                    const Divider(height: 1),
+                    // Estimated Duration intentionally left blank initially
+                    _buildDetailItem('Estimated Duration', estimatedDuration),
+                    const Divider(height: 1),
+                    _buildDetailItem('Assigned Technician', technician),
+                    const Divider(height: 1),
+                    _buildDetailItem('Reported On', reportedText, isLast: true),
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -155,15 +197,5 @@ class OngoingRepairScreen extends StatelessWidget {
     );
   }
 
-  // kept for optional external maps link
-  static Future<void> _openMaps(BuildContext context, String destination) async {
-    final encoded = Uri.encodeComponent(destination);
-    final uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$encoded');
-
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open maps')),
-      );
-    }
-  }
+  // (no external maps helper - keep the UI simple for now)
 }
