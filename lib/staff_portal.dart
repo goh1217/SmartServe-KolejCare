@@ -308,7 +308,7 @@ class _StaffPortalDashboardState extends State<StaffPortalDashboard> {
                 }
 
                 return Column(
-                  children: complaints.take(5).map((complaint) => _buildComplaintCard(complaint)).toList(), // Show top 5
+                  children: complaints.map((complaint) => _buildComplaintCard(complaint)).toList(), // Now shows all complaints
                 );
               },
             );
