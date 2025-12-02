@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-// Main Tips Page - Updated Design
+// Main Tips Page - Updated to match Home Page color scheme
 class TipsPage extends StatefulWidget {
   const TipsPage({super.key});
 
@@ -14,9 +14,9 @@ class _TipsPageState extends State<TipsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF3E5F5), // Light purple background
+      backgroundColor: Colors.grey[100], // Matches home page background
       appBar: AppBar(
-        backgroundColor: const Color(0xFF9C27B0), // Purple
+        backgroundColor: Colors.deepPurple, // Matches home page purple
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -37,7 +37,7 @@ class _TipsPageState extends State<TipsPage> {
           children: [
             const SizedBox(height: 30),
 
-            // DONATE Image (Replace with your image)
+            // DONATE Image
             Container(
               width: 150,
               height: 150,
@@ -46,7 +46,7 @@ class _TipsPageState extends State<TipsPage> {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.purple.withOpacity(0.2),
+                    color: Colors.deepPurple.withOpacity(0.15),
                     spreadRadius: 3,
                     blurRadius: 10,
                   ),
@@ -72,9 +72,9 @@ class _TipsPageState extends State<TipsPage> {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.purple.withOpacity(0.15),
+                    color: Colors.grey.withOpacity(0.08),
                     spreadRadius: 2,
-                    blurRadius: 10,
+                    blurRadius: 8,
                   ),
                 ],
               ),
@@ -86,7 +86,7 @@ class _TipsPageState extends State<TipsPage> {
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF6A1B9A), // Dark purple
+                      color: Colors.deepPurple,
                       height: 1.3,
                     ),
                   ),
@@ -105,7 +105,7 @@ class _TipsPageState extends State<TipsPage> {
 
                   const SizedBox(height: 30),
 
-                  // Amount Selection - More Visible
+                  // Amount Selection
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -142,7 +142,7 @@ class _TipsPageState extends State<TipsPage> {
                     child: const Text(
                       'Choose other amount',
                       style: TextStyle(
-                        color: Color(0xFF9C27B0), // Purple
+                        color: Colors.deepPurple,
                         fontSize: 14,
                         decoration: TextDecoration.underline,
                         fontWeight: FontWeight.w600,
@@ -169,13 +169,13 @@ class _TipsPageState extends State<TipsPage> {
                       }
                           : null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF7B1FA2), // Deep purple
+                        backgroundColor: Colors.deepPurple,
                         disabledBackgroundColor: Colors.grey[300],
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        elevation: 3,
+                        elevation: 2,
                       ),
                       child: const Text(
                         'Done',
@@ -190,10 +190,9 @@ class _TipsPageState extends State<TipsPage> {
 
                   const SizedBox(height: 12),
 
-                  // Maybe next time - Connected to home page
+                  // Maybe next time
                   TextButton(
                     onPressed: () {
-                      // Navigate back to home page
                       Navigator.popUntil(context, (route) => route.isFirst);
                     },
                     child: Text(
@@ -235,23 +234,16 @@ class _AmountButton extends StatelessWidget {
         width: 85,
         height: 85,
         decoration: BoxDecoration(
-          gradient: isSelected 
-              ? const LinearGradient(
-                  colors: [Color(0xFF9C27B0), Color(0xFF7B1FA2)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
-              : null,
-          color: isSelected ? null : const Color(0xFFE1BEE7), // Light purple
+          color: isSelected ? Colors.deepPurple : Colors.deepPurple.shade50,
           shape: BoxShape.circle,
           border: Border.all(
-            color: isSelected ? const Color(0xFF7B1FA2) : const Color(0xFF9C27B0),
-            width: 3,
+            color: Colors.deepPurple,
+            width: 2,
           ),
           boxShadow: [
             if (isSelected)
               BoxShadow(
-                color: const Color(0xFF9C27B0).withOpacity(0.4),
+                color: Colors.deepPurple.withOpacity(0.3),
                 spreadRadius: 2,
                 blurRadius: 8,
                 offset: const Offset(0, 3),
@@ -267,7 +259,7 @@ class _AmountButton extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: isSelected ? Colors.white : const Color(0xFF6A1B9A),
+                  color: isSelected ? Colors.white : Colors.deepPurple,
                 ),
               ),
             ],
@@ -278,7 +270,7 @@ class _AmountButton extends StatelessWidget {
   }
 }
 
-// Enter Amount Page - Updated with Purple Theme
+// Enter Amount Page - Updated with matching colors
 class EnterAmountPage extends StatefulWidget {
   const EnterAmountPage({super.key});
 
@@ -308,16 +300,16 @@ class _EnterAmountPageState extends State<EnterAmountPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF3E5F5), // Light purple background
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        backgroundColor: const Color(0xFF9C27B0), // Purple
+        backgroundColor: Colors.deepPurple,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Tips',
+          'Enter Amount',
           style: TextStyle(
             color: Colors.white,
             fontSize: 18,
@@ -336,109 +328,115 @@ class _EnterAmountPageState extends State<EnterAmountPage> {
               children: [
                 const SizedBox(height: 40),
 
-          // Enter Amount Label
-          const Text(
-            'Enter Amount',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF6A1B9A), // Dark purple
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Amount Display
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'RM',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF6A1B9A),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                width: 100,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF9C27B0), width: 2),
-                ),
-                child: Center(
-                  child: Text(
-                    enteredAmount.isEmpty ? '0' : enteredAmount,
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF6A1B9A),
-                    ),
+                // Enter Amount Label
+                const Text(
+                  'Enter Amount',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.deepPurple,
                   ),
                 ),
-              ),
-            ],
-          ),
 
-          const SizedBox(height: 40),
+                const SizedBox(height: 20),
 
-          // Number Pad
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40),
-            child: Column(
-              children: [
-                _NumberRow(
-                  numbers: ['1', '2', '3'],
-                  onTap: _onNumberTap,
-                ),
-                const SizedBox(height: 20),
-                _NumberRow(
-                  numbers: ['4', '5', '6'],
-                  onTap: _onNumberTap,
-                ),
-                const SizedBox(height: 20),
-                _NumberRow(
-                  numbers: ['7', '8', '9'],
-                  onTap: _onNumberTap,
-                ),
-                const SizedBox(height: 20),
+                // Amount Display
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    GestureDetector(
-                      onTap: _onDeleteTap,
-                      child: Container(
-                        width: 70,
-                        height: 70,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFE1BEE7), // Light purple
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Center(
-                          child: Icon(Icons.backspace_outlined, color: Color(0xFF6A1B9A)),
-                        ),
+                    const Text(
+                      'RM',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.deepPurple,
                       ),
                     ),
-                    _NumberButton(
-                      value: '0',
-                      onTap: _onNumberTap,
-                    ),
+                    const SizedBox(width: 8),
                     Container(
-                      width: 70,
-                      height: 70,
-                      decoration: const BoxDecoration(
-                        color: Colors.transparent,
-                        shape: BoxShape.circle,
+                      width: 100,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.deepPurple, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.08),
+                            blurRadius: 6,
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          enteredAmount.isEmpty ? '0' : enteredAmount,
+                          style: const TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.deepPurple,
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
+
+                const SizedBox(height: 40),
+
+                // Number Pad
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 40),
+                  child: Column(
+                    children: [
+                      _NumberRow(
+                        numbers: ['1', '2', '3'],
+                        onTap: _onNumberTap,
+                      ),
+                      const SizedBox(height: 20),
+                      _NumberRow(
+                        numbers: ['4', '5', '6'],
+                        onTap: _onNumberTap,
+                      ),
+                      const SizedBox(height: 20),
+                      _NumberRow(
+                        numbers: ['7', '8', '9'],
+                        onTap: _onNumberTap,
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          GestureDetector(
+                            onTap: _onDeleteTap,
+                            child: Container(
+                              width: 70,
+                              height: 70,
+                              decoration: BoxDecoration(
+                                color: Colors.deepPurple.shade50,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Center(
+                                child: Icon(Icons.backspace_outlined, color: Colors.deepPurple),
+                              ),
+                            ),
+                          ),
+                          _NumberButton(
+                            value: '0',
+                            onTap: _onNumberTap,
+                          ),
+                          Container(
+                            width: 70,
+                            height: 70,
+                            decoration: const BoxDecoration(
+                              color: Colors.transparent,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
 
                 const Spacer(),
 
@@ -461,13 +459,13 @@ class _EnterAmountPageState extends State<EnterAmountPage> {
                       }
                           : null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF7B1FA2), // Deep purple
+                        backgroundColor: Colors.deepPurple,
                         disabledBackgroundColor: Colors.grey[300],
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        elevation: 3,
+                        elevation: 2,
                       ),
                       child: const Text(
                         'Done',
@@ -527,15 +525,11 @@ class _NumberButton extends StatelessWidget {
         width: 70,
         height: 70,
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFFCE93D8), Color(0xFFBA68C8)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: Colors.deepPurple,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF9C27B0).withOpacity(0.3),
+              color: Colors.deepPurple.withOpacity(0.3),
               spreadRadius: 1,
               blurRadius: 5,
               offset: const Offset(0, 2),
@@ -557,7 +551,7 @@ class _NumberButton extends StatelessWidget {
   }
 }
 
-// Payment Method Page - Updated with Purple Theme
+// Payment Method Page - Updated with matching colors
 class PaymentMethodPage extends StatefulWidget {
   final int amount;
 
@@ -582,9 +576,9 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF3E5F5), // Light purple background
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        backgroundColor: const Color(0xFF9C27B0), // Purple
+        backgroundColor: Colors.deepPurple,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close, color: Colors.white),
@@ -610,7 +604,7 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF6A1B9A), // Dark purple
+                color: Colors.deepPurple,
               ),
             ),
 
@@ -654,7 +648,13 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF9C27B0)),
+                  border: Border.all(color: Colors.deepPurple),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.08),
+                      blurRadius: 6,
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -671,17 +671,17 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF3E5F5),
+                        color: Colors.deepPurple.shade50,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFF9C27B0)),
+                        border: Border.all(color: Colors.deepPurple),
                       ),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
                           value: selectedBank,
                           hint: const Text('Select Bank'),
                           isExpanded: true,
-                          icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF9C27B0)),
-                          dropdownColor: const Color(0xFFF3E5F5),
+                          icon: const Icon(Icons.keyboard_arrow_down, color: Colors.deepPurple),
+                          dropdownColor: Colors.white,
                           items: banks.map((String bank) {
                             return DropdownMenuItem<String>(
                               value: bank,
@@ -709,7 +709,6 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                 onPressed: (selectedPaymentMethod == 'card' ||
                     (selectedPaymentMethod == 'fpx' && selectedBank != null))
                     ? () {
-                  // Show success dialog
                   showDialog(
                     context: context,
                     builder: (context) => AlertDialog(
@@ -720,7 +719,7 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                       title: const Text(
                         'Payment Successful',
                         style: TextStyle(
-                          color: Color(0xFF7B1FA2),
+                          color: Colors.deepPurple,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -736,7 +735,7 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                           child: const Text(
                             'OK',
                             style: TextStyle(
-                              color: Color(0xFF7B1FA2),
+                              color: Colors.deepPurple,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -747,13 +746,13 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                 }
                     : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF7B1FA2), // Deep purple
+                  backgroundColor: Colors.deepPurple,
                   disabledBackgroundColor: Colors.grey[300],
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  elevation: 3,
+                  elevation: 2,
                 ),
                 child: const Text(
                   'Proceed',
@@ -799,13 +798,13 @@ class _PaymentOption extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? const Color(0xFF7B1FA2) : const Color(0xFFE1BEE7),
+            color: isSelected ? Colors.deepPurple : Colors.grey.shade300,
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
             if (isSelected)
               BoxShadow(
-                color: const Color(0xFF9C27B0).withOpacity(0.2),
+                color: Colors.deepPurple.withOpacity(0.15),
                 spreadRadius: 2,
                 blurRadius: 5,
               ),
@@ -815,7 +814,7 @@ class _PaymentOption extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: const Color(0xFF9C27B0),
+              color: Colors.deepPurple,
               size: 24,
             ),
             const SizedBox(width: 12),
@@ -825,14 +824,14 @@ class _PaymentOption extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFF6A1B9A),
+                  color: Colors.deepPurple,
                 ),
               ),
             ),
             if (showDropdown)
               Icon(
                 isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                color: const Color(0xFF9C27B0),
+                color: Colors.deepPurple,
               ),
           ],
         ),
