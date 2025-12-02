@@ -268,8 +268,6 @@ class _StaffPortalDashboardState extends State<StaffPortalDashboard> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.menu, color: Colors.white),
-          const SizedBox(width: 12),
           const Icon(Icons.build, color: Colors.white, size: 24),
           const SizedBox(width: 8),
           const Text('Staff Portal', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600)),
