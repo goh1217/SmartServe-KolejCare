@@ -289,17 +289,20 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
             // Tabs: Today's tasks / Approved / Ongoing / Completed
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildTab("Today's tasks", 0),
-                    const SizedBox(width: 8),
-                    _buildTab('Approved', 1),
-                    const SizedBox(width: 8),
-                    _buildTab('Ongoing', 2),
-                    const SizedBox(width: 8),
-                    _buildTab('Completed', 3),
-                  ],
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildTab("Today's tasks", 0),
+                      const SizedBox(width: 8),
+                      _buildTab('Approved', 1),
+                      const SizedBox(width: 8),
+                      _buildTab('Ongoing', 2),
+                      const SizedBox(width: 8),
+                      _buildTab('Completed', 3),
+                    ],
+                  ),
                 ),
               ),
 
