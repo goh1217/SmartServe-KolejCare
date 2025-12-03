@@ -1080,8 +1080,9 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
 
   // Empty state widget shown when there are no active reports
   Widget _buildEmptyReportsState() {
-    return Container(
-      padding: const EdgeInsets.all(24),
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -1171,6 +1172,7 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
             ),
           ),
         ],
+        ),
       ),
     );
   }
