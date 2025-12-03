@@ -21,6 +21,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final _matricController = TextEditingController();
   final _collegeController = TextEditingController();
   final _blockController = TextEditingController();
+  final _roomController = TextEditingController();
   final _staffNoController = TextEditingController();
   final _workCollegeController = TextEditingController();
 
@@ -35,6 +36,12 @@ class _SignUpPageState extends State<SignUpPage> {
 
   String? _selectedStaffRank;
   final List<String> _staffRanks = ["supervisor", "manager", "admin", "officer"];
+
+  // Gender and wing for student
+  String? _selectedGender;
+  final List<String> _genderOptions = ['Male', 'Female', 'Other'];
+  String? _selectedWing;
+  final List<String> _wingOptions = ['A', 'B', 'C'];
 
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -191,6 +198,9 @@ class _SignUpPageState extends State<SignUpPage> {
         'phoneNo': _phoneController.text.trim(),
         'residentCollege': _collegeController.text.trim(),
         'block': _blockController.text.trim(),
+        'roomNumber': _roomController.text.trim(),
+        'gender': _selectedGender ?? '',
+        'wing': _selectedWing ?? '',
         'year': _selectedYear,
         'role': 'student',
         'complaintHistory': [],
@@ -229,6 +239,7 @@ class _SignUpPageState extends State<SignUpPage> {
     _blockController.dispose();
     _staffNoController.dispose();
     _workCollegeController.dispose();
+    _roomController.dispose();
     super.dispose();
   }
 
@@ -381,6 +392,51 @@ class _SignUpPageState extends State<SignUpPage> {
                         controller: _blockController,
                         decoration: _buildInputDecoration('e.g., M20'),
                         validator: (value) => value == null || value.isEmpty ? 'Please enter your block' : null,
+                      ),
+                      const SizedBox(height: 20),
+                      _buildLabel('Gender'),
+                      DropdownButtonFormField<String>(
+                        decoration: _buildInputDecoration(''),
+                        value: _selectedGender,
+                        hint: const Text('Select gender'),
+                        isExpanded: true,
+                        items: _genderOptions.map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            _selectedGender = newValue;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      _buildLabel('Room Number'),
+                      TextFormField(
+                        controller: _roomController,
+                        decoration: _buildInputDecoration('e.g., 210'),
+                        keyboardType: TextInputType.text,
+                      ),
+                      const SizedBox(height: 20),
+                      _buildLabel('Wing (if applicable)'),
+                      DropdownButtonFormField<String>(
+                        decoration: _buildInputDecoration(''),
+                        value: _selectedWing,
+                        hint: const Text('Select wing (A / B / C)'),
+                        isExpanded: true,
+                        items: _wingOptions.map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            _selectedWing = newValue;
+                          });
+                        },
                       ),
                     ],
 
