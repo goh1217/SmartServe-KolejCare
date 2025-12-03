@@ -704,7 +704,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
 
   Widget _buildActionButton() {
     // Check if status is In Progress (case insensitive)
-    bool isInProgress = status.toLowerCase() == 'in progress';
+    bool isInProgress = status.toLowerCase() == 'in progress' || status.toLowerCase() == 'ongoing';
     bool isCompleted = status.toLowerCase() == 'completed';
 
     if (isCompleted) {
@@ -716,6 +716,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
         width: double.infinity,
         child: ElevatedButton(
           onPressed: () async {
+            // Step 1: pick image
             File? image = await pickImage();
 
             if (image == null) {
@@ -725,7 +726,36 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
               return;
             }
 
-            // Show loading indicator? For now, just wait.
+            // Step 2: show confirmation preview
+            final confirm = await showDialog<bool>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: const Text('Submit proof image'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Please confirm the image before submitting.'),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: 200,
+                      height: 200,
+                      child: Image.file(image, fit: BoxFit.cover),
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+                  ElevatedButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Confirm')),
+                ],
+              ),
+            );
+
+            if (confirm != true) {
+              // user cancelled
+              return;
+            }
+
+            // Show uploading indicator
             ScaffoldMessenger.of(context).showSnackBar(
                const SnackBar(content: Text("Uploading image...")),
             );
@@ -765,7 +795,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
             elevation: 2,
           ),
           child: const Text(
-            'Mark as completed',
+            'Complete Task',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -838,7 +868,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.pop(context); // Close dialog
-                        _updateComplaintStatus('In Progress');
+                        _updateComplaintStatus('Ongoing');
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFD32F2F), // Red
@@ -903,6 +933,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
       case 'pending':
         return const Color(0xFFFFA726);
       case 'in progress':
+      case 'ongoing':
         return const Color(0xFF42A5F5);
       case 'completed':
         return const Color(0xFF66BB6A);

@@ -115,9 +115,14 @@ class _CalendarPageState extends State<CalendarPage> {
                       // Allow empty data to show empty grid
                       final allTasks = snapshot.hasData ? snapshot.data!.docs : <QueryDocumentSnapshot>[];
 
-                      // Filter by date
+                      // Filter by date and reportStatus
                       final dayTasks = allTasks.where((doc) {
                         final data = doc.data() as Map<String, dynamic>;
+                        
+                        // Filter by reportStatus - only show Completed, Approved, Ongoing
+                        final reportStatus = (data['reportStatus'] ?? '').toString().toLowerCase();
+                        final validStatuses = ['completed', 'approved', 'ongoing'];
+                        if (!validStatuses.contains(reportStatus)) return false;
 
                         Timestamp? timestamp;
                         if (data['scheduledDate'] != null && data['scheduledDate'] is Timestamp) {
@@ -309,6 +314,22 @@ class _CalendarPageState extends State<CalendarPage> {
     );
   }
 
+  Color _getReportStatusColor(String? reportStatus) {
+    final status = (reportStatus ?? '').toString().toLowerCase();
+    switch (status) {
+      case 'completed':
+        return const Color(0xFF66BB6A); // Green for completed
+      case 'approved':
+        return const Color(0xFF9C27B0); // Purple for approved
+      case 'ongoing':
+        return const Color(0xFF42A5F5); // Blue for ongoing
+      case 'rejected':
+        return const Color(0xFFEF5350); // Red for rejected
+      default:
+        return const Color(0xFFFFA726); // Orange default
+    }
+  }
+
   Widget _buildEvents(List<QueryDocumentSnapshot> tasks) {
     return SizedBox(
       height: 24 * timeSlotHeight,
@@ -331,11 +352,8 @@ class _CalendarPageState extends State<CalendarPage> {
 
           // Default duration 1 hour if not specified
           final duration = (data['duration'] ?? 1.0).toDouble();
-          // Determine color based on status or priority
-          // Using urgencyLevel from schema: "Medium"
-          Color color = const Color(0xFFFFA726); // Default orange
-          if (data['urgencyLevel'] == 'High') color = const Color(0xFFEF5350);
-          if (data['urgencyLevel'] == 'Low') color = const Color(0xFF66BB6A);
+          // Determine color based on reportStatus
+          Color color = _getReportStatusColor(data['reportStatus']);
 
           return _buildEventCard(
             doc.id,
