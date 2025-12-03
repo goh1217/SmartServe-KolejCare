@@ -218,24 +218,23 @@ class _RatingPageState extends State<RatingPage> {
         }
       }
 
-      // Fallback: read assignedTechnicianName from complaint doc
+      // If technician info wasn't provided via widget.technicianId, try
+      // resolving the assigned technician from the complaint's `assignedTo`
+      // path (preferred) and load the technician document for name/photo.
       if (name.isEmpty && widget.complaintId != null && widget.complaintId!.isNotEmpty) {
         final cdoc = await FirebaseFirestore.instance.collection('complaint').doc(widget.complaintId).get();
         if (cdoc.exists) {
           final cdata = cdoc.data();
-          name = (cdata?['assignedTechnicianName'] ?? '').toString();
-          if (name.isEmpty) {
-            final assignedTo = (cdata?['assignedTo'] ?? '').toString();
-            if (assignedTo.isNotEmpty) {
-              final parts = assignedTo.split('/').where((s) => s.isNotEmpty).toList();
-              if (parts.isNotEmpty) {
-                final possibleId = parts.last;
-                final doc = await FirebaseFirestore.instance.collection('technician').doc(possibleId).get();
-                if (doc.exists) {
-                  final t = doc.data();
-                  name = (t?['technicianName'] ?? t?['name'] ?? '').toString();
-                  photo = (t?['photoUrl'] ?? t?['avatar'] ?? '').toString();
-                }
+          final assignedTo = (cdata?['assignedTo'] ?? '').toString();
+          if (assignedTo.isNotEmpty) {
+            final parts = assignedTo.split('/').where((s) => s.isNotEmpty).toList();
+            if (parts.isNotEmpty) {
+              final possibleId = parts.last;
+              final doc = await FirebaseFirestore.instance.collection('technician').doc(possibleId).get();
+              if (doc.exists) {
+                final t = doc.data();
+                name = (t?['technicianName'] ?? t?['name'] ?? '').toString();
+                photo = (t?['photoUrl'] ?? t?['avatar'] ?? '').toString();
               }
             }
           }

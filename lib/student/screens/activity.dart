@@ -38,26 +38,14 @@ class _ActivityScreenState extends State<ActivityScreen> {
   }
   int _selectedIndex = 2; // default to activity tab
 
-  // Resolve a technician name for display. Prefer stored assignedTechnicianName,
-  // then assignedTechnicianId, then try to parse assignedTo path to find a doc id.
+  // Resolve a technician name for display. Use the `assignedTo` path to
+  // locate the technician document, extract the technician id from the path
+  // and then read the technician document to get the name. This avoids
+  // relying on stored duplicated fields like `assignedTechnicianName`.
   Future<String> _getTechnicianName(Map<String, dynamic> data) async {
     try {
-      final fromField = (data['assignedTechnicianName'] ?? '').toString();
-      if (fromField.isNotEmpty) return fromField;
-
-      final techId = (data['assignedTechnicianId'] ?? data['technicianID'] ?? '').toString();
-      if (techId.isNotEmpty) {
-        final doc = await FirebaseFirestore.instance.collection('technician').doc(techId).get();
-        if (doc.exists) {
-          final m = doc.data() as Map<String, dynamic>?;
-          final name = (m?['technicianName'] ?? m?['name'] ?? '').toString();
-          if (name.isNotEmpty) return name;
-        }
-      }
-
       final assignedTo = (data['assignedTo'] ?? '').toString();
       if (assignedTo.isNotEmpty) {
-        // try to extract an id from a path like '/collection/technician/<id>' or similar
         final parts = assignedTo.split('/').where((s) => s.isNotEmpty).toList();
         if (parts.isNotEmpty) {
           final possibleId = parts.last;
@@ -67,6 +55,17 @@ class _ActivityScreenState extends State<ActivityScreen> {
             final name = (m?['technicianName'] ?? m?['name'] ?? '').toString();
             if (name.isNotEmpty) return name;
           }
+        }
+      }
+
+      // As a last resort, try a direct technician id field (legacy `technicianID`)
+      final techId = (data['technicianID'] ?? '').toString();
+      if (techId.isNotEmpty) {
+        final doc = await FirebaseFirestore.instance.collection('technician').doc(techId).get();
+        if (doc.exists) {
+          final m = doc.data() as Map<String, dynamic>?;
+          final name = (m?['technicianName'] ?? m?['name'] ?? '').toString();
+          if (name.isNotEmpty) return name;
         }
       }
 
@@ -392,8 +391,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                         status: data['reportStatus']?.toString() ?? 'Approved',
                                         scheduledDate: dateStr,
                                         assignedTechnician: techName.isNotEmpty
-                                            ? techName
-                                            : (data['assignedTechnicianName'] ?? data['assignedTo'] ?? '').toString(),
+                                          ? techName
+                                          : (data['assignedTo'] ?? '').toString(),
                                         damageCategory: (data['damageCategory'] ?? '').toString(),
                                         inventoryDamageTitle: data['inventoryDamageTitle'] ?? '',
                                         inventoryDamage: (data['inventoryDamage'] ?? '').toString(),

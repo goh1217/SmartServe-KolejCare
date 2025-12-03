@@ -63,7 +63,24 @@ class OngoingRepairScreen extends StatelessWidget {
                 final issue = (data['inventoryDamage'] ?? data['description'] ?? data['damageDesc'] ?? '').toString();
                 // Estimated duration intentionally left blank initially
                 final estimatedDuration = (data['estimatedDuration'] ?? data['estimated_time'] ?? '').toString();
-                final technician = (data['assignedTechnicianName'] ?? data['assignedTechnician'] ?? data['assignedTechnicianId'] ?? '').toString();
+                // Resolve technician name by parsing `assignedTo` path and
+                // looking up the technician document. This avoids relying on
+                // deprecated/duplicated fields such as `assignedTechnicianName`.
+                final String assignedToRaw = (data['assignedTo'] ?? '').toString();
+                Future<String> technicianFuture() async {
+                  try {
+                    if (assignedToRaw.isEmpty) return '';
+                    final parts = assignedToRaw.split('/').where((s) => s.isNotEmpty).toList();
+                    if (parts.isEmpty) return '';
+                    final id = parts.last;
+                    final doc = await FirebaseFirestore.instance.collection('technician').doc(id).get();
+                    if (!doc.exists) return '';
+                    final m = doc.data();
+                    return (m?['technicianName'] ?? m?['name'] ?? '').toString();
+                  } catch (_) {
+                    return '';
+                  }
+                }
                 final reportedOn = data['reportedDate'] ?? data['reportedOn'] ?? data['createdAt'];
                 String reportedText = '';
                 try {
@@ -98,40 +115,46 @@ class OngoingRepairScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => TechnicianTrackingScreen(
-                                    technicianName: technician.isNotEmpty ? technician : 'Technician',
-                                    complaintId: complaintId,
+                          FutureBuilder<String>(
+                            future: technicianFuture(),
+                            builder: (context, techSnap) {
+                              final techName = techSnap.data ?? '';
+                              return InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => TechnicianTrackingScreen(
+                                        technicianName: techName.isNotEmpty ? techName : 'Technician',
+                                        complaintId: complaintId,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: const [
+                                      Text(
+                                        'By 1:00 pm',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.blue,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      SizedBox(width: 4),
+                                      Icon(Icons.map_outlined, size: 14, color: Colors.blue),
+                                    ],
                                   ),
                                 ),
                               );
                             },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.blue.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: const [
-                                  Text(
-                                    'By 1:00 pm',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.blue,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  SizedBox(width: 4),
-                                  Icon(Icons.map_outlined, size: 14, color: Colors.blue),
-                                ],
-                              ),
-                            ),
                           ),
                         ],
                       ),
@@ -144,7 +167,24 @@ class OngoingRepairScreen extends StatelessWidget {
                     // Estimated Duration intentionally left blank initially
                     _buildDetailItem('Estimated Duration', estimatedDuration),
                     const Divider(height: 1),
-                    _buildDetailItem('Assigned Technician', technician),
+                    _buildDetailItem(
+                      'Assigned Technician',
+                      '',
+                      trailing: FutureBuilder<String>(
+                        future: technicianFuture(),
+                        builder: (context, techSnap) {
+                          final tech = techSnap.data ?? '';
+                          return Text(
+                            tech.isNotEmpty ? tech : 'Technician',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              color: Colors.black,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                     const Divider(height: 1),
                     _buildDetailItem('Reported On', reportedText, isLast: true),
                   ],
