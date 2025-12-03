@@ -128,11 +128,11 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
 
       await complaintRef.update({
         'reportStatus': 'In Progress',
-        'assignedTechnicianId': selectedTechnicianId,
+        //'assignedTechnicianId': selectedTechnicianId,
         // store assignedTo as a document path so other code can parse it consistently
         'assignedTo': selectedTechnicianId != null ? '/collection/technician/$selectedTechnicianId' : '',
-        'assignedTechnicianName': selectedTechnicianData!['technicianName'],
-        'assignedTechnicianNo': selectedTechnicianData!['technicianNo'],
+        //'assignedTechnicianName': selectedTechnicianData!['technicianName'],
+        //'assignedTechnicianNo': selectedTechnicianData!['technicianNo'],
         'assignedDate': FieldValue.serverTimestamp(),
         'isRead': false,
         'lastStatusUpdate': FieldValue.serverTimestamp(),
