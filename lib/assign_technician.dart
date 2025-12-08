@@ -127,7 +127,7 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
       final String reviewedByPath = currentUser != null ? '/collection/staff/${currentUser.uid}' : '';
 
       await complaintRef.update({
-        'reportStatus': 'In Progress',
+        'reportStatus': 'Approved',
         // store assignedTo as a document path so other code can parse it consistently
         'assignedTo': selectedTechnicianId != null ? '/collection/technician/$selectedTechnicianId' : '',
         'assignedDate': FieldValue.serverTimestamp(),
