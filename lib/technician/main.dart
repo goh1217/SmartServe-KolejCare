@@ -445,7 +445,7 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
                         padding: const EdgeInsets.only(bottom: 16, left: 20, right: 20),
                         child: _buildTaskCard(
                           task['complaintID'] ?? t['id'] ?? 'unknown',
-                          task['inventoryDamage'] ?? 'No title',
+                          task['inventoryDamageTitle'] ?? 'No title',
                           task['roomEntryConsent'] == true ? 'Room Entry Allowed' : 'Wait for student',
                           dateStr,
                           Colors.pink.shade50,
