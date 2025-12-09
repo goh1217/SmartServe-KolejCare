@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 class AssignTechnicianPage extends StatefulWidget {
   final String complaintId;
@@ -18,13 +19,27 @@ class AssignTechnicianPage extends StatefulWidget {
 
 class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final ScrollController _scrollController = ScrollController();
+  final TextEditingController _durationController = TextEditingController();
+  
   String? selectedTechnicianId;
   Map<String, dynamic>? selectedTechnicianData;
   bool isAssigning = false;
   Map<String, dynamic>? recommendedTechnicianData;
   bool isManualSelection = false;
+  
+  // Scheduling fields
+  DateTime? selectedScheduleDateTime;
+  int? selectedEstimatedDurationHours;
+  DateTime _focusedDay = DateTime.now();
+  DateTime? _selectedDay;
+  TimeOfDay? _selectedTime;
+  
+  // Booked dates for selected technician
+  Set<DateTime> bookedDates = {};
+  bool isLoadingBookedDates = false;
 
-  // New variables for rejection
+  // Rejection fields
   final _rejectionReasonController = TextEditingController();
   bool _isRejecting = false;
 
@@ -37,6 +52,8 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
   @override
   void dispose() {
     _rejectionReasonController.dispose();
+    _durationController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -45,17 +62,50 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
     if (technicians.isNotEmpty) {
       setState(() {
         recommendedTechnicianData = technicians.first;
-        // Pre-select the recommended technician
         selectedTechnicianId = recommendedTechnicianData!['id'];
         selectedTechnicianData = recommendedTechnicianData;
+      });
+      // Load booked dates for recommended technician
+      await _loadBookedDates(selectedTechnicianId!);
+    }
+  }
+
+  Future<void> _loadBookedDates(String technicianId) async {
+    setState(() {
+      isLoadingBookedDates = true;
+    });
+
+    try {
+      final assignedPath = '/collection/technician/$technicianId';
+      final snap = await _firestore
+          .collection('complaint')
+          .where('assignedTo', isEqualTo: assignedPath)
+          .get();
+
+      final Set<DateTime> dates = {};
+      for (var doc in snap.docs) {
+        final data = doc.data();
+        final sd = data['scheduleDate'];
+        if (sd is Timestamp) {
+          final d = sd.toDate();
+          dates.add(DateTime(d.year, d.month, d.day));
+        }
+      }
+
+      setState(() {
+        bookedDates = dates;
+        isLoadingBookedDates = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoadingBookedDates = false;
       });
     }
   }
 
-  // Get available technicians matching the complaint category and sort them by workload
   Stream<List<Map<String, dynamic>>> getAvailableTechniciansStream() {
     String maintenanceField =
-    _mapCategoryToMaintenanceField(widget.complaint.category);
+        _mapCategoryToMaintenanceField(widget.complaint.category);
 
     return _firestore
         .collection('technician')
@@ -66,13 +116,11 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
       var technicians = snapshot.docs.map((doc) {
         Map<String, dynamic> data = doc.data();
         data['id'] = doc.id;
-        // Ensure tasksAssigned is a list to prevent errors
         data['tasksAssigned'] =
-        data['tasksAssigned'] is List ? data['tasksAssigned'] : [];
+            data['tasksAssigned'] is List ? data['tasksAssigned'] : [];
         return data;
       }).toList();
 
-      // Sort technicians by the number of tasks assigned in ascending order
       technicians.sort((a, b) {
         int tasksA = (a['tasksAssigned'] as List).length;
         int tasksB = (b['tasksAssigned'] as List).length;
@@ -114,30 +162,54 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
       return;
     }
 
+    if (selectedScheduleDateTime == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a schedule date and time'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (selectedEstimatedDurationHours == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter estimated duration'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       isAssigning = true;
     });
 
     try {
       DocumentReference complaintRef =
-      _firestore.collection('complaint').doc(widget.complaintId);
+          _firestore.collection('complaint').doc(widget.complaintId);
 
-      // Record which staff reviewed/assigned this complaint as a staff doc path
       final currentUser = FirebaseAuth.instance.currentUser;
-      final String reviewedByPath = currentUser != null ? '/collection/staff/${currentUser.uid}' : '';
+      final String reviewedByPath =
+          currentUser != null ? '/collection/staff/${currentUser.uid}' : '';
 
       await complaintRef.update({
         'reportStatus': 'Approved',
-        // store assignedTo as a document path so other code can parse it consistently
-        'assignedTo': selectedTechnicianId != null ? '/collection/technician/$selectedTechnicianId' : '',
+        'assignedTo': '/collection/technician/$selectedTechnicianId',
         'assignedDate': FieldValue.serverTimestamp(),
+        'scheduleDate': Timestamp.fromDate(selectedScheduleDateTime!),
+        'estimatedDurationJobDone': selectedEstimatedDurationHours,
         'isRead': false,
         'lastStatusUpdate': FieldValue.serverTimestamp(),
         'reviewedBy': reviewedByPath,
         'reviewedOn': FieldValue.serverTimestamp(),
       });
 
-      await _firestore.collection('technician').doc(selectedTechnicianId).update({
+      await _firestore
+          .collection('technician')
+          .doc(selectedTechnicianId)
+          .update({
         'tasksAssigned': FieldValue.arrayUnion([complaintRef]),
       });
 
@@ -172,7 +244,6 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
     }
   }
 
-  // New method to handle complaint rejection
   Future<void> _rejectComplaint(String reason) async {
     if (reason.isEmpty) {
       if (mounted) {
@@ -191,37 +262,53 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
     });
 
     try {
-      // Resolve staff display name for reviewedBy
       String reviewedByName = '';
       try {
         final user = FirebaseAuth.instance.currentUser;
         if (user != null) {
-          // try direct doc lookup by uid
-          final docById = await _firestore.collection('staff').doc(user.uid).get();
+          final docById =
+              await _firestore.collection('staff').doc(user.uid).get();
           if (docById.exists) {
             final d = docById.data();
-            reviewedByName = (d?['staffName'] ?? d?['name'] ?? d?['displayName'] ?? '').toString();
+            reviewedByName = (d?['staffName'] ??
+                    d?['name'] ??
+                    d?['displayName'] ??
+                    '')
+                .toString();
           }
 
-          // fallback: query by authUid field
           if (reviewedByName.isEmpty) {
-            final q = await _firestore.collection('staff').where('authUid', isEqualTo: user.uid).limit(1).get();
+            final q = await _firestore
+                .collection('staff')
+                .where('authUid', isEqualTo: user.uid)
+                .limit(1)
+                .get();
             if (q.docs.isNotEmpty) {
               final d = q.docs.first.data();
-              reviewedByName = (d['staffName'] ?? d['name'] ?? d['displayName'] ?? '').toString();
+              reviewedByName = (d['staffName'] ??
+                      d['name'] ??
+                      d['displayName'] ??
+                      '')
+                  .toString();
             }
           }
 
-          // fallback: query by email
           if (reviewedByName.isEmpty && (user.email ?? '').isNotEmpty) {
-            final q2 = await _firestore.collection('staff').where('email', isEqualTo: user.email).limit(1).get();
+            final q2 = await _firestore
+                .collection('staff')
+                .where('email', isEqualTo: user.email)
+                .limit(1)
+                .get();
             if (q2.docs.isNotEmpty) {
               final d = q2.docs.first.data();
-              reviewedByName = (d['staffName'] ?? d['name'] ?? d['displayName'] ?? '').toString();
+              reviewedByName = (d['staffName'] ??
+                      d['name'] ??
+                      d['displayName'] ??
+                      '')
+                  .toString();
             }
           }
 
-          // final fallback to uid
           if (reviewedByName.isEmpty) reviewedByName = user.uid;
         }
       } catch (_) {
@@ -264,9 +351,7 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
     }
   }
 
-  // New method to show the rejection dialog
   void _showRejectDialog() {
-    // Clear the controller before showing the dialog
     _rejectionReasonController.clear();
     showDialog(
       context: context,
@@ -290,7 +375,7 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
             ElevatedButton(
               onPressed: () {
                 final reason = _rejectionReasonController.text.trim();
-                Navigator.pop(context); // Close dialog
+                Navigator.pop(context);
                 _rejectComplaint(reason);
               },
               style: ElevatedButton.styleFrom(
@@ -303,6 +388,18 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
         );
       },
     );
+  }
+
+  void _scrollToCalendar() {
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
   }
 
   @override
@@ -338,7 +435,6 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
                   return _buildNoTechniciansFound();
                 }
 
-                // Show recommendation view or manual selection list
                 return isManualSelection
                     ? _buildManualSelectionView(technicians)
                     : _buildRecommendationView(technicians);
@@ -350,15 +446,14 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
     );
   }
 
-  // Builds the recommendation view with accept/reject options
   Widget _buildRecommendationView(List<Map<String, dynamic>> technicians) {
     if (recommendedTechnicianData == null) {
-      // This can happen briefly while the first stream result is being processed
       return const Center(
           child: CircularProgressIndicator(color: Color(0xFF7C3AED)));
     }
 
     return SingleChildScrollView(
+      controller: _scrollController,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -374,58 +469,299 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
           _buildTechnicianCard(recommendedTechnicianData!, true,
               isRecommendation: true),
           const SizedBox(height: 16),
+          if (selectedTechnicianId != null) ...[
+            _buildSchedulingSection(),
+            const SizedBox(height: 16),
+          ],
           _buildRecommendationButtons(),
+          const SizedBox(height: 16),
         ],
       ),
     );
   }
 
-  // Builds the list for manual technician selection
   Widget _buildManualSelectionView(List<Map<String, dynamic>> technicians) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
+        Expanded(
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      const Text('Available Technicians',
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87)),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF7C3AED).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          _mapCategoryToMaintenanceField(
+                              widget.complaint.category),
+                          style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF7C3AED)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: technicians.length,
+                  itemBuilder: (context, index) {
+                    final technician = technicians[index];
+                    final isSelected =
+                        selectedTechnicianId == technician['id'];
+                    return _buildTechnicianCard(technician, isSelected);
+                  },
+                ),
+                if (selectedTechnicianId != null) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _buildSchedulingSection(),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ],
+            ),
+          ),
+        ),
+        _buildManualActionButtons(),
+      ],
+    );
+  }
+
+  Widget _buildSchedulingSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              const Text('Available Technicians',
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87)),
+              const Icon(Icons.calendar_today,
+                  color: Color(0xFF7C3AED), size: 20),
               const SizedBox(width: 8),
-              Container(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF7C3AED).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  _mapCategoryToMaintenanceField(widget.complaint.category),
-                  style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF7C3AED)),
-                ),
+              const Text(
+                'Schedule Assignment',
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87),
               ),
             ],
           ),
+          const SizedBox(height: 16),
+          if (isLoadingBookedDates)
+            const Center(
+                child: Padding(
+              padding: EdgeInsets.all(20.0),
+              child: CircularProgressIndicator(color: Color(0xFF7C3AED)),
+            ))
+          else
+            _buildCalendar(),
+          const SizedBox(height: 16),
+          if (_selectedDay != null) ...[
+            const Divider(),
+            const SizedBox(height: 16),
+            _buildTimeSelector(),
+            const SizedBox(height: 16),
+            if (_selectedTime != null) _buildDurationInput(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCalendar() {
+    return TableCalendar(
+      firstDay: DateTime.now(),
+      lastDay: DateTime.now().add(const Duration(days: 365)),
+      focusedDay: _focusedDay,
+      selectedDayPredicate: (day) {
+        return isSameDay(_selectedDay, day);
+      },
+      enabledDayPredicate: (day) {
+        final dateOnly = DateTime(day.year, day.month, day.day);
+        return !bookedDates.contains(dateOnly) &&
+            !day.isBefore(DateTime.now().subtract(const Duration(days: 1)));
+      },
+      onDaySelected: (selectedDay, focusedDay) {
+        final dateOnly =
+            DateTime(selectedDay.year, selectedDay.month, selectedDay.day);
+        if (!bookedDates.contains(dateOnly)) {
+          setState(() {
+            _selectedDay = selectedDay;
+            _focusedDay = focusedDay;
+            _selectedTime = null;
+            selectedScheduleDateTime = null;
+            selectedEstimatedDurationHours = null;
+            _durationController.clear();
+          });
+        }
+      },
+      calendarStyle: CalendarStyle(
+        selectedDecoration: const BoxDecoration(
+          color: Color(0xFF7C3AED),
+          shape: BoxShape.circle,
+        ),
+        todayDecoration: BoxDecoration(
+          color: const Color(0xFF7C3AED).withOpacity(0.3),
+          shape: BoxShape.circle,
+        ),
+        disabledDecoration: const BoxDecoration(
+          color: Colors.yellow,
+          shape: BoxShape.circle,
+        ),
+        disabledTextStyle: const TextStyle(color: Colors.black54),
+        outsideDaysVisible: false,
+      ),
+      headerStyle: const HeaderStyle(
+        formatButtonVisible: false,
+        titleCentered: true,
+        titleTextStyle: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      calendarFormat: CalendarFormat.month,
+    );
+  }
+
+  Widget _buildTimeSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.access_time, color: Color(0xFF7C3AED), size: 20),
+            const SizedBox(width: 8),
+            const Text(
+              'Select Time',
+              style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87),
+            ),
+          ],
         ),
         const SizedBox(height: 12),
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: technicians.length,
-            itemBuilder: (context, index) {
-              final technician = technicians[index];
-              final isSelected = selectedTechnicianId == technician['id'];
-              return _buildTechnicianCard(technician, isSelected);
-            },
+        InkWell(
+          onTap: () async {
+            final TimeOfDay? picked = await showTimePicker(
+              context: context,
+              initialTime: _selectedTime ?? TimeOfDay.now(),
+            );
+            if (picked != null) {
+              setState(() {
+                _selectedTime = picked;
+                if (_selectedDay != null) {
+                  selectedScheduleDateTime = DateTime(
+                    _selectedDay!.year,
+                    _selectedDay!.month,
+                    _selectedDay!.day,
+                    picked.hour,
+                    picked.minute,
+                  );
+                }
+              });
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey[300]!),
+              borderRadius: BorderRadius.circular(8),
+              color: Colors.grey[50],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _selectedTime != null
+                      ? _selectedTime!.format(context)
+                      : 'Tap to select time',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: _selectedTime != null
+                        ? Colors.black87
+                        : Colors.grey[600],
+                  ),
+                ),
+                Icon(Icons.arrow_drop_down, color: Colors.grey[600]),
+              ],
+            ),
           ),
         ),
-        _buildManualActionButtons(), // Show assign button for manual selection
+      ],
+    );
+  }
+
+  Widget _buildDurationInput() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.timer, color: Color(0xFF7C3AED), size: 20),
+            const SizedBox(width: 8),
+            const Text(
+              'Estimated Duration (hours)',
+              style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _durationController,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            hintText: 'Enter estimated hours',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            filled: true,
+            fillColor: Colors.grey[50],
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          ),
+          onChanged: (value) {
+            final hours = int.tryParse(value);
+            setState(() {
+              selectedEstimatedDurationHours = hours;
+            });
+          },
+        ),
       ],
     );
   }
@@ -441,13 +777,13 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
                 : const Icon(Icons.check_circle),
             label: isAssigning
                 ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                    strokeWidth: 2, color: Colors.white))
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white))
                 : const Text('Accept & Assign',
-                style:
-                TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    style:
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             onPressed: isAssigning ? null : assignTechnician,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF7C3AED),
@@ -466,8 +802,13 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
             onPressed: () {
               setState(() {
                 isManualSelection = true;
-                selectedTechnicianId = null; // Deselect on switching
+                selectedTechnicianId = null;
                 selectedTechnicianData = null;
+                _selectedDay = null;
+                _selectedTime = null;
+                selectedScheduleDateTime = null;
+                selectedEstimatedDurationHours = null;
+                bookedDates.clear();
               });
             },
             child: const Text(
@@ -492,13 +833,13 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
             ),
             child: _isRejecting
                 ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                    strokeWidth: 2, color: Colors.white))
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white))
                 : const Text('Reject Complaint',
-                style:
-                TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    style:
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           ),
         ),
       ],
@@ -534,13 +875,13 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
               ),
               child: isAssigning
                   ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                      strokeWidth: 2, color: Colors.white))
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white))
                   : const Text('Assign Selected Technician',
-                  style:
-                  TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      style: TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold)),
             ),
           ),
           const SizedBox(height: 8),
@@ -558,13 +899,13 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
               ),
               child: _isRejecting
                   ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                      strokeWidth: 2, color: Colors.white))
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white))
                   : const Text('Reject Complaint',
-                  style: TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold)),
+                      style: TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -649,16 +990,22 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
 
   Widget _buildTechnicianCard(Map<String, dynamic> technician, bool isSelected,
       {bool isRecommendation = false}) {
-    // For manual selection, the card is tappable. For recommendation, it is not.
     return GestureDetector(
       onTap: isRecommendation
           ? null
-          : () {
-        setState(() {
-          selectedTechnicianId = technician['id'];
-          selectedTechnicianData = technician;
-        });
-      },
+          : () async {
+              setState(() {
+                selectedTechnicianId = technician['id'];
+                selectedTechnicianData = technician;
+                _selectedDay = null;
+                _selectedTime = null;
+                selectedScheduleDateTime = null;
+                selectedEstimatedDurationHours = null;
+                _durationController.clear();
+              });
+              await _loadBookedDates(technician['id']);
+              _scrollToCalendar();
+            },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
@@ -687,7 +1034,6 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
             Row(
               children: [
                 if (!isRecommendation) ...[
-                  // Selection Circle for manual list
                   Container(
                     width: 24,
                     height: 24,
@@ -713,8 +1059,8 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
                   backgroundColor: const Color(0xFF7C3AED).withOpacity(0.1),
                   child: Text(
                     technician['technicianName']
-                        ?.substring(0, 1)
-                        .toUpperCase() ??
+                            ?.substring(0, 1)
+                            .toUpperCase() ??
                         'T',
                     style: const TextStyle(
                         fontSize: 20,
