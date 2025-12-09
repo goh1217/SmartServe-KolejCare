@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:owtest/analytics_page.dart';
 import 'package:owtest/main.dart';
 import 'package:owtest/staff_complaints.dart';
 import 'package:owtest/settings_page.dart';
+
+// IMPORTANT: Replace this with your actual Gemini API Key.
+// For production apps, use environment variables, not hardcoding.
+const String GEMINI_API_KEY = "AIzaSyCMX9-2sIkUn-1DX0WPjqVBVYFsWvvX10M";
 
 class HelpPage extends StatefulWidget {
   const HelpPage({Key? key}) : super(key: key);
@@ -15,6 +20,12 @@ class _HelpPageState extends State<HelpPage> {
   int _selectedIndex = 3;
   final TextEditingController _messageController = TextEditingController();
   final List<ChatMessage> _messages = [];
+
+  // Initialize the Gemini Model Client
+  late final GenerativeModel _model = GenerativeModel(
+    model: 'gemini-1.5-flash',
+    apiKey: GEMINI_API_KEY,
+  );
 
   final List<FAQItem> faqs = [
     FAQItem(
@@ -43,9 +54,11 @@ class _HelpPageState extends State<HelpPage> {
     if (index == 0) {
       Navigator.of(context).popUntil((route) => route.isFirst);
     } else if (index == 1) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const StaffComplaintsPage()));
+      Navigator.pushReplacement(context,
+          MaterialPageRoute(builder: (context) => const StaffComplaintsPage()));
     } else if (index == 2) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => const AnalyticsPage()));
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => const AnalyticsPage()));
     } else {
       setState(() {
         _selectedIndex = index;
@@ -54,24 +67,16 @@ class _HelpPageState extends State<HelpPage> {
   }
 
   void _sendMessage() {
-    if (_messageController.text.trim().isNotEmpty) {
+    final text = _messageController.text.trim();
+    if (text.isNotEmpty) {
       setState(() {
         _messages.add(ChatMessage(
-          text: _messageController.text,
+          text: text,
           isUser: true,
         ));
         _messageController.clear();
-
-        // Simulate AI response
-        Future.delayed(const Duration(milliseconds: 500), () {
-          setState(() {
-            _messages.add(ChatMessage(
-              text: 'Thank you for your message. How can I help you with that?',
-              isUser: false,
-            ));
-          });
-        });
       });
+      _generateBotResponse(text);
     }
   }
 
@@ -81,21 +86,59 @@ class _HelpPageState extends State<HelpPage> {
         text: question,
         isUser: true,
       ));
+    });
+    _generateBotResponse(question);
+  }
 
-      // Simulate AI response based on question
-      Future.delayed(const Duration(milliseconds: 500), () {
-        setState(() {
-          String response = _getResponseForQuestion(question);
-          _messages.add(ChatMessage(
-            text: response,
-            isUser: false,
-          ));
-        });
+  // Modified to be async and call Gemini
+  void _generateBotResponse(String userInput) async {
+    // A small delay for better UX before generating a response
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    String botReply;
+
+    // --- Hardcoded Logic (Existing) ---
+    final hardcodedResponse = _getResponseForQuestion(userInput);
+
+    if (hardcodedResponse != null) {
+      botReply = hardcodedResponse;
+    }
+    // --- Gemini API Logic (New) ---
+    else {
+      try {
+        // Prepare a prompt to instruct the AI on its role
+        final systemInstruction =
+            "You are a helpful, friendly, and concise chatbot assistant for the SmartServe residential college platform. Answer user questions based on your general knowledge and the context provided, keeping your answers related to dormitory, college, or student life when possible.";
+
+        final content = [
+          Content.text(systemInstruction),
+          Content.text(userInput)
+        ];
+
+        // Use the API to generate a response
+        final response = await _model.generateContent(content);
+
+        botReply = response.text ??
+            "Sorry, the AI model returned an empty response. Try again.";
+      } catch (e) {
+        // Catch any errors (like network issues, invalid key, rate limits)
+        botReply =
+            "I ran into an error trying to connect to the AI. Please check your API key and internet connection.";
+        // Log the error for debugging
+        print('Gemini API Error: $e');
+      }
+    }
+
+    // Update the UI with the bot's final response
+    setState(() {
+      _messages.add({
+        'text': botReply,
+        'isUser': false,
       });
     });
   }
 
-  String _getResponseForQuestion(String question) {
+  String? _getResponseForQuestion(String question) {
     if (question.contains('report a damage')) {
       return 'To report a damage, go to the Complaints section and click "Add New Complaint". Fill in the details and submit.';
     } else if (question.contains('track my complaint')) {
@@ -107,7 +150,7 @@ class _HelpPageState extends State<HelpPage> {
     } else if (question.contains('contact support')) {
       return 'You can contact support through this chat or by calling our helpline at 1-800-SUPPORT.';
     }
-    return 'Thank you for your question. Our support team will get back to you shortly.';
+    return null;
   }
 
   @override
@@ -141,7 +184,10 @@ class _HelpPageState extends State<HelpPage> {
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.settings, color: Colors.white),
-                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsPage())),
+                    onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const SettingsPage())),
                   ),
                 ],
               ),
@@ -240,7 +286,8 @@ class _HelpPageState extends State<HelpPage> {
                                         height: 32,
                                         decoration: BoxDecoration(
                                           color: const Color(0xFFF0F0F0),
-                                          borderRadius: BorderRadius.circular(8),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
                                         ),
                                         child: const Icon(
                                           Icons.smart_toy,
@@ -264,7 +311,8 @@ class _HelpPageState extends State<HelpPage> {
                                     shrinkWrap: true,
                                     itemCount: _messages.length,
                                     itemBuilder: (context, index) {
-                                      return _buildChatMessage(_messages[index]);
+                                      return _buildChatMessage(
+                                          _messages[index]);
                                     },
                                   ),
                           ),
@@ -278,7 +326,8 @@ class _HelpPageState extends State<HelpPage> {
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Colors.grey.shade300),
+                                    border: Border.all(
+                                        color: Colors.grey.shade300),
                                   ),
                                   child: TextField(
                                     controller: _messageController,
@@ -307,7 +356,8 @@ class _HelpPageState extends State<HelpPage> {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: IconButton(
-                                  icon: const Icon(Icons.send, color: Colors.white),
+                                  icon: const Icon(Icons.send,
+                                      color: Colors.white),
                                   onPressed: _sendMessage,
                                 ),
                               ),
