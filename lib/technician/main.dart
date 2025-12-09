@@ -182,7 +182,7 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
                         scheduledTs = data['scheduledDate'] as Timestamp;
                       }
                       if (scheduledTs != null) {
-                        final scheduled = scheduledTs.toDate().toUtc().add(const Duration(hours: 8));
+                        final scheduled = scheduledTs.toDate().toLocal();
                         final sd = DateTime(scheduled.year, scheduled.month, scheduled.day);
                         if (sd == today) {
                           totalToday++;
@@ -324,20 +324,19 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
                   print('Found ${rawTasks.length} tasks for technician: $technicianDocId');
 
                   // Normalize tasks with metadata
-                  // Convert current time to Malaysia time (UTC+8)
-                  final now = DateTime.now().toUtc().add(const Duration(hours: 8));
+                  // Use local device time for 'now' and for interpreting stored timestamps
+                  final now = DateTime.now();
                   final today = DateTime(now.year, now.month, now.day);
 
                   List<Map<String, dynamic>> normalized = rawTasks.map((doc) {
                     final data = doc.data() as Map<String, dynamic>;
                     DateTime? scheduled;
                     if (data['scheduledDate'] != null && data['scheduledDate'] is Timestamp) {
-                      // Convert stored timestamp to UTC then apply UTC+8 (Malaysia timezone)
-                      scheduled = (data['scheduledDate'] as Timestamp).toDate().toUtc().add(const Duration(hours: 8));
+                      scheduled = (data['scheduledDate'] as Timestamp).toDate().toLocal();
                     }
                     DateTime? reported;
                     if (data['reportedDate'] != null && data['reportedDate'] is Timestamp) {
-                      reported = (data['reportedDate'] as Timestamp).toDate().toUtc().add(const Duration(hours: 8));
+                      reported = (data['reportedDate'] as Timestamp).toDate().toLocal();
                     }
                     final status = (data['reportStatus'] ?? '').toString();
                     return {

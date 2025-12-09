@@ -106,8 +106,8 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
           }
 
           if (timestamp != null) {
-              // Convert stored timestamp to UTC then apply UTC+8 (Malaysia timezone)
-              final dt = timestamp.toDate().toUtc().add(const Duration(hours: 8));
+              // Interpret stored timestamp as local DateTime
+              final dt = timestamp.toDate().toLocal();
               date = "${dt.day}/${dt.month}/${dt.year}";
               // Also set scheduled time if scheduledDate provided
               final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;

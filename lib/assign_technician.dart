@@ -34,22 +34,22 @@ class TimeSlot {
 
 /// Represents a technician's existing booking
 class TechnicianBooking {
-  final DateTime scheduleDate;
+  final DateTime scheduledDate;
   final int estimatedDurationJobDone;
   final String? taskTitle;
 
   TechnicianBooking({
-    required this.scheduleDate,
+    required this.scheduledDate,
     required this.estimatedDurationJobDone,
     this.taskTitle,
   });
 
   DateTime get endDateTime {
-    return scheduleDate.add(Duration(hours: estimatedDurationJobDone));
+    return scheduledDate.add(Duration(hours: estimatedDurationJobDone));
   }
 
   bool overlaps(DateTime start, DateTime end) {
-    return (start.isBefore(endDateTime) && end.isAfter(scheduleDate));
+    return (start.isBefore(endDateTime) && end.isAfter(scheduledDate));
   }
 }
 
@@ -70,7 +70,7 @@ class TimeSlotCalculator {
     final List<TimeSlot> slots = [];
 
     final dayBookings = existingBookings.where((booking) {
-      return isSameDay(booking.scheduleDate, selectedDate);
+      return isSameDay(booking.scheduledDate, selectedDate);
     }).toList();
 
     DateTime currentSlotStart = DateTime(
@@ -128,7 +128,7 @@ class TimeSlotCalculator {
   }
 
   static bool hasBookingsOnDate(DateTime date, List<TechnicianBooking> bookings) {
-    return bookings.any((booking) => isSameDay(booking.scheduleDate, date));
+    return bookings.any((booking) => isSameDay(booking.scheduledDate, date));
   }
 
   static bool isFullyBooked(DateTime date, List<TechnicianBooking> bookings) {
@@ -171,7 +171,7 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
   bool isManualSelection = false;
 
   // Scheduling fields
-  DateTime? selectedScheduleDateTime;
+  DateTime? selectedScheduledDateTime;
   int? selectedEstimatedDurationHours;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
@@ -235,16 +235,16 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
 
       for (var doc in snap.docs) {
         final data = doc.data();
-        final sd = data['scheduleDate'];
+        final sd = data['scheduledDate'];
         if (sd is Timestamp) {
-          final scheduleDateTime = sd.toDate();
+          final scheduledDateTime = sd.toDate().toLocal();
           final duration = data['estimatedDurationJobDone'] as int? ?? 1;
           final title = data['title'] ?? data['inventoryDamage'] ?? 'Task';
 
-          dates.add(DateTime(scheduleDateTime.year, scheduleDateTime.month, scheduleDateTime.day));
+          dates.add(DateTime(scheduledDateTime.year, scheduledDateTime.month, scheduledDateTime.day));
 
           bookings.add(TechnicianBooking(
-            scheduleDate: scheduleDateTime,
+            scheduledDate: scheduledDateTime,
             estimatedDurationJobDone: duration,
             taskTitle: title,
           ));
@@ -322,7 +322,7 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
       return;
     }
 
-    if (selectedScheduleDateTime == null) {
+    if (selectedScheduledDateTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select a schedule date and time slot'),
@@ -354,11 +354,26 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
       final String reviewedByPath =
       currentUser != null ? '/collection/staff/${currentUser.uid}' : '';
 
+      // Prepare local wall-clock components to preserve user's selection
+      final local = selectedScheduledDateTime!;
+
       await complaintRef.update({
         'reportStatus': 'Approved',
         'assignedTo': '/collection/technician/$selectedTechnicianId',
         'assignedDate': FieldValue.serverTimestamp(),
-        'scheduleDate': Timestamp.fromDate(selectedScheduleDateTime!),
+        // Store the instant in UTC so comparisons and queries are correct
+        'scheduledDate': Timestamp.fromDate(local.toUtc()),
+        // Also store the local wall-clock components so UI can display the exact
+        // time the user picked regardless of timezone conversions
+        // This is preserve for future use if needed
+        // 'scheduleLocal': {
+        //   'year': local.year,
+        //   'month': local.month,
+        //   'day': local.day,
+        //   'hour': local.hour,
+        //   'minute': local.minute,
+        //   'tzOffsetMinutes': local.timeZoneOffset.inMinutes,
+        // },
         'estimatedDurationJobDone': selectedEstimatedDurationHours,
         'isRead': false,
         'lastStatusUpdate': FieldValue.serverTimestamp(),
@@ -802,7 +817,7 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
           _selectedDay = selectedDay;
           _focusedDay = focusedDay;
           selectedTimeSlot = null;
-          selectedScheduleDateTime = null;
+          selectedScheduledDateTime = null;
           selectedEstimatedDurationHours = null;
           _durationController.clear();
 
@@ -988,13 +1003,19 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
         setState(() {
           selectedTimeSlot = slot;
 
-          selectedScheduleDateTime = DateTime(
+          // Create DateTime in local timezone (the user's wall-clock selection)
+          final localDateTime = DateTime(
             _selectedDay!.year,
             _selectedDay!.month,
             _selectedDay!.day,
             slot.startTime.hour,
             slot.startTime.minute,
           );
+
+          // Keep the local DateTime as the selected scheduled time here.
+          // We'll convert to UTC when storing into Firestore so the instant is correct,
+          // and also write a `scheduleLocal` map so the original wall-clock is preserved.
+          selectedScheduledDateTime = localDateTime;
         });
         _scrollToDuration();
       }
@@ -1162,7 +1183,7 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
                 selectedTechnicianData = null;
                 _selectedDay = null;
                 _selectedTime = null;
-                selectedScheduleDateTime = null;
+                selectedScheduledDateTime = null;
                 selectedEstimatedDurationHours = null;
                 selectedTimeSlot = null;
                 availableTimeSlots.clear();
@@ -1358,7 +1379,7 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
           selectedTechnicianData = technician;
           _selectedDay = null;
           _selectedTime = null;
-          selectedScheduleDateTime = null;
+          selectedScheduledDateTime = null;
           selectedEstimatedDurationHours = null;
           selectedTimeSlot = null;
           availableTimeSlots.clear();

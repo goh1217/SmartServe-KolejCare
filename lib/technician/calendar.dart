@@ -133,9 +133,8 @@ class _CalendarPageState extends State<CalendarPage> {
 
                         if (timestamp == null) return false;
 
-                        // Shift time to UTC+8 for Malaysia/Campus time
-                        final utcTime = timestamp.toDate().toUtc();
-                        final taskDate = utcTime.add(const Duration(hours: 8));
+                        // Interpret stored timestamp as local DateTime for Malaysia/Campus time
+                        final taskDate = timestamp.toDate().toLocal();
 
                         return taskDate.year == selectedDate.year &&
                             taskDate.month == selectedDate.month &&
@@ -332,8 +331,8 @@ class _CalendarPageState extends State<CalendarPage> {
 
   Widget _buildEvents(List<QueryDocumentSnapshot> tasks) {
     // Sort tasks by status first, then by proximity to current time
-    // Convert current time to Malaysia time (UTC+8)
-    final now = DateTime.now().toUtc().add(const Duration(hours: 8));
+    // Use local device time for 'now' and interpret stored timestamps as local instants
+    final now = DateTime.now();
     final sortedTasks = List<QueryDocumentSnapshot>.from(tasks);
     sortedTasks.sort((a, b) {
       final dataA = a.data() as Map<String, dynamic>;
@@ -369,9 +368,9 @@ class _CalendarPageState extends State<CalendarPage> {
 
       if (timestampA == null || timestampB == null) return 0;
 
-      // Convert to Malaysia time (UTC+8)
-      final startA = timestampA.toDate().toUtc().add(const Duration(hours: 8));
-      final startB = timestampB.toDate().toUtc().add(const Duration(hours: 8));
+      // Interpret stored timestamps as local DateTimes
+      final startA = timestampA.toDate().toLocal();
+      final startB = timestampB.toDate().toLocal();
 
       // Calculate time difference from now (both in Malaysia time)
       final diffA = (startA.difference(now)).abs();
@@ -396,9 +395,8 @@ class _CalendarPageState extends State<CalendarPage> {
 
           if (timestamp == null) return const SizedBox.shrink();
 
-          // Shift time to UTC+8 for Malaysia/Campus time
-          final utcTime = timestamp.toDate().toUtc();
-          final start = utcTime.add(const Duration(hours: 8));
+          // Interpret stored timestamp as local DateTime for display
+          final start = timestamp.toDate().toLocal();
 
           // Default duration 1 hour if not specified
           final duration = (data['duration'] ?? 1.0).toDouble();
