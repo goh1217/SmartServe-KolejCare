@@ -163,6 +163,8 @@ class OngoingRepairScreen extends StatelessWidget {
                     const Divider(height: 1),
                     _buildDetailItem('Service Category', serviceCategory),
                     const Divider(height: 1),
+                    _buildDetailItem('Damage Location', location),
+                    const Divider(height: 1),
                     _buildDetailItem('Issue Description', issue),
                     const Divider(height: 1),
                     // Estimated Duration intentionally left blank initially
