@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_generative_ai/google_generative_ai.dart'; // <-- New Import
+
+// IMPORTANT: Replace this with your actual Gemini API Key.
+// For production apps, use environment variables, not hardcoding.
+const String GEMINI_API_KEY = "AIzaSyCMX9-2sIkUn-1DX0WPjqVBVYFsWvvX10M";
 
 class ChatbotScreen extends StatefulWidget {
   const ChatbotScreen({super.key});
@@ -13,9 +18,16 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   final List<Map<String, dynamic>> _messages = [];
 
+  // Initialize the Gemini Model Client
+  late final GenerativeModel _model = GenerativeModel(
+    model: 'gemini-2.5-flash',
+    apiKey: "AIzaSyCMX9-2sIkUn-1DX0WPjqVBVYFsWvvX10M",
+  );
+
   void _sendMessage(String text) {
     if (text.trim().isEmpty) return;
 
+    // Add user message to the list immediately
     setState(() {
       _messages.add({
         'text': text.trim(),
@@ -27,43 +39,66 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     _generateBotResponse(text);
   }
 
-  //hardcode only, haven't integrate AI API
-  void _generateBotResponse(String userInput) {
-    Future.delayed(const Duration(milliseconds: 700), () {
-      String botReply;
+  // Modified to be async and call Gemini
+  void _generateBotResponse(String userInput) async {
+    // A small delay for better UX before generating a response
+    await Future.delayed(const Duration(milliseconds: 300));
+    
+    String botReply;
 
-      if (userInput.toLowerCase().contains('complaint') ||
-          userInput.toLowerCase().contains('problem')) {
-        botReply =
-        "Here’s a step-by-step guide on how you can file a complaint regarding damages in your dormitory:\n"
-            "1. Navigate to your home page.\n"
-            "2. Find the purple '+' button at the bottom centre of your menu section.\n"
-            "3. You will be directed to a form. Fill in all the details and press ‘Submit Complaint’.\n\n"
-            "That’s all you need to do to file a complaint to your residential college office. 😊";
-      } else if (userInput.toLowerCase().contains('smartserve')) {
-        botReply =
-        "SmartServe is a platform for managing residential college facilities, maintenance reports, and student services all in one place.";
-      } else if (userInput.toLowerCase().contains('college')) {
-        botReply =
-        "You can contact your residential college office for room or facility issues. They’ll assist with repair scheduling and room management.";
-      } else if (userInput.toLowerCase().contains('faq')) {
-        botReply = "You can browse FAQs for help with account access, maintenance reporting, and general dorm inquiries.";
-      } else {
-        botReply =
-        "I’m not sure I understand that yet 🤔 — try asking about how to file a complaint, SmartServe info, or college help!";
+    // --- Hardcoded Logic (Existing) ---
+    if (userInput.toLowerCase().contains('complaint') ||
+        userInput.toLowerCase().contains('problem')) {
+      botReply =
+          "Here’s a step-by-step guide on how you can file a complaint regarding damages in your dormitory:\n"
+          "1. Navigate to your home page.\n"
+          "2. Find the purple '+' button at the bottom centre of your menu section.\n"
+          "3. You will be directed to a form. Fill in all the details and press ‘Submit Complaint’.\n\n"
+          "That’s all you need to do to file a file a complaint to your residential college office. 😊";
+    } else if (userInput.toLowerCase().contains('smartserve')) {
+      botReply =
+          "SmartServe is a platform for managing residential college facilities, maintenance reports, and student services all in one place.";
+    } else if (userInput.toLowerCase().contains('college')) {
+      botReply =
+          "You can contact your residential college office for room or facility issues. They’ll assist with repair scheduling and room management.";
+    } else if (userInput.toLowerCase().contains('faq')) {
+      botReply = "You can browse FAQs for help with account access, maintenance reporting, and general dorm inquiries.";
+    }
+    // --- Gemini API Logic (New) ---
+    else {
+      try {
+        // Prepare a prompt to instruct the AI on its role
+        final systemInstruction = "You are Fixie, a helpful, friendly, and concise chatbot assistant for the SmartServe residential college platform. Answer user questions based on your general knowledge and the context provided, keeping your answers related to dormitory, college, or student life when possible.";
+
+        final content = [
+          Content.text(systemInstruction),
+          Content.text(userInput)
+        ];
+
+        // Use the API to generate a response
+        final response = await _model.generateContent(content);
+
+        botReply = response.text ?? "Sorry, the AI model returned an empty response. Try again.";
+      } catch (e) {
+        // Catch any errors (like network issues, invalid key, rate limits)
+        botReply = "I ran into an error trying to connect to the AI. Please check your API key and internet connection.";
+        // Log the error for debugging
+        print('Gemini API Error: $e');
       }
+    }
 
-      setState(() {
-        _messages.add({
-          'text': botReply,
-          'isUser': false,
-        });
+    // Update the UI with the bot's final response
+    setState(() {
+      _messages.add({
+        'text': botReply,
+        'isUser': false,
       });
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    // ... (Your existing build method)
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9FB),
       appBar: AppBar(
@@ -226,4 +261,3 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     );
   }
 }
-//
