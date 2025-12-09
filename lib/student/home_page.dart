@@ -551,7 +551,21 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
             .get();
         for (final d in qRef.docs) {
           complaintIds.add(d.id);
-          summaries.add(_buildSummaryFromDoc(d.id, d.data()));
+          final summary = _buildSummaryFromDoc(d.id, d.data());
+          
+          // Auto-archive cancelled complaints
+          final status = summary.rawStatus.toLowerCase();
+          if ((status == 'cancelled' || status == 'canceled') && d.data()['isArchived'] != true) {
+            FirebaseFirestore.instance.collection('complaint').doc(d.id).update({
+              'isArchived': true,
+              'archivedAt': FieldValue.serverTimestamp(),
+            }).catchError((e) {
+              if (kDebugMode) print('Error auto-archiving cancelled complaint: $e');
+            });
+            continue; // Skip adding to summaries
+          }
+          
+          summaries.add(summary);
         }
 
         // Some systems store the reportBy as a path/string. Try common variants.
@@ -571,7 +585,21 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
           for (final d in qS.docs) {
             if (!complaintIds.contains(d.id)) {
               complaintIds.add(d.id);
-              summaries.add(_buildSummaryFromDoc(d.id, d.data()));
+              final summary = _buildSummaryFromDoc(d.id, d.data());
+              
+              // Auto-archive cancelled complaints
+              final status = summary.rawStatus.toLowerCase();
+              if ((status == 'cancelled' || status == 'canceled') && d.data()['isArchived'] != true) {
+                FirebaseFirestore.instance.collection('complaint').doc(d.id).update({
+                  'isArchived': true,
+                  'archivedAt': FieldValue.serverTimestamp(),
+                }).catchError((e) {
+                  if (kDebugMode) print('Error auto-archiving cancelled complaint: $e');
+                });
+                continue;
+              }
+              
+              summaries.add(summary);
             }
           }
         }
@@ -582,7 +610,21 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
       for (final d in q2.docs) {
         if (!complaintIds.contains(d.id)) {
           complaintIds.add(d.id);
-          summaries.add(_buildSummaryFromDoc(d.id, d.data()));
+          final summary = _buildSummaryFromDoc(d.id, d.data());
+          
+          // Auto-archive cancelled complaints
+          final status = summary.rawStatus.toLowerCase();
+          if ((status == 'cancelled' || status == 'canceled') && d.data()['isArchived'] != true) {
+            FirebaseFirestore.instance.collection('complaint').doc(d.id).update({
+              'isArchived': true,
+              'archivedAt': FieldValue.serverTimestamp(),
+            }).catchError((e) {
+              if (kDebugMode) print('Error auto-archiving cancelled complaint: $e');
+            });
+            continue;
+          }
+          
+          summaries.add(summary);
         }
       }
 
@@ -601,7 +643,23 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
         }
         for (final id in complaintIds) {
           final doc = await FirebaseFirestore.instance.collection('complaint').doc(id).get();
-          if (doc.exists) summaries.add(_buildSummaryFromDoc(doc.id, doc.data() ?? {}));
+          if (doc.exists) {
+            final summary = _buildSummaryFromDoc(doc.id, doc.data() ?? {});
+            
+            // Auto-archive cancelled complaints
+            final status = summary.rawStatus.toLowerCase();
+            if ((status == 'cancelled' || status == 'canceled') && (doc.data()?['isArchived'] != true)) {
+              FirebaseFirestore.instance.collection('complaint').doc(doc.id).update({
+                'isArchived': true,
+                'archivedAt': FieldValue.serverTimestamp(),
+              }).catchError((e) {
+                if (kDebugMode) print('Error auto-archiving cancelled complaint: $e');
+              });
+              continue;
+            }
+            
+            summaries.add(summary);
+          }
         }
       }
 
@@ -783,7 +841,21 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
             }
 
             if (matches) {
-              summaries.add(_buildSummaryFromDoc(d.id, data));
+              final summary = _buildSummaryFromDoc(d.id, data);
+              
+              // Auto-archive cancelled complaints
+              final status = summary.rawStatus.toLowerCase();
+              if ((status == 'cancelled' || status == 'canceled') && data['isArchived'] != true) {
+                FirebaseFirestore.instance.collection('complaint').doc(d.id).update({
+                  'isArchived': true,
+                  'archivedAt': FieldValue.serverTimestamp(),
+                }).catchError((e) {
+                  if (kDebugMode) print('Error auto-archiving cancelled complaint: $e');
+                });
+                continue; // Skip adding to summaries
+              }
+              
+              summaries.add(summary);
             }
           }
 
