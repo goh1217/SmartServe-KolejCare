@@ -4,6 +4,7 @@ class RejectedRepairScreen extends StatelessWidget {
   final String? reportId; // Made optional with ?
   final String status;
   final String damageCategory;
+  final String damageLocation;
   final String inventoryDamage;
   final String inventoryDamageTitle;
   final String reportedOn;
@@ -16,6 +17,7 @@ class RejectedRepairScreen extends StatelessWidget {
     this.reportId, // Optional parameter
     required this.status,
     required this.damageCategory,
+    required this.damageLocation,
     required this.inventoryDamage,
     required this.inventoryDamageTitle,
     required this.reportedOn,
@@ -69,6 +71,8 @@ class RejectedRepairScreen extends StatelessWidget {
                       _buildDetailItem('Report Status', status),
                       const Divider(height: 1),
                       _buildDetailItem('Damage Category', damageCategory),
+                      const Divider(height: 1),
+                      _buildDetailItem('Damage Location', damageLocation),
                       const Divider(height: 1),
                       _buildDetailItem('Damage Title', inventoryDamageTitle),
                       const Divider(height: 1),

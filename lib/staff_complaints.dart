@@ -128,6 +128,7 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
         title: const Text('All Complaints', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600)),
         backgroundColor: const Color(0xFF7C3AED),
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Column(
         children: [
@@ -356,17 +357,17 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
   Color _getStatusColor(String status) {
     switch (status) {
       case 'Pending':
-        return Colors.yellow[700]!;
+        return Colors.yellow;
       case 'Approved':
-        return Colors.purple[700]!;
+        return Colors.purple;
       case 'Ongoing':
-        return Colors.blue[700]!;
+        return Colors.blue;
       case 'Completed':
-        return Colors.green[700]!;
+        return Colors.green;
       case 'Rejected':
-        return Colors.red[700]!;
+        return Colors.red;
       case 'Cancelled':
-        return Colors.grey[700]!;
+        return Colors.grey;
       default:
         return const Color(0xFF7C3AED);
     }

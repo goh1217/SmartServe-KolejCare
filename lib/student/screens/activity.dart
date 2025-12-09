@@ -14,6 +14,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import '../profile.dart';
+import '../chatbot_screen.dart';
 
 class ActivityScreen extends StatefulWidget {
   const ActivityScreen({super.key});
@@ -534,6 +535,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                       builder: (context) => RejectedRepairScreen(
                                         status: data['reportStatus'] ?? 'Rejected',
                                         damageCategory: data['damageCategory'] ?? '',
+                                        damageLocation: data['damageLocation'] ?? '',
                                         inventoryDamageTitle: data['inventoryDamageTitle'] ?? '',
                                         inventoryDamage: data['inventoryDamage'] ?? '',
                                         reportedOn: dateText,
@@ -657,6 +659,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                     builder: (context) => WaitingApprovalScreen(
                                       reportStatus: data['reportStatus'] ?? 'Pending',
                                       damageCategory: data['damageCategory'] ?? '',
+                                      damageLocation: data['damageLocation'] ?? '',
                                       inventoryDamageTitle: data['inventoryDamageTitle'] ?? '',
                                       inventoryDamage: data['inventoryDamage'] ?? '',
                                       reportedOn: dateText,
@@ -885,7 +888,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildNavItem(Icons.home_rounded, 0),
-                _buildNavItem(Icons.calendar_today_rounded, 1),
+                _buildNavItem(Icons.smart_toy_rounded, 1),
                 // Empty space for the central FAB
                 const SizedBox(width: 60),
                 _buildNavItem(Icons.description_rounded, 2),
@@ -917,7 +920,10 @@ class _ActivityScreenState extends State<ActivityScreen> {
             );
             break;
           case 1:
-            Navigator.pushNamed(context, '/schedule');
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ChatbotScreen()),
+            );
             break;
           case 2:
             Navigator.push(

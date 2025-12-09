@@ -10,6 +10,7 @@ import 'notification_page.dart';
 import 'donate_page.dart';
 import 'screens/activity.dart';
 import 'profile.dart';
+import 'chatbot_screen.dart';
 
 // Simple model to hold complaint summary information for UI
 class ComplaintSummary {
@@ -1608,7 +1609,7 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildNavItem(Icons.home_rounded, 0),
-                _buildNavItem(Icons.calendar_today_rounded, 1),
+                _buildNavItem(Icons.smart_toy_rounded, 1),
                 const SizedBox(width: 60),
                 _buildNavItem(Icons.description_rounded, 2),
                 _buildNavItem(Icons.person_outline, 3),
@@ -1636,7 +1637,10 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
             );
             break;
           case 1:
-            Navigator.pushNamed(context, '/schedule');
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ChatbotScreen()),
+            );
             break;
           case 2:
             Navigator.push(
