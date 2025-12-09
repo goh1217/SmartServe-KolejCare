@@ -143,9 +143,15 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
                   const SizedBox(width: 8),
                   _buildFilterChip('Pending'),
                   const SizedBox(width: 8),
-                  _buildFilterChip('In Progress'),
+                  _buildFilterChip('Approved'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Ongoing'),
                   const SizedBox(width: 8),
                   _buildFilterChip('Completed'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Rejected'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Cancelled'),
                 ],
               ),
             ),
@@ -350,11 +356,17 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
   Color _getStatusColor(String status) {
     switch (status) {
       case 'Pending':
-        return Colors.orange[700]!;
-      case 'In Progress':
+        return Colors.yellow[700]!;
+      case 'Approved':
+        return Colors.purple[700]!;
+      case 'Ongoing':
         return Colors.blue[700]!;
       case 'Completed':
         return Colors.green[700]!;
+      case 'Rejected':
+        return Colors.red[700]!;
+      case 'Cancelled':
+        return Colors.grey[700]!;
       default:
         return const Color(0xFF7C3AED);
     }
