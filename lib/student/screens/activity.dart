@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'activity/ongoingrepair.dart';
 //import 'activity/completedrepair.dart';
 import 'activity/completedrepair2.dart';
+import '../notification_page.dart';
 import 'activity/completed/rating.dart';
 import 'activity/completed/tips.dart';
 import 'activity/scheduledrepair.dart';
@@ -76,6 +77,97 @@ class _ActivityScreenState extends State<ActivityScreen> {
     }
   }
 
+  // Bell icon with real-time unread badge
+  Widget _buildBellIcon() {
+    return FutureBuilder<String>(
+      future: () async {
+        final user = FirebaseAuth.instance.currentUser;
+        final uid = user?.uid;
+        if (uid == null) return '';
+        final q = await FirebaseFirestore.instance.collection('student').where('authUid', isEqualTo: uid).limit(1).get();
+        if (q.docs.isNotEmpty) return q.docs.first.id;
+        final email = user?.email ?? '';
+        if (email.isNotEmpty) {
+          final qe = await FirebaseFirestore.instance.collection('student').where('email', isEqualTo: email).limit(1).get();
+          if (qe.docs.isNotEmpty) return qe.docs.first.id;
+        }
+        return '';
+      }(),
+      builder: (context, snap) {
+        final sid = snap.data ?? '';
+        if (snap.connectionState == ConnectionState.waiting) {
+          return Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+            child: const SizedBox(width: 24, height: 24, child: Center(child: CircularProgressIndicator(strokeWidth: 2))),
+          );
+        }
+
+        final stream = sid.isNotEmpty
+            ? FirebaseFirestore.instance.collection('complaint').where('reportBy', isEqualTo: '/collection/student/$sid').where('isRead', isEqualTo: false).snapshots()
+            : FirebaseFirestore.instance.collection('complaint').where('isRead', isEqualTo: false).where('reportBy', isEqualTo: FirebaseAuth.instance.currentUser?.uid ?? '').snapshots();
+
+        return StreamBuilder<QuerySnapshot>(
+          stream: stream,
+          builder: (context, s2) {
+            final unread = s2.data?.docs.length ?? 0;
+            final hasUnread = unread > 0;
+            return InkWell(
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (c) => const NotificationPage()));
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Icon(
+                      Icons.notifications,
+                      color: hasUnread ? const Color(0xFF5E4DB2) : Colors.grey.shade600,
+                      size: 24,
+                    ),
+                    if (hasUnread)
+                      Positioned(
+                        right: -6,
+                        top: -6,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                            boxShadow: [BoxShadow(color: Colors.red.withOpacity(0.45), blurRadius: 8, spreadRadius: 2)],
+                          ),
+                          constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                          child: Center(
+                            child: Text(
+                              unread > 99 ? '99+' : '$unread',
+                              style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     String formatTimestamp(dynamic ts) {
@@ -141,24 +233,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     ),
                   ],
                 ),
-                GestureDetector(
-                  onTap: () {},
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(Icons.notifications, color: Color(0xFF5E4DB2)),
-                  ),
-                ),
+                _buildBellIcon(),
               ],
             ),
           ),

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class ScheduledRepairScreen extends StatefulWidget {
   final String reportId;
   final String status;
-  final String scheduledDate;
+  final String scheduledDate; // original string for initial display
   final String assignedTechnician;
   final String damageCategory;
   final String damageLocation;
@@ -32,29 +32,40 @@ class ScheduledRepairScreen extends StatefulWidget {
 }
 
 class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
-  late String currentScheduledDate;
-  bool isEditingDate = false;
+  DateTime? updatedScheduledDate; // store actual updated date
+  bool isDateUpdated = false;
 
   @override
   void initState() {
     super.initState();
-    currentScheduledDate = widget.scheduledDate;
   }
 
   Future<void> _editRequest() async {
-    // Convert currentScheduledDate string to DateTime
-    DateTime initialDate = DateTime.now();
-    try {
-      final parts = currentScheduledDate.split(' ');
-      final day = int.parse(parts[0]);
-      final month = _monthNumber(parts[1]);
-      final year = int.parse(parts[2]);
-      initialDate = DateTime(year, month, day);
-    } catch (_) {
-      initialDate = DateTime.now();
-    }
+    // Show warning dialog first
+    bool proceed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Warning'),
+        content: const Text(
+          'Only request to change scheduled reparation date when necessary.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('I understand'),
+          ),
+        ],
+      ),
+    ) ?? false;
+
+    if (!proceed) return; // User cancelled
 
     // Show date picker
+    DateTime initialDate = updatedScheduledDate ?? DateTime.now();
     DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: initialDate,
@@ -64,34 +75,45 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
     );
 
     if (pickedDate != null) {
-      setState(() {
-        currentScheduledDate =
-        "${pickedDate.day.toString().padLeft(2, '0')} ${_monthName(pickedDate.month)} ${pickedDate.year} (Time to be scheduled)";
+      // Update Firestore
+      final complaintRef =
+      FirebaseFirestore.instance.collection('complaint').doc(widget.reportId);
+
+      // Fetch current complaint data
+      final complaintSnapshot = await complaintRef.get();
+      final complaintData = complaintSnapshot.data();
+
+      // Remove this complaintID from old technician's tasksAssigned
+      if (complaintData != null && complaintData['assignedTo'] != null) {
+        final oldTechId = complaintData['assignedTo'];
+        final techRef = FirebaseFirestore.instance.collection('technician').doc(oldTechId);
+        final techSnapshot = await techRef.get();
+        final techData = techSnapshot.data();
+        if (techData != null && techData['tasksAssigned'] != null) {
+          List tasks = List.from(techData['tasksAssigned']);
+          tasks.removeWhere((task) =>
+          task is DocumentReference && task.id == widget.reportId);
+          await techRef.update({'tasksAssigned': tasks});
+        }
+      }
+
+      // Update complaint: scheduledDate, reportStatus, assignedTo & reviewedBy
+      await complaintRef.update({
+        'scheduledDate': Timestamp.fromDate(pickedDate),
+        'reportStatus': 'Pending',
+        'assignedTo': null,
+        'reviewedBy': null,
       });
 
-      // Update Firestore
-      await FirebaseFirestore.instance
-          .collection('complaint')
-          .doc(widget.reportId)
-          .update({'scheduledDate': currentScheduledDate});
+      setState(() {
+        updatedScheduledDate = pickedDate;
+        isDateUpdated = true;
+      });
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Scheduled date updated successfully!')),
       );
     }
-  }
-
-  Future<void> _cancelRequest() async {
-    await FirebaseFirestore.instance
-        .collection('complaint')
-        .doc(widget.reportId)
-        .update({'reportStatus': 'Cancelled'});
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Request has been cancelled')),
-    );
-
-    Navigator.pop(context); // go back after cancelling
   }
 
   int _monthNumber(String shortName) {
@@ -110,8 +132,31 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
     return months[month];
   }
 
+  String _formatScheduledDate() {
+    if (updatedScheduledDate != null) {
+      return "${updatedScheduledDate!.day.toString().padLeft(2, '0')} "
+          "${_monthName(updatedScheduledDate!.month)} "
+          "${updatedScheduledDate!.year} (Time to be scheduled)";
+    } else {
+      return "${widget.scheduledDate} (Time to be scheduled)";
+    }
+  }
+
+  Future<void> _cancelRequest() async {
+    await FirebaseFirestore.instance
+        .collection('complaint')
+        .doc(widget.reportId)
+        .update({'reportStatus': 'Cancelled'});
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Request has been cancelled')),
+    );
+
+    Navigator.pop(context);
+  }
+
   Widget _buildDetailItem(String label, String value,
-      {bool isFirst = false, bool isLast = false}) {
+      {bool isFirst = false, bool isLast = false, Color? valueColor}) {
     return Container(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -128,9 +173,9 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
           const SizedBox(height: 8),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
-              color: Colors.black,
+              color: valueColor ?? Colors.black,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -181,13 +226,17 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
                     children: [
                       _buildDetailItem('Repair Status', widget.status),
                       const Divider(height: 1),
-                      _buildDetailItem('Scheduled Date', currentScheduledDate),
+                      _buildDetailItem(
+                        'Scheduled Date',
+                        _formatScheduledDate(),
+                        valueColor: isDateUpdated ? const Color(0xFF7C4DFF) : null,
+                      ),
                       const Divider(height: 1),
                       _buildDetailItem('Assigned Technician', widget.assignedTechnician),
                       const Divider(height: 1),
                       _buildDetailItem('Damage Category', widget.damageCategory),
                       const Divider(height: 1),
-                      _buildDetailItem('Damage Location', widget.damageLocation), // <-- added
+                      _buildDetailItem('Damage Location', widget.damageLocation),
                       const Divider(height: 1),
                       _buildDetailItem('Damage Title', widget.inventoryDamageTitle),
                       const Divider(height: 1),
@@ -229,7 +278,7 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
                       elevation: 0,
                     ),
                     child: const Text(
-                      'Edit Request',
+                      'Edit Scheduled Date',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,

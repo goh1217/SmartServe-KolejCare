@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart'; // Assuming image_picker is available or I will add logic.
@@ -40,11 +41,14 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   String category = 'Loading...';
   String date = 'Loading...';
   String scheduledTime = '--:--';
+  String title = 'Loading...';
+  String location = 'Loading...';
   String description = 'Loading...';
   String assignmentNotes = 'Loading...'; // Rejection reason or notes
   String studentName = 'Loading...';
   String studentRole = 'Student'; // Assuming student for now
   String studentImage = 'https://via.placeholder.com/150';
+  String studentPhoneNumber = ''; // Phone number for calling
   List<String> damagePictures = []; // List to store multiple damage pictures
   int currentImageIndex = 0; // Track current image being displayed
   String studentId = '';
@@ -73,6 +77,8 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
           status = data['reportStatus'] ?? widget.status;
           urgency = data['urgencyLevel'] ?? 'Medium';
           category = data['damageCategory'] ?? 'Uncategorized';
+          title = data['inventoryDamageTitle'] ?? 'No title provided.';
+          location = data['damageLocation'] ?? 'No location provided.';
           description = data['inventoryDamage'] ?? 'No description provided.';
           assignmentNotes = data['rejectionReason'] ?? 'No notes provided.';
           // If there is a damagePic field - can be a string or list
@@ -112,12 +118,16 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
             date = widget.time;
           }
 
-          // Fetch Student Info
-          // The 'reportBy' field is a String path "/collection/student/..."
-          // We need to extract the ID or use the path directly if we can parse it.
-          final String? reportByPath = data['reportBy'];
-          if (reportByPath != null) {
-             _fetchStudentInfo(reportByPath);
+          // Fetch Student Info from studentID or matricNo in complaint
+          final String? studentIDFromComplaint = data['studentID'] ?? data['matricNo'];
+          if (studentIDFromComplaint != null && studentIDFromComplaint.isNotEmpty) {
+            _fetchStudentInfoById(studentIDFromComplaint);
+          } else {
+            // Fallback to reportBy if studentID not available
+            final String? reportByPath = data['reportBy'];
+            if (reportByPath != null) {
+               _fetchStudentInfo(reportByPath);
+            }
           }
         });
       }
@@ -159,7 +169,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
          if (studentDoc.exists) {
            final studentData = studentDoc.data() as Map<String, dynamic>;
            setState(() {
-             studentName = studentData['name'] ?? 'Unknown Student';
+             studentName = studentData['studentName'] ?? 'Unknown Student';
              // studentImage = studentData['profileImage'] ?? studentImage; 
              // studentRole = 'Student'; 
            });
@@ -169,6 +179,69 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
       print("Error fetching student info: $e");
     }
   }
+
+  Future<void> _fetchStudentInfoById(String studentID) async {
+    try {
+      final studentDoc = await FirebaseFirestore.instance
+          .collection('student')
+          .doc(studentID)
+          .get();
+
+      if (studentDoc.exists) {
+        final studentData = studentDoc.data() as Map<String, dynamic>;
+        setState(() {
+          studentId = studentID;
+          // Try to get name from different possible fields, fallback to matricNo
+          studentName = studentData['studentName'] ?? 
+                       studentData['matricNo'] ?? 
+                       'Unknown Student';
+          // Phone field is 'phoneNo' in the student collection
+          studentPhoneNumber = studentData['phoneNo'] ?? 
+                              studentData['phoneNumber'] ?? 
+                              studentData['phone'] ?? 
+                              '';
+          // Get student image if available
+          if (studentData['photoUrl'] != null) {
+            studentImage = studentData['photoUrl'] as String;
+          }
+        });
+      }
+    } catch (e) {
+      print("Error fetching student info by ID: $e");
+    }
+  }
+
+  Future<void> _callStudent() async {
+  if (studentPhoneNumber.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Student phone number not available')),
+    );
+    return;
+  }
+
+  final sanitizedPhoneNumber = studentPhoneNumber.replaceAll(RegExp(r'[^\d+]'), '');
+
+  if (sanitizedPhoneNumber.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Invalid phone number format')),
+    );
+    return;
+  }
+
+  final Uri launchUri = Uri(
+    scheme: 'tel',
+    path: sanitizedPhoneNumber,
+  );
+
+  try {
+    await launchUrl(launchUri, mode: LaunchMode.externalApplication);
+  } catch (e) {
+    print("Error launching phone call: $e");
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error: $e')),
+    );
+  }
+}
 
   Future<String?> uploadToCloudinary(File file) async {
     const cloudName = "deaju8keu";
@@ -250,7 +323,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                     children: [
                       Expanded(
                         child: Text(
-                          widget.title,
+                          title,
                           style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
@@ -291,7 +364,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                             const SizedBox(height: 16),
                             _buildInfoItem('Category', category),
                             const SizedBox(height: 16),
-                            _buildInfoItem('Address', widget.location),
+                            _buildInfoItem('Address', location),
                           ],
                         ),
                       ),
@@ -611,6 +684,15 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                         ),
                         const SizedBox(height: 4),
                         Text(
+                          studentPhoneNumber.isEmpty ? 'Phone: Not available' : 'Phone: $studentPhoneNumber',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.orange,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
                           studentRole,
                           style: const TextStyle(
                             fontSize: 14,
@@ -620,16 +702,19 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                       ],
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF6C63FF),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.phone,
-                      color: Colors.white,
-                      size: 24,
+                  GestureDetector(
+                    onTap: _callStudent,
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF6C63FF),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.phone,
+                        color: Colors.white,
+                        size: 24,
+                      ),
                     ),
                   ),
                 ],
