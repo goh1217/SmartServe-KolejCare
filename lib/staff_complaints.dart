@@ -357,17 +357,17 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
   Color _getStatusColor(String status) {
     switch (status) {
       case 'Pending':
-        return Colors.yellow;
+        return Colors.yellow[700]!;
       case 'Approved':
-        return Colors.purple;
+        return Colors.purple[700]!;
       case 'Ongoing':
-        return Colors.blue;
+        return Colors.blue[700]!;
       case 'Completed':
-        return Colors.green;
+        return Colors.green[700]!;
       case 'Rejected':
-        return Colors.red;
+        return Colors.red[700]!;
       case 'Cancelled':
-        return Colors.grey;
+        return Colors.grey[700]!;
       default:
         return const Color(0xFF7C3AED);
     }
