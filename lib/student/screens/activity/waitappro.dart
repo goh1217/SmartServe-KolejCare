@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class WaitingApprovalScreen extends StatelessWidget {
   final String reportStatus;
   final String damageCategory;
+  final String damageLocation;
   final String inventoryDamage;
   final String inventoryDamageTitle;
   final String reportedOn;
@@ -11,6 +12,7 @@ class WaitingApprovalScreen extends StatelessWidget {
     super.key,
     required this.reportStatus,
     required this.damageCategory,
+    required this.damageLocation,
     required this.inventoryDamage,
     required this.inventoryDamageTitle,
     required this.reportedOn,
@@ -56,6 +58,8 @@ class WaitingApprovalScreen extends StatelessWidget {
                 _buildDetailItem('Report Status', reportStatus, isFirst: true),
                 const Divider(height: 1),
                 _buildDetailItem('Damage Category', damageCategory),
+                const Divider(height: 1),
+                _buildDetailItem('Damage Location', damageLocation),
                 const Divider(height: 1),
                 _buildDetailItem('Damage Title', inventoryDamageTitle),
                 const Divider(height: 1),

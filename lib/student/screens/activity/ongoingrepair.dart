@@ -60,6 +60,7 @@ class OngoingRepairScreen extends StatelessWidget {
                 // (No ETA shown initially; keep parsing available for later if needed.)
 
                 final serviceCategory = (data['damageCategory'] ?? data['category'] ?? '').toString();
+                final location = (data['damageLocation'] ?? data['location'] ?? '').toString();
                 final issue = (data['inventoryDamage'] ?? data['description'] ?? data['damageDesc'] ?? '').toString();
                 // Estimated duration intentionally left blank initially
                 final estimatedDuration = (data['estimatedDuration'] ?? data['estimated_time'] ?? '').toString();
@@ -161,6 +162,8 @@ class OngoingRepairScreen extends StatelessWidget {
                     ),
                     const Divider(height: 1),
                     _buildDetailItem('Service Category', serviceCategory),
+                    const Divider(height: 1),
+                    _buildDetailItem('Damage Location', location),
                     const Divider(height: 1),
                     _buildDetailItem('Issue Description', issue),
                     const Divider(height: 1),
