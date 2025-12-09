@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_generative_ai/google_generative_ai.dart'; // <-- New Import
+import 'notification_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 // IMPORTANT: Replace this with your actual Gemini API Key.
 // For production apps, use environment variables, not hardcoding.
@@ -168,28 +171,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     ),
                   ],
                 ),
-                GestureDetector(
-                  onTap: () {},
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.06),
-                          blurRadius: 12,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.notifications_rounded,
-                      color: Color(0xFF5E4DB2),
-                      size: 22,
-                    ),
-                  ),
-                ),
+                _buildBellIcon(),
               ],
             ),
           ),
@@ -527,6 +509,96 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         if (mounted && _isTyping) {
           setState(() {});
         }
+      },
+    );
+  }
+
+  // Bell icon with real-time unread badge
+  Widget _buildBellIcon() {
+    return FutureBuilder<String>(
+      future: () async {
+        final user = FirebaseAuth.instance.currentUser;
+        final uid = user?.uid;
+        if (uid == null) return '';
+        final q = await FirebaseFirestore.instance.collection('student').where('authUid', isEqualTo: uid).limit(1).get();
+        if (q.docs.isNotEmpty) return q.docs.first.id;
+        final email = user?.email ?? '';
+        if (email.isNotEmpty) {
+          final qe = await FirebaseFirestore.instance.collection('student').where('email', isEqualTo: email).limit(1).get();
+          if (qe.docs.isNotEmpty) return qe.docs.first.id;
+        }
+        return '';
+      }(),
+      builder: (context, snap) {
+        final sid = snap.data ?? '';
+        if (snap.connectionState == ConnectionState.waiting) {
+          return Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
+            child: const SizedBox(width: 22, height: 22, child: Center(child: CircularProgressIndicator(strokeWidth: 2))),
+          );
+        }
+
+        final stream = sid.isNotEmpty
+            ? FirebaseFirestore.instance.collection('complaint').where('reportBy', isEqualTo: '/collection/student/$sid').where('isRead', isEqualTo: false).snapshots()
+            : FirebaseFirestore.instance.collection('complaint').where('isRead', isEqualTo: false).where('reportBy', isEqualTo: FirebaseAuth.instance.currentUser?.uid ?? '').snapshots();
+
+        return StreamBuilder<QuerySnapshot>(
+          stream: stream,
+          builder: (context, s2) {
+            final unread = s2.data?.docs.length ?? 0;
+            final hasUnread = unread > 0;
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (c) => const NotificationPage()));
+              },
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 12,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Icon(
+                      Icons.notifications_rounded,
+                      color: hasUnread ? const Color(0xFF5E4DB2) : Colors.grey.shade600,
+                      size: 22,
+                    ),
+                    if (hasUnread)
+                      Positioned(
+                        right: -6,
+                        top: -6,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                            boxShadow: [BoxShadow(color: Colors.red.withOpacity(0.45), blurRadius: 8, spreadRadius: 2)],
+                          ),
+                          constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                          child: Center(
+                            child: Text(
+                              unread > 99 ? '99+' : '$unread',
+                              style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
       },
     );
   }
