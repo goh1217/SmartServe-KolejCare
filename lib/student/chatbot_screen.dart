@@ -17,6 +17,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   final TextEditingController _controller = TextEditingController();
 
   final List<Map<String, dynamic>> _messages = [];
+  bool _isTyping = false;
 
   // Initialize the Gemini Model Client
   late final GenerativeModel _model = GenerativeModel(
@@ -41,6 +42,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   // Modified to be async and call Gemini
   void _generateBotResponse(String userInput) async {
+    // Show typing indicator
+    setState(() {
+      _isTyping = true;
+    });
+
     // A small delay for better UX before generating a response
     await Future.delayed(const Duration(milliseconds: 300));
     
@@ -79,6 +85,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         final response = await _model.generateContent(content);
 
         botReply = response.text ?? "Sorry, the AI model returned an empty response. Try again.";
+        
+        // Clean up markdown formatting to make it look less AI-generated
+        botReply = botReply.replaceAll('**', '');
       } catch (e) {
         // Catch any errors (like network issues, invalid key, rate limits)
         botReply = "I ran into an error trying to connect to the AI. Please check your API key and internet connection.";
@@ -89,6 +98,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
     // Update the UI with the bot's final response
     setState(() {
+      _isTyping = false;
       _messages.add({
         'text': botReply,
         'isUser': false,
@@ -193,8 +203,13 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 ? _buildWelcomeCard()
                 : ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              itemCount: _messages.length,
+              itemCount: _messages.length + (_isTyping ? 1 : 0),
               itemBuilder: (context, index) {
+                // Show typing indicator at the end
+                if (_isTyping && index == _messages.length) {
+                  return _buildTypingIndicator();
+                }
+
                 final msg = _messages[index];
                 final isUser = msg['isUser'] as bool;
 
@@ -447,6 +462,72 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildTypingIndicator() {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+            bottomLeft: Radius.circular(4),
+            bottomRight: Radius.circular(20),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildDot(0),
+            const SizedBox(width: 4),
+            _buildDot(1),
+            const SizedBox(width: 4),
+            _buildDot(2),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDot(int index) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 600),
+      builder: (context, value, child) {
+        final delay = index * 0.2;
+        final animValue = ((value + delay) % 1.0);
+        final scale = 0.5 + (animValue * 0.5);
+        final opacity = 0.3 + (animValue * 0.7);
+        
+        return Transform.scale(
+          scale: scale,
+          child: Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: const Color(0xFF5E4DB2).withOpacity(opacity),
+              shape: BoxShape.circle,
+            ),
+          ),
+        );
+      },
+      onEnd: () {
+        if (mounted && _isTyping) {
+          setState(() {});
+        }
+      },
     );
   }
 }
