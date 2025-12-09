@@ -395,6 +395,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                             ? techName
                                             : (data['assignedTechnicianName'] ?? data['assignedTo'] ?? '').toString(),
                                         damageCategory: (data['damageCategory'] ?? '').toString(),
+                                        damageLocation: (data['damageLocation'] ?? '').toString(),
                                         inventoryDamageTitle: data['inventoryDamageTitle'] ?? '',
                                         inventoryDamage: (data['inventoryDamage'] ?? '').toString(),
                                         expectedDuration: (data['expectedDuration'] ?? '').toString(),
@@ -797,6 +798,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                             completedDate: dateText,
                                             assignedTechnician: techName.isNotEmpty ? techName : (data['assignedTo'] ?? '').toString(),
                                             damageCategory: data['damageCategory'] ?? '',
+                                            damageLocation: data['damageLocation'] ?? '',
                                             inventoryDamageTitle: data['inventoryDamageTitle'] ?? '',
                                             inventoryDamage: data['inventoryDamage'] ?? '',
                                             duration: data['duration'] ?? '',

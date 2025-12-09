@@ -7,6 +7,7 @@ class ScheduledRepairScreen extends StatefulWidget {
   final String scheduledDate;
   final String assignedTechnician;
   final String damageCategory;
+  final String damageLocation;
   final String inventoryDamage;
   final String inventoryDamageTitle;
   final String expectedDuration;
@@ -19,6 +20,7 @@ class ScheduledRepairScreen extends StatefulWidget {
     required this.scheduledDate,
     required this.assignedTechnician,
     required this.damageCategory,
+    required this.damageLocation,
     required this.inventoryDamageTitle,
     required this.inventoryDamage,
     required this.expectedDuration,
@@ -74,13 +76,12 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
           .update({'scheduledDate': currentScheduledDate});
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Scheduled date updated successfully!')),
+        const SnackBar(content: Text('Scheduled date updated successfully!')),
       );
     }
   }
 
   Future<void> _cancelRequest() async {
-    // Optional: You can reuse existing cancel logic if needed
     await FirebaseFirestore.instance
         .collection('complaint')
         .doc(widget.reportId)
@@ -178,8 +179,6 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // _buildDetailItem('Report ID', widget.reportId),
-                      // const Divider(height: 1),
                       _buildDetailItem('Repair Status', widget.status),
                       const Divider(height: 1),
                       _buildDetailItem('Scheduled Date', currentScheduledDate),
@@ -187,6 +186,8 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
                       _buildDetailItem('Assigned Technician', widget.assignedTechnician),
                       const Divider(height: 1),
                       _buildDetailItem('Damage Category', widget.damageCategory),
+                      const Divider(height: 1),
+                      _buildDetailItem('Damage Location', widget.damageLocation), // <-- added
                       const Divider(height: 1),
                       _buildDetailItem('Damage Title', widget.inventoryDamageTitle),
                       const Divider(height: 1),
