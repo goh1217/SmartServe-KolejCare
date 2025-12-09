@@ -259,7 +259,7 @@ class _CalendarPageState extends State<CalendarPage> {
         ),
       ),
       child: const Text(
-        'Ongoing',
+        "Today's tasks",
         style: TextStyle(
           fontSize: 22,
           fontWeight: FontWeight.bold,
@@ -331,10 +331,60 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 
   Widget _buildEvents(List<QueryDocumentSnapshot> tasks) {
+    // Sort tasks by status first, then by proximity to current time
+    // Convert current time to Malaysia time (UTC+8)
+    final now = DateTime.now().toUtc().add(const Duration(hours: 8));
+    final sortedTasks = List<QueryDocumentSnapshot>.from(tasks);
+    sortedTasks.sort((a, b) {
+      final dataA = a.data() as Map<String, dynamic>;
+      final dataB = b.data() as Map<String, dynamic>;
+
+      // Get report status
+      final statusA = (dataA['reportStatus'] ?? '').toString().toLowerCase();
+      final statusB = (dataB['reportStatus'] ?? '').toString().toLowerCase();
+
+      // Define status priority: Approved and Ongoing first, then Completed
+      final priorityA = (statusA == 'approved' || statusA == 'ongoing') ? 0 : 1;
+      final priorityB = (statusB == 'approved' || statusB == 'ongoing') ? 0 : 1;
+
+      // If different priorities, sort by priority (0 comes first)
+      if (priorityA != priorityB) {
+        return priorityA.compareTo(priorityB);
+      }
+
+      // Get timestamps
+      Timestamp? timestampA;
+      if (dataA['scheduledDate'] != null && dataA['scheduledDate'] is Timestamp) {
+        timestampA = dataA['scheduledDate'] as Timestamp;
+      } else if (dataA['repairDate'] != null && dataA['repairDate'] is Timestamp) {
+        timestampA = dataA['repairDate'] as Timestamp;
+      }
+
+      Timestamp? timestampB;
+      if (dataB['scheduledDate'] != null && dataB['scheduledDate'] is Timestamp) {
+        timestampB = dataB['scheduledDate'] as Timestamp;
+      } else if (dataB['repairDate'] != null && dataB['repairDate'] is Timestamp) {
+        timestampB = dataB['repairDate'] as Timestamp;
+      }
+
+      if (timestampA == null || timestampB == null) return 0;
+
+      // Convert to Malaysia time (UTC+8)
+      final startA = timestampA.toDate().toUtc().add(const Duration(hours: 8));
+      final startB = timestampB.toDate().toUtc().add(const Duration(hours: 8));
+
+      // Calculate time difference from now (both in Malaysia time)
+      final diffA = (startA.difference(now)).abs();
+      final diffB = (startB.difference(now)).abs();
+
+      // Sort by closest to current time
+      return diffA.compareTo(diffB);
+    });
+
     return SizedBox(
       height: 24 * timeSlotHeight,
       child: Stack(
-        children: tasks.map((doc) {
+        children: sortedTasks.map((doc) {
           final data = doc.data() as Map<String, dynamic>;
           // Check both scheduledDate and repairDate
           Timestamp? timestamp;
@@ -413,7 +463,7 @@ class _CalendarPageState extends State<CalendarPage> {
         },
         child: Container(
           height: height,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [color, color.withOpacity(0.8)],
@@ -425,28 +475,39 @@ class _CalendarPageState extends State<CalendarPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   Text(
                     location,
-                    style: const TextStyle(fontSize: 14, color: Colors.white),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 12, color: Colors.white),
                   ),
-                         if (reportStatus != null) // Display report status if available
-                           Text(
-                             reportStatus,
-                             style: const TextStyle(fontSize: 12, color: Colors.white),
-                           ),
+                  if (reportStatus != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        reportStatus,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 11, color: Colors.white),
+                      ),
+                    ),
                 ],
               ),
               Align(
@@ -454,7 +515,7 @@ class _CalendarPageState extends State<CalendarPage> {
                 child: Text(
                   '${_formatTime(start)} - $endTime',
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: 10,
                     color: Colors.white,
                     fontWeight: FontWeight.w500,
                   ),

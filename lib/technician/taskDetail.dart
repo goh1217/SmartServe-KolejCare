@@ -45,7 +45,8 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   String studentName = 'Loading...';
   String studentRole = 'Student'; // Assuming student for now
   String studentImage = 'https://via.placeholder.com/150';
-  String taskImage = 'https://via.placeholder.com/300x200';
+  List<String> damagePictures = []; // List to store multiple damage pictures
+  int currentImageIndex = 0; // Track current image being displayed
   String studentId = '';
   
   // For proof submission
@@ -74,9 +75,14 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
           category = data['damageCategory'] ?? 'Uncategorized';
           description = data['inventoryDamage'] ?? 'No description provided.';
           assignmentNotes = data['rejectionReason'] ?? 'No notes provided.';
-          // If there is a damagePic field
+          // If there is a damagePic field - can be a string or list
           if (data['damagePic'] != null) {
-             taskImage = data['damagePic'];
+            if (data['damagePic'] is List) {
+              damagePictures = List<String>.from(data['damagePic'] as List);
+            } else if (data['damagePic'] is String) {
+              damagePictures = [data['damagePic'] as String];
+            }
+            currentImageIndex = 0; // Reset to first image
           }
           // If there is a proof pic
           if (data['proofPic'] != null) {
@@ -386,23 +392,84 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      taskImage,
-                      width: 160,
-                      height: 120,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          width: 160,
-                          height: 120,
-                          color: Colors.grey.shade300,
-                          child: const Icon(Icons.image, size: 50),
-                        );
-                      },
+                  if (damagePictures.isNotEmpty)
+                    Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Left arrow button
+                            if (damagePictures.length > 1)
+                              IconButton(
+                                icon: const Icon(Icons.arrow_back_ios),
+                                onPressed: () {
+                                  setState(() {
+                                    currentImageIndex = (currentImageIndex - 1 + damagePictures.length) % damagePictures.length;
+                                  });
+                                },
+                              )
+                            else
+                              const SizedBox(width: 48),
+                            // Image display
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.network(
+                                  damagePictures[currentImageIndex],
+                                  width: 160,
+                                  height: 120,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      width: 160,
+                                      height: 120,
+                                      color: Colors.grey.shade300,
+                                      child: const Icon(Icons.image, size: 50),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                            // Right arrow button
+                            if (damagePictures.length > 1)
+                              IconButton(
+                                icon: const Icon(Icons.arrow_forward_ios),
+                                onPressed: () {
+                                  setState(() {
+                                    currentImageIndex = (currentImageIndex + 1) % damagePictures.length;
+                                  });
+                                },
+                              )
+                            else
+                              const SizedBox(width: 48),
+                          ],
+                        ),
+                        // Image counter
+                        if (damagePictures.length > 1)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              '${currentImageIndex + 1} / ${damagePictures.length}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                      ],
+                    )
+                  else
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        width: 160,
+                        height: 120,
+                        color: Colors.grey.shade300,
+                        child: const Icon(Icons.image, size: 50),
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -459,44 +526,6 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
               ),
             
             if (proofImage != null) const SizedBox(height: 16),
-
-            // Assignment Notes / Rejection Reason Card
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Notes / Rejection Reason',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    assignmentNotes,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
-            ),
 
             const SizedBox(height: 16),
 

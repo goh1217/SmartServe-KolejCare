@@ -266,17 +266,7 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
-                        ElevatedButton(
-                          onPressed: () {},
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: const Color(0xFF6C63FF),
-                            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: const Text('View Task', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                        ),
+
                       ],
                     ),
                   );
@@ -334,7 +324,8 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
                   print('Found ${rawTasks.length} tasks for technician: $technicianDocId');
 
                   // Normalize tasks with metadata
-                  final now = DateTime.now();
+                  // Convert current time to Malaysia time (UTC+8)
+                  final now = DateTime.now().toUtc().add(const Duration(hours: 8));
                   final today = DateTime(now.year, now.month, now.day);
 
                   List<Map<String, dynamic>> normalized = rawTasks.map((doc) {
@@ -395,27 +386,30 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
                     }).toList();
                   }
 
-                  // Sort: pending and most recent at top, completed at bottom for Today's view
+                  // Sort: Approved/Ongoing by earliest to latest scheduled date, then Completed at bottom
                   filtered.sort((a, b) {
                     final aStatus = (a['status'] ?? '').toString().toLowerCase();
                     final bStatus = (b['status'] ?? '').toString().toLowerCase();
 
                     if (selectedTab == 0) {
-                      // For today's tasks, put pending before completed
-                      if (aStatus == bStatus) {
-                        final aDate = (a['reported'] as DateTime?) ?? DateTime.fromMillisecondsSinceEpoch(0);
-                        final bDate = (b['reported'] as DateTime?) ?? DateTime.fromMillisecondsSinceEpoch(0);
-                        return bDate.compareTo(aDate); // most recent first
+                      // For today's tasks: Approved/Ongoing first (sorted by earliest scheduled time), then Completed
+                      final aIsActive = aStatus == 'approved' || aStatus == 'ongoing';
+                      final bIsActive = bStatus == 'approved' || bStatus == 'ongoing';
+                      
+                      if (aIsActive != bIsActive) {
+                        return aIsActive ? -1 : 1; // Active tasks first
                       }
-                      if (aStatus == 'pending') return -1;
-                      if (bStatus == 'pending') return 1;
-                      return aStatus.compareTo(bStatus);
+                      
+                      // Within same priority, sort by scheduled date (earliest first)
+                      final aScheduled = (a['scheduled'] as DateTime?) ?? DateTime.fromMillisecondsSinceEpoch(0);
+                      final bScheduled = (b['scheduled'] as DateTime?) ?? DateTime.fromMillisecondsSinceEpoch(0);
+                      return aScheduled.compareTo(bScheduled);
                     }
 
-                    // For other tabs, sort by reported date desc
-                    final aDate = (a['reported'] as DateTime?) ?? DateTime.fromMillisecondsSinceEpoch(0);
-                    final bDate = (b['reported'] as DateTime?) ?? DateTime.fromMillisecondsSinceEpoch(0);
-                    return bDate.compareTo(aDate);
+                    // For other tabs, sort by scheduled date (earliest first)
+                    final aScheduled = (a['scheduled'] as DateTime?) ?? DateTime.fromMillisecondsSinceEpoch(0);
+                    final bScheduled = (b['scheduled'] as DateTime?) ?? DateTime.fromMillisecondsSinceEpoch(0);
+                    return aScheduled.compareTo(bScheduled);
                   });
 
                   if (filtered.isEmpty) {
