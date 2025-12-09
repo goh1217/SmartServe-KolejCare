@@ -29,6 +29,11 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
 
   final List<XFile> _pickedImages = [];
 
+  //location
+  String? _locationChoice; // "room" or "public"
+  final TextEditingController _publicLocationController = TextEditingController();
+  Map<String, dynamic>? _studentData; // to store student block/room/college
+
   final List<String> _maintenanceOptions = ['Furniture', 'Electrical', 'Plumbing', 'Other'];
   final List<String> _urgencyOptions = ['Minor', 'Medium', 'High'];
 
@@ -36,6 +41,7 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _publicLocationController.dispose();
     super.dispose();
   }
 
@@ -56,7 +62,14 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
     final title = _titleController.text.trim();
     final desc = _descriptionController.text.trim();
 
-    if (title.isEmpty || desc.isEmpty || _selectedUrgency == null || _selectedMaintenanceType == null) {
+    if (title.isEmpty ||
+        desc.isEmpty ||
+        _selectedUrgency == null ||
+        _selectedMaintenanceType == null ||
+        _locationChoice == null ||
+        (_locationChoice == "public" && _publicLocationController.text.trim().isEmpty)
+    ) {
+
       showDialog(
         context: context,
         builder: (c) => AlertDialog(
@@ -75,10 +88,18 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw 'User not logged in';
 
+      // ---------------- FETCH STUDENT DATA ----------------
+      final studentDoc = await firestore.collection('student').doc(user.uid).get();
+      _studentData = studentDoc.data();
+      if (_studentData == null) throw 'Student record not found';
+
       final docRef = await firestore.collection('complaint').add({
         'assignedTo': '/collection/technician',
         'damageCategory': _selectedMaintenanceType,
         'damagePic': null,
+        'damageLocation': (_locationChoice == "room")
+            ? "${_studentData?['residentCollege']}, ${_studentData?['block']}, ${_studentData?['roomNumber']}"
+            : _publicLocationController.text.trim(),
         'feedbackRating': 0,
         'inventoryDamage': desc,
         'inventoryDamageTitle': title,
@@ -232,6 +253,44 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
               ),
             ),
             const SizedBox(height: 16),
+
+            // LOCATION
+            Container(
+              decoration: _cardDecoration(),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: DropdownButtonFormField<String>(
+                value: _locationChoice,
+                items: const [
+                  DropdownMenuItem(value: "room", child: Text("Inside My Room")),
+                  DropdownMenuItem(value: "public", child: Text("Public Area")),
+                ],
+                onChanged: (_isSubmitted || _isSubmitting)
+                    ? null
+                    : (v) => setState(() => _locationChoice = v),
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  hintText: "Select damage location",
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            if (_locationChoice == "public")
+              Container(
+                decoration: _cardDecoration(),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                child: TextField(
+                  controller: _publicLocationController,
+                  enabled: !_isSubmitted && !_isSubmitting,
+                  decoration: const InputDecoration(
+                    hintText: "Enter public area description",
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+            if (_locationChoice == "public") const SizedBox(height: 16),
+            // ----------------------------------------------------------
+
 
             // Image Upload
             GestureDetector(
