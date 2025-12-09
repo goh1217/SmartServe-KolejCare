@@ -963,7 +963,8 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
             for (final doc in s2.data?.docs ?? const []) {
               final data = doc.data() as Map<String, dynamic>? ?? {};
 
-              // skip if already read
+              // skip archived or already read
+              if (data['isArchived'] == true) continue;
               final isRead = data['isRead'] == true;
               if (isRead) continue;
 
