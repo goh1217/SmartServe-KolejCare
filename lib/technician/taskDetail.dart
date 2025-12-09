@@ -41,6 +41,8 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   String category = 'Loading...';
   String date = 'Loading...';
   String scheduledTime = '--:--';
+  String title = 'Loading...';
+  String location = 'Loading...';
   String description = 'Loading...';
   String assignmentNotes = 'Loading...'; // Rejection reason or notes
   String studentName = 'Loading...';
@@ -75,6 +77,8 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
           status = data['reportStatus'] ?? widget.status;
           urgency = data['urgencyLevel'] ?? 'Medium';
           category = data['damageCategory'] ?? 'Uncategorized';
+          title = data['inventoryDamageTitle'] ?? 'No title provided.';
+          location = data['damageLocation'] ?? 'No location provided.';
           description = data['inventoryDamage'] ?? 'No description provided.';
           assignmentNotes = data['rejectionReason'] ?? 'No notes provided.';
           // If there is a damagePic field - can be a string or list
@@ -319,7 +323,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                     children: [
                       Expanded(
                         child: Text(
-                          widget.title,
+                          title,
                           style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
@@ -360,7 +364,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                             const SizedBox(height: 16),
                             _buildInfoItem('Category', category),
                             const SizedBox(height: 16),
-                            _buildInfoItem('Address', widget.location),
+                            _buildInfoItem('Address', location),
                           ],
                         ),
                       ),

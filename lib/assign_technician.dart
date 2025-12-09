@@ -3,6 +3,148 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:table_calendar/table_calendar.dart';
 
+// ============================================================================
+// HELPER CLASSES FOR TIME SLOT MANAGEMENT
+// ============================================================================
+
+/// Represents a single time slot with availability status
+class TimeSlot {
+  final TimeOfDay startTime;
+  final TimeOfDay endTime;
+  final bool isAvailable;
+  final String? taskTitle;
+
+  TimeSlot({
+    required this.startTime,
+    required this.endTime,
+    required this.isAvailable,
+    this.taskTitle,
+  });
+
+  String get displayTime {
+    return '${_formatTime(startTime)} - ${_formatTime(endTime)}';
+  }
+
+  String _formatTime(TimeOfDay time) {
+    final hour = time.hour.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+}
+
+/// Represents a technician's existing booking
+class TechnicianBooking {
+  final DateTime scheduleDate;
+  final int estimatedDurationJobDone;
+  final String? taskTitle;
+
+  TechnicianBooking({
+    required this.scheduleDate,
+    required this.estimatedDurationJobDone,
+    this.taskTitle,
+  });
+
+  DateTime get endDateTime {
+    return scheduleDate.add(Duration(hours: estimatedDurationJobDone));
+  }
+
+  bool overlaps(DateTime start, DateTime end) {
+    return (start.isBefore(endDateTime) && end.isAfter(scheduleDate));
+  }
+}
+
+// ============================================================================
+// TIME SLOT CALCULATOR
+// ============================================================================
+
+class TimeSlotCalculator {
+  static const int workStartHour = 8;
+  static const int workEndHour = 18;
+  static const int slotDurationMinutes = 60;
+
+  static List<TimeSlot> generateTimeSlots({
+    required DateTime selectedDate,
+    required List<TechnicianBooking> existingBookings,
+    int durationNeeded = 1,
+  }) {
+    final List<TimeSlot> slots = [];
+
+    final dayBookings = existingBookings.where((booking) {
+      return isSameDay(booking.scheduleDate, selectedDate);
+    }).toList();
+
+    DateTime currentSlotStart = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+      workStartHour,
+    );
+
+    final workEndTime = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+      workEndHour,
+    );
+
+    while (currentSlotStart.add(Duration(hours: durationNeeded)).isBefore(workEndTime) ||
+        currentSlotStart.add(Duration(hours: durationNeeded)).isAtSameMomentAs(workEndTime)) {
+
+      final slotEnd = currentSlotStart.add(Duration(hours: durationNeeded));
+
+      bool isAvailable = true;
+      String? blockingTask;
+
+      for (var booking in dayBookings) {
+        if (booking.overlaps(currentSlotStart, slotEnd)) {
+          isAvailable = false;
+          blockingTask = booking.taskTitle;
+          break;
+        }
+      }
+
+      final now = DateTime.now();
+      final isPastSlot = currentSlotStart.isBefore(now);
+
+      if (!isPastSlot) {
+        slots.add(TimeSlot(
+          startTime: TimeOfDay(
+            hour: currentSlotStart.hour,
+            minute: currentSlotStart.minute,
+          ),
+          endTime: TimeOfDay(
+            hour: slotEnd.hour,
+            minute: slotEnd.minute,
+          ),
+          isAvailable: isAvailable,
+          taskTitle: blockingTask,
+        ));
+      }
+
+      currentSlotStart = currentSlotStart.add(const Duration(minutes: slotDurationMinutes));
+    }
+
+    return slots;
+  }
+
+  static bool hasBookingsOnDate(DateTime date, List<TechnicianBooking> bookings) {
+    return bookings.any((booking) => isSameDay(booking.scheduleDate, date));
+  }
+
+  static bool isFullyBooked(DateTime date, List<TechnicianBooking> bookings) {
+    final slots = generateTimeSlots(selectedDate: date, existingBookings: bookings);
+    return slots.isNotEmpty && slots.every((slot) => !slot.isAvailable);
+  }
+
+  static bool isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+}
+
+// ============================================================================
+// MAIN WIDGET
+// ============================================================================
+
 class AssignTechnicianPage extends StatefulWidget {
   final String complaintId;
   final dynamic complaint;
@@ -21,20 +163,25 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _durationController = TextEditingController();
-  
+
   String? selectedTechnicianId;
   Map<String, dynamic>? selectedTechnicianData;
   bool isAssigning = false;
   Map<String, dynamic>? recommendedTechnicianData;
   bool isManualSelection = false;
-  
+
   // Scheduling fields
   DateTime? selectedScheduleDateTime;
   int? selectedEstimatedDurationHours;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   TimeOfDay? _selectedTime;
-  
+
+  // NEW: Time slot management
+  List<TechnicianBooking> technicianBookings = [];
+  List<TimeSlot> availableTimeSlots = [];
+  TimeSlot? selectedTimeSlot;
+
   // Booked dates for selected technician
   Set<DateTime> bookedDates = {};
   bool isLoadingBookedDates = false;
@@ -65,11 +212,11 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
         selectedTechnicianId = recommendedTechnicianData!['id'];
         selectedTechnicianData = recommendedTechnicianData;
       });
-      // Load booked dates for recommended technician
       await _loadBookedDates(selectedTechnicianId!);
     }
   }
 
+  // MODIFIED: Load technician bookings with full details
   Future<void> _loadBookedDates(String technicianId) async {
     setState(() {
       isLoadingBookedDates = true;
@@ -80,20 +227,33 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
       final snap = await _firestore
           .collection('complaint')
           .where('assignedTo', isEqualTo: assignedPath)
+          .where('reportStatus', whereIn: ['Approved', 'In Progress'])
           .get();
 
       final Set<DateTime> dates = {};
+      final List<TechnicianBooking> bookings = [];
+
       for (var doc in snap.docs) {
         final data = doc.data();
         final sd = data['scheduleDate'];
         if (sd is Timestamp) {
-          final d = sd.toDate();
-          dates.add(DateTime(d.year, d.month, d.day));
+          final scheduleDateTime = sd.toDate();
+          final duration = data['estimatedDurationJobDone'] as int? ?? 1;
+          final title = data['title'] ?? data['inventoryDamage'] ?? 'Task';
+
+          dates.add(DateTime(scheduleDateTime.year, scheduleDateTime.month, scheduleDateTime.day));
+
+          bookings.add(TechnicianBooking(
+            scheduleDate: scheduleDateTime,
+            estimatedDurationJobDone: duration,
+            taskTitle: title,
+          ));
         }
       }
 
       setState(() {
         bookedDates = dates;
+        technicianBookings = bookings;
         isLoadingBookedDates = false;
       });
     } catch (e) {
@@ -105,7 +265,7 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
 
   Stream<List<Map<String, dynamic>>> getAvailableTechniciansStream() {
     String maintenanceField =
-        _mapCategoryToMaintenanceField(widget.complaint.category);
+    _mapCategoryToMaintenanceField(widget.complaint.category);
 
     return _firestore
         .collection('technician')
@@ -117,7 +277,7 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
         Map<String, dynamic> data = doc.data();
         data['id'] = doc.id;
         data['tasksAssigned'] =
-            data['tasksAssigned'] is List ? data['tasksAssigned'] : [];
+        data['tasksAssigned'] is List ? data['tasksAssigned'] : [];
         return data;
       }).toList();
 
@@ -165,7 +325,7 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
     if (selectedScheduleDateTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please select a schedule date and time'),
+          content: Text('Please select a schedule date and time slot'),
           backgroundColor: Colors.orange,
         ),
       );
@@ -188,11 +348,11 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
 
     try {
       DocumentReference complaintRef =
-          _firestore.collection('complaint').doc(widget.complaintId);
+      _firestore.collection('complaint').doc(widget.complaintId);
 
       final currentUser = FirebaseAuth.instance.currentUser;
       final String reviewedByPath =
-          currentUser != null ? '/collection/staff/${currentUser.uid}' : '';
+      currentUser != null ? '/collection/staff/${currentUser.uid}' : '';
 
       await complaintRef.update({
         'reportStatus': 'Approved',
@@ -267,13 +427,13 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
         final user = FirebaseAuth.instance.currentUser;
         if (user != null) {
           final docById =
-              await _firestore.collection('staff').doc(user.uid).get();
+          await _firestore.collection('staff').doc(user.uid).get();
           if (docById.exists) {
             final d = docById.data();
             reviewedByName = (d?['staffName'] ??
-                    d?['name'] ??
-                    d?['displayName'] ??
-                    '')
+                d?['name'] ??
+                d?['displayName'] ??
+                '')
                 .toString();
           }
 
@@ -286,9 +446,9 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
             if (q.docs.isNotEmpty) {
               final d = q.docs.first.data();
               reviewedByName = (d['staffName'] ??
-                      d['name'] ??
-                      d['displayName'] ??
-                      '')
+                  d['name'] ??
+                  d['displayName'] ??
+                  '')
                   .toString();
             }
           }
@@ -302,9 +462,9 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
             if (q2.docs.isNotEmpty) {
               final d = q2.docs.first.data();
               reviewedByName = (d['staffName'] ??
-                      d['name'] ??
-                      d['displayName'] ??
-                      '')
+                  d['name'] ??
+                  d['displayName'] ??
+                  '')
                   .toString();
             }
           }
@@ -392,6 +552,28 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
 
   void _scrollToCalendar() {
     Future.delayed(const Duration(milliseconds: 300), () {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+  void _scrollToTimeSlots() {
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+  void _scrollToDuration() {
+    Future.delayed(const Duration(milliseconds: 400), () {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
@@ -582,24 +764,27 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
           if (isLoadingBookedDates)
             const Center(
                 child: Padding(
-              padding: EdgeInsets.all(20.0),
-              child: CircularProgressIndicator(color: Color(0xFF7C3AED)),
-            ))
-          else
+                  padding: EdgeInsets.all(20.0),
+                  child: CircularProgressIndicator(color: Color(0xFF7C3AED)),
+                ))
+          else ...[
             _buildCalendar(),
+            _buildCalendarLegend(),
+          ],
           const SizedBox(height: 16),
           if (_selectedDay != null) ...[
             const Divider(),
             const SizedBox(height: 16),
-            _buildTimeSelector(),
+            _buildTimeSlotSelector(),
             const SizedBox(height: 16),
-            if (_selectedTime != null) _buildDurationInput(),
+            if (selectedTimeSlot != null) _buildDurationInput(),
           ],
         ],
       ),
     );
   }
 
+  // MODIFIED: Calendar with partial booking indicators
   Widget _buildCalendar() {
     return TableCalendar(
       firstDay: DateTime.now(),
@@ -609,39 +794,41 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
         return isSameDay(_selectedDay, day);
       },
       enabledDayPredicate: (day) {
-        final dateOnly = DateTime(day.year, day.month, day.day);
-        return !bookedDates.contains(dateOnly) &&
-            !day.isBefore(DateTime.now().subtract(const Duration(days: 1)));
+        // Allow all future dates
+        return !day.isBefore(DateTime.now().subtract(const Duration(days: 1)));
       },
       onDaySelected: (selectedDay, focusedDay) {
-        final dateOnly =
-            DateTime(selectedDay.year, selectedDay.month, selectedDay.day);
-        if (!bookedDates.contains(dateOnly)) {
-          setState(() {
-            _selectedDay = selectedDay;
-            _focusedDay = focusedDay;
-            _selectedTime = null;
-            selectedScheduleDateTime = null;
-            selectedEstimatedDurationHours = null;
-            _durationController.clear();
-          });
-        }
+        setState(() {
+          _selectedDay = selectedDay;
+          _focusedDay = focusedDay;
+          selectedTimeSlot = null;
+          selectedScheduleDateTime = null;
+          selectedEstimatedDurationHours = null;
+          _durationController.clear();
+
+          // Generate available time slots
+          availableTimeSlots = TimeSlotCalculator.generateTimeSlots(
+            selectedDate: selectedDay,
+            existingBookings: technicianBookings,
+            durationNeeded: 1,
+          );
+        });
+        _scrollToTimeSlots();
       },
-      calendarStyle: CalendarStyle(
-        selectedDecoration: const BoxDecoration(
-          color: Color(0xFF7C3AED),
-          shape: BoxShape.circle,
-        ),
-        todayDecoration: BoxDecoration(
-          color: const Color(0xFF7C3AED).withOpacity(0.3),
-          shape: BoxShape.circle,
-        ),
-        disabledDecoration: const BoxDecoration(
-          color: Colors.yellow,
-          shape: BoxShape.circle,
-        ),
-        disabledTextStyle: const TextStyle(color: Colors.black54),
+      calendarBuilders: CalendarBuilders(
+        defaultBuilder: (context, day, focusedDay) {
+          return _buildCalendarDay(day, false, false);
+        },
+        selectedBuilder: (context, day, focusedDay) {
+          return _buildCalendarDay(day, true, false);
+        },
+        todayBuilder: (context, day, focusedDay) {
+          return _buildCalendarDay(day, false, true);
+        },
+      ),
+      calendarStyle: const CalendarStyle(
         outsideDaysVisible: false,
+        markerDecoration: BoxDecoration(),
       ),
       headerStyle: const HeaderStyle(
         formatButtonVisible: false,
@@ -655,72 +842,241 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
     );
   }
 
-  Widget _buildTimeSelector() {
+  // NEW: Custom calendar day builder
+  Widget _buildCalendarDay(DateTime day, bool isSelected, bool isToday) {
+    final hasBookings = TimeSlotCalculator.hasBookingsOnDate(day, technicianBookings);
+    final isFullyBooked = TimeSlotCalculator.isFullyBooked(day, technicianBookings);
+
+    Color backgroundColor;
+    Color textColor = Colors.black;
+
+    if (isSelected) {
+      backgroundColor = const Color(0xFF7C3AED);
+      textColor = Colors.white;
+    } else if (isToday) {
+      backgroundColor = const Color(0xFF7C3AED).withOpacity(0.3);
+    } else if (isFullyBooked) {
+      backgroundColor = Colors.red.shade100;
+      textColor = Colors.red.shade900;
+    } else if (hasBookings) {
+      backgroundColor = Colors.yellow.shade100;
+    } else {
+      backgroundColor = Colors.transparent;
+    }
+
+    return Container(
+      margin: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              '${day.day}',
+              style: TextStyle(
+                color: textColor,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+            if (hasBookings && !isSelected)
+              Container(
+                margin: const EdgeInsets.only(top: 2),
+                width: 4,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: isFullyBooked ? Colors.red : Colors.orange,
+                  shape: BoxShape.circle,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // NEW: Calendar legend
+  Widget _buildCalendarLegend() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildLegendItem('Available', Colors.white),
+          _buildLegendItem('Partial', Colors.yellow.shade100),
+          _buildLegendItem('Full', Colors.red.shade100),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegendItem(String label, Color color) {
+    return Row(
+      children: [
+        Container(
+          width: 14,
+          height: 14,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.grey.shade400),
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 11),
+        ),
+      ],
+    );
+  }
+
+  // NEW: Time slot selector (replaces time picker)
+  Widget _buildTimeSlotSelector() {
+    if (availableTimeSlots.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        child: const Text(
+          'No available time slots for this date',
+          style: TextStyle(fontSize: 14, color: Colors.red),
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        const Row(
           children: [
-            const Icon(Icons.access_time, color: Color(0xFF7C3AED), size: 20),
-            const SizedBox(width: 8),
-            const Text(
-              'Select Time',
+            Icon(Icons.access_time, color: Color(0xFF7C3AED), size: 20),
+            SizedBox(width: 8),
+            Text(
+              'Select Available Time Slot',
               style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87),
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
             ),
           ],
         ),
         const SizedBox(height: 12),
-        InkWell(
-          onTap: () async {
-            final TimeOfDay? picked = await showTimePicker(
-              context: context,
-              initialTime: _selectedTime ?? TimeOfDay.now(),
-            );
-            if (picked != null) {
-              setState(() {
-                _selectedTime = picked;
-                if (_selectedDay != null) {
-                  selectedScheduleDateTime = DateTime(
-                    _selectedDay!.year,
-                    _selectedDay!.month,
-                    _selectedDay!.day,
-                    picked.hour,
-                    picked.minute,
-                  );
-                }
-              });
-            }
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey[300]!),
-              borderRadius: BorderRadius.circular(8),
-              color: Colors.grey[50],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  _selectedTime != null
-                      ? _selectedTime!.format(context)
-                      : 'Tap to select time',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: _selectedTime != null
-                        ? Colors.black87
-                        : Colors.grey[600],
-                  ),
-                ),
-                Icon(Icons.arrow_drop_down, color: Colors.grey[600]),
-              ],
-            ),
+        SizedBox(
+          height: 250,
+          child: ListView.builder(
+            itemCount: availableTimeSlots.length,
+            itemBuilder: (context, index) {
+              final slot = availableTimeSlots[index];
+              return _buildTimeSlotCard(slot);
+            },
           ),
         ),
       ],
+    );
+  }
+
+  // NEW: Individual time slot card
+  Widget _buildTimeSlotCard(TimeSlot slot) {
+    final isSelected = selectedTimeSlot == slot;
+
+    return GestureDetector(
+      onTap: slot.isAvailable
+          ? () {
+        setState(() {
+          selectedTimeSlot = slot;
+
+          selectedScheduleDateTime = DateTime(
+            _selectedDay!.year,
+            _selectedDay!.month,
+            _selectedDay!.day,
+            slot.startTime.hour,
+            slot.startTime.minute,
+          );
+        });
+        _scrollToDuration();
+      }
+          : null,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: !slot.isAvailable
+              ? Colors.grey.shade100
+              : isSelected
+              ? const Color(0xFF7C3AED)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: !slot.isAvailable
+                ? Colors.grey.shade300
+                : isSelected
+                ? const Color(0xFF7C3AED)
+                : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              slot.isAvailable ? Icons.access_time : Icons.block,
+              color: !slot.isAvailable
+                  ? Colors.grey
+                  : isSelected
+                  ? Colors.white
+                  : const Color(0xFF7C3AED),
+              size: 20,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    slot.displayTime,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: !slot.isAvailable
+                          ? Colors.grey
+                          : isSelected
+                          ? Colors.white
+                          : Colors.black,
+                    ),
+                  ),
+                  if (!slot.isAvailable && slot.taskTitle != null)
+                    Text(
+                      'Booked: ${slot.taskTitle}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey.shade600,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
+              ),
+            ),
+            if (slot.isAvailable)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isSelected ? Colors.white : const Color(0xFFE8D9FF),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  isSelected ? 'Selected' : 'Available',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: isSelected ? const Color(0xFF7C3AED) : Colors.black87,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -753,7 +1109,7 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
             filled: true,
             fillColor: Colors.grey[50],
             contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           ),
           onChanged: (value) {
             final hours = int.tryParse(value);
@@ -777,13 +1133,13 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
                 : const Icon(Icons.check_circle),
             label: isAssigning
                 ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white))
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: Colors.white))
                 : const Text('Accept & Assign',
-                    style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                style:
+                TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             onPressed: isAssigning ? null : assignTechnician,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF7C3AED),
@@ -808,7 +1164,10 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
                 _selectedTime = null;
                 selectedScheduleDateTime = null;
                 selectedEstimatedDurationHours = null;
+                selectedTimeSlot = null;
+                availableTimeSlots.clear();
                 bookedDates.clear();
+                technicianBookings.clear();
               });
             },
             child: const Text(
@@ -833,13 +1192,13 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
             ),
             child: _isRejecting
                 ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white))
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: Colors.white))
                 : const Text('Reject Complaint',
-                    style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                style:
+                TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           ),
         ),
       ],
@@ -875,13 +1234,13 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
               ),
               child: isAssigning
                   ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white))
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white))
                   : const Text('Assign Selected Technician',
-                      style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold)),
+                  style: TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold)),
             ),
           ),
           const SizedBox(height: 8),
@@ -899,13 +1258,13 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
               ),
               child: _isRejecting
                   ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white))
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white))
                   : const Text('Reject Complaint',
-                      style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold)),
+                  style: TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -994,18 +1353,20 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
       onTap: isRecommendation
           ? null
           : () async {
-              setState(() {
-                selectedTechnicianId = technician['id'];
-                selectedTechnicianData = technician;
-                _selectedDay = null;
-                _selectedTime = null;
-                selectedScheduleDateTime = null;
-                selectedEstimatedDurationHours = null;
-                _durationController.clear();
-              });
-              await _loadBookedDates(technician['id']);
-              _scrollToCalendar();
-            },
+        setState(() {
+          selectedTechnicianId = technician['id'];
+          selectedTechnicianData = technician;
+          _selectedDay = null;
+          _selectedTime = null;
+          selectedScheduleDateTime = null;
+          selectedEstimatedDurationHours = null;
+          selectedTimeSlot = null;
+          availableTimeSlots.clear();
+          _durationController.clear();
+        });
+        await _loadBookedDates(technician['id']);
+        _scrollToCalendar();
+      },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
@@ -1059,8 +1420,8 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
                   backgroundColor: const Color(0xFF7C3AED).withOpacity(0.1),
                   child: Text(
                     technician['technicianName']
-                            ?.substring(0, 1)
-                            .toUpperCase() ??
+                        ?.substring(0, 1)
+                        .toUpperCase() ??
                         'T',
                     style: const TextStyle(
                         fontSize: 20,
@@ -1119,5 +1480,10 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
         Text(text, style: TextStyle(fontSize: 12, color: color)),
       ],
     );
+  }
+
+  bool isSameDay(DateTime? a, DateTime? b) {
+    if (a == null || b == null) return false;
+    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 }

@@ -23,7 +23,7 @@ class _HelpPageState extends State<HelpPage> {
 
   // Initialize the Gemini Model Client
   late final GenerativeModel _model = GenerativeModel(
-    model: 'gemini-1.5-flash',
+    model: 'gemini-2.5-flash',
     apiKey: GEMINI_API_KEY,
   );
 

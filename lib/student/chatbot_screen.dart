@@ -539,14 +539,43 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           );
         }
 
-        final stream = sid.isNotEmpty
-            ? FirebaseFirestore.instance.collection('complaint').where('reportBy', isEqualTo: '/collection/student/$sid').where('isRead', isEqualTo: false).snapshots()
-            : FirebaseFirestore.instance.collection('complaint').where('isRead', isEqualTo: false).where('reportBy', isEqualTo: FirebaseAuth.instance.currentUser?.uid ?? '').snapshots();
+        // Listen to all complaints and filter client-side to handle mixed reportBy formats
+        final stream = FirebaseFirestore.instance.collection('complaint').snapshots();
 
         return StreamBuilder<QuerySnapshot>(
           stream: stream,
           builder: (context, s2) {
-            final unread = s2.data?.docs.length ?? 0;
+            final uid = FirebaseAuth.instance.currentUser?.uid;
+            int unread = 0;
+
+            for (final doc in s2.data?.docs ?? const []) {
+              final data = doc.data() as Map<String, dynamic>? ?? {};
+              if (data['isArchived'] == true) continue;
+              if (data['isRead'] == true) continue;
+
+              final rb = data['reportBy'] ?? data['reportedBy'];
+              bool matches = false;
+
+              if (sid.isNotEmpty) {
+                if (rb is DocumentReference) {
+                  final path = rb.path;
+                  if (path.endsWith('/$sid') || path.contains(sid)) matches = true;
+                } else if (rb is String) {
+                  if (rb == sid || rb.endsWith('/$sid') || rb.contains('/student/$sid') || rb.contains('/collection/student/$sid')) {
+                    matches = true;
+                  }
+                }
+              }
+
+              if (!matches && uid != null) {
+                if (rb == uid) matches = true;
+                else if (rb is String && rb.contains(uid)) matches = true;
+                else if (rb is DocumentReference && rb.path.contains(uid)) matches = true;
+              }
+
+              if (matches) unread++;
+            }
+
             final hasUnread = unread > 0;
             return GestureDetector(
               onTap: () {
