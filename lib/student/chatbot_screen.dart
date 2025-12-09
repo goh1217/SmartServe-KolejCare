@@ -98,27 +98,92 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // ... (Your existing build method)
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F9FB),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFEDE8FF),
-        elevation: 0,
-        title: Text(
-          'Chatbot Assistance',
-          style: GoogleFonts.poppins(
-              fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 16),
-            child: Icon(Icons.notifications_none, color: Colors.black87),
+      backgroundColor: const Color(0xFFF5F5F7),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(72),
+        child: SafeArea(
+          child: Container(
+            color: const Color(0xFFF5F5F7),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.06),
+                              blurRadius: 12,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.arrow_back_ios_new,
+                          size: 18,
+                          color: Color(0xFF5E4DB2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Chatbot Assistance',
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        Text(
+                          'Powered by Gemini AI',
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
+                            color: const Color(0xFF9E9E9E),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                GestureDetector(
+                  onTap: () {},
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.06),
+                          blurRadius: 12,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.notifications_rounded,
+                      color: Color(0xFF5E4DB2),
+                      size: 22,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ],
+        ),
       ),
 
       body: Column(
@@ -127,44 +192,52 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             child: _messages.isEmpty
                 ? _buildWelcomeCard()
                 : ListView.builder(
-              padding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final msg = _messages[index];
                 final isUser = msg['isUser'] as bool;
 
                 return Align(
-                  alignment:
-                  isUser ? Alignment.centerRight : Alignment.centerLeft,
+                  alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
                   child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    padding: const EdgeInsets.all(12),
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * 0.75,
+                    ),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: isUser
-                          ? const Color(0xFF5F33E1)
-                          : Colors.white,
+                      gradient: isUser
+                          ? const LinearGradient(
+                              colors: [Color(0xFF6C4DF0), Color(0xFF5E4DB2)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : null,
+                      color: isUser ? null : Colors.white,
                       borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(12),
-                        topRight: const Radius.circular(12),
-                        bottomLeft: Radius.circular(isUser ? 12 : 0),
-                        bottomRight: Radius.circular(isUser ? 0 : 12),
+                        topLeft: const Radius.circular(20),
+                        topRight: const Radius.circular(20),
+                        bottomLeft: Radius.circular(isUser ? 20 : 4),
+                        bottomRight: Radius.circular(isUser ? 4 : 20),
                       ),
                       boxShadow: [
-                        if (!isUser)
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
+                        BoxShadow(
+                          color: isUser 
+                              ? const Color(0xFF5E4DB2).withOpacity(0.3)
+                              : Colors.black.withOpacity(0.08),
+                          blurRadius: isUser ? 12 : 8,
+                          offset: Offset(0, isUser ? 4 : 2),
+                        ),
                       ],
                     ),
                     child: Text(
                       msg['text'],
                       style: GoogleFonts.poppins(
-                        color: isUser ? Colors.white : Colors.black87,
+                        color: isUser ? Colors.white : const Color(0xFF2D2D2D),
                         fontSize: 14,
-                        height: 1.4,
+                        fontWeight: isUser ? FontWeight.w500 : FontWeight.w400,
+                        height: 1.5,
                       ),
                     ),
                   ),
@@ -176,12 +249,17 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           if (_messages.isEmpty) _buildQuickReplies(),
 
           Container(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
-            decoration: const BoxDecoration(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
               color: Colors.white,
+              borderRadius: BorderRadius.circular(28),
               boxShadow: [
                 BoxShadow(
-                    color: Colors.black12, blurRadius: 8, offset: Offset(0, -2))
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
               ],
             ),
             child: Row(
@@ -190,18 +268,39 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                   child: TextField(
                     controller: _controller,
                     decoration: InputDecoration(
-                      hintText: "Type your message here...",
+                      hintText: "Ask me anything...",
                       hintStyle: GoogleFonts.poppins(
-                        color: const Color(0xFF90929C),
+                        color: const Color(0xFFB0B0B0),
                         fontSize: 14,
+                        fontWeight: FontWeight.w400,
                       ),
                       border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 12,
+                      ),
+                    ),
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      color: Colors.black87,
                     ),
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.send_rounded, color: Color(0xFF5F33E1)),
-                  onPressed: () => _sendMessage(_controller.text),
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF6C4DF0), Color(0xFF5E4DB2)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                    onPressed: () => _sendMessage(_controller.text),
+                    padding: const EdgeInsets.all(8),
+                    constraints: const BoxConstraints(),
+                  ),
                 ),
               ],
             ),
@@ -214,18 +313,61 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   Widget _buildWelcomeCard() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        padding: const EdgeInsets.symmetric(horizontal: 32.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.smart_toy_rounded,
-                size: 80, color: Color(0xFF5F33E1)),
-            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF6C4DF0), Color(0xFF5E4DB2)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF5E4DB2).withOpacity(0.4),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.smart_toy_rounded,
+                size: 64,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 24),
             Text(
-              "Hi there, I’m Fixie, your chatbot assistance on SmartServe.\nTry asking me some questions regarding your residential college!",
+              "Hi there! I'm Fixie 👋",
+              style: GoogleFonts.poppins(
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF2D2D2D),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              "Your AI-powered assistant for SmartServe",
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
-                  fontSize: 14, color: const Color(0xFF606060), height: 1.5),
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF5E4DB2),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "Ask me anything about your residential college, maintenance reports, or campus facilities!",
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                color: const Color(0xFF808080),
+                height: 1.6,
+              ),
             ),
           ],
         ),
@@ -234,29 +376,76 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   Widget _buildQuickReplies() {
-    final List<String> quickReplies = [
-      "💬 What is SmartServe?",
-      "🏫 College",
-      "❓ FAQs",
+    final List<Map<String, dynamic>> quickReplies = [
+      {"icon": Icons.info_outline, "label": "What is SmartServe?"},
+      {"icon": Icons.home_work_outlined, "label": "College Info"},
+      {"icon": Icons.help_outline, "label": "FAQs"},
     ];
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Wrap(
-        alignment: WrapAlignment.center,
-        spacing: 8,
-        children: quickReplies.map((label) {
-          return GestureDetector(
-            onTap: () => _sendMessage(label),
-            child: Chip(
-              label: Text(
-                label,
-                style: GoogleFonts.poppins(fontSize: 13),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 12),
+            child: Text(
+              "Quick Actions",
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF808080),
               ),
-              backgroundColor: const Color(0xFFF2EEFF),
             ),
-          );
-        }).toList(),
+          ),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 10,
+            runSpacing: 10,
+            children: quickReplies.map((item) {
+              return GestureDetector(
+                onTap: () => _sendMessage(item["label"]),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: const Color(0xFFE0E0E0),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        item["icon"],
+                        size: 18,
+                        color: const Color(0xFF5E4DB2),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        item["label"],
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF2D2D2D),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
       ),
     );
   }
