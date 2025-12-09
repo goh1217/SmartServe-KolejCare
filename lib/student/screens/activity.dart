@@ -535,6 +535,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                       builder: (context) => RejectedRepairScreen(
                                         status: data['reportStatus'] ?? 'Rejected',
                                         damageCategory: data['damageCategory'] ?? '',
+                                        damageLocation: data['damageLocation'] ?? '',
                                         inventoryDamageTitle: data['inventoryDamageTitle'] ?? '',
                                         inventoryDamage: data['inventoryDamage'] ?? '',
                                         reportedOn: dateText,
@@ -658,6 +659,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                     builder: (context) => WaitingApprovalScreen(
                                       reportStatus: data['reportStatus'] ?? 'Pending',
                                       damageCategory: data['damageCategory'] ?? '',
+                                      damageLocation: data['damageLocation'] ?? '',
                                       inventoryDamageTitle: data['inventoryDamageTitle'] ?? '',
                                       inventoryDamage: data['inventoryDamage'] ?? '',
                                       reportedOn: dateText,
