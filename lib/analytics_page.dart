@@ -343,11 +343,17 @@ class AnalyticsPage extends StatelessWidget {
   Color _getStatusColor(String status) {
     switch (status) {
       case 'Pending':
-        return Colors.orange[700]!;
-      case 'In Progress':
+        return Colors.yellow[700]!;
+      case 'Approved':
+        return Colors.purple[700]!;
+      case 'Ongoing':
         return Colors.blue[700]!;
       case 'Completed':
         return Colors.green[700]!;
+      case 'Rejected':
+        return Colors.red[700]!;
+      case 'Cancelled':
+        return Colors.grey[700]!;
       default:
         return const Color(0xFF7C3AED);
     }
