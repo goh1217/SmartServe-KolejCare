@@ -604,7 +604,14 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
         }
       }
 
-      if (summaries.isEmpty) {
+      // Keep only allowed statuses for the status bar
+      const allowed = {'pending', 'approved', 'ongoing', 'completed', 'rejected'};
+      final filteredSummaries = summaries.where((c) {
+        final status = c.rawStatus.toLowerCase();
+        return allowed.contains(status);
+      }).toList();
+
+      if (filteredSummaries.isEmpty) {
         setState(() {
           complaintSummaries = [];
           complaintProgress = 0.0;
@@ -617,11 +624,11 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
       }
 
       // sort by createdAt descending
-      summaries.sort((a, b) => (b.createdAt ?? 0).compareTo(a.createdAt ?? 0));
+      filteredSummaries.sort((a, b) => (b.createdAt ?? 0).compareTo(a.createdAt ?? 0));
 
-      final primary = summaries.first;
+      final primary = filteredSummaries.first;
       setState(() {
-        complaintSummaries = summaries;
+        complaintSummaries = filteredSummaries;
         complaintProgress = primary.progress;
         complaintStatusLabel = primary.displayText;
         complaintRawStatus = primary.rawStatus;
@@ -629,7 +636,7 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
         complaintDamageCategory = primary.category;
       });
 
-      final anyAssigned = summaries.any((c) => c.rawStatus == 'ongoing');
+      final anyAssigned = filteredSummaries.any((c) => c.rawStatus == 'ongoing');
       if (anyAssigned && showAlert && mounted) {
         setState(() => showAlert = false);
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -779,11 +786,15 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
             }
           }
 
-          // sort and update state
-          summaries.sort((a, b) => (b.createdAt ?? 0).compareTo(a.createdAt ?? 0));
-          if (kDebugMode) print('Complaint listener: found ${summaries.length} matching items');
+          // Keep only allowed statuses for the status bar
+          const allowed = {'pending', 'approved', 'ongoing', 'completed', 'rejected'};
+          final filteredSummaries = summaries.where((c) => allowed.contains(c.rawStatus.toLowerCase())).toList();
 
-          if (summaries.isEmpty) {
+          // sort and update state
+          filteredSummaries.sort((a, b) => (b.createdAt ?? 0).compareTo(a.createdAt ?? 0));
+          if (kDebugMode) print('Complaint listener: found ${filteredSummaries.length} matching items after filtering');
+
+          if (filteredSummaries.isEmpty) {
             if (mounted) setState(() {
               complaintSummaries = [];
               complaintProgress = 0.0;
@@ -793,9 +804,9 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
               complaintDamageCategory = '';
             });
           } else {
-            final primary = summaries.first;
+            final primary = filteredSummaries.first;
             if (mounted) setState(() {
-              complaintSummaries = summaries;
+              complaintSummaries = filteredSummaries;
               complaintProgress = primary.progress;
               complaintStatusLabel = primary.displayText;
               complaintRawStatus = primary.rawStatus;
@@ -867,14 +878,46 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
           );
         }
 
-        final stream = sid.isNotEmpty
-            ? FirebaseFirestore.instance.collection('complaint').where('reportBy', isEqualTo: '/collection/student/$sid').where('isRead', isEqualTo: false).snapshots()
-            : FirebaseFirestore.instance.collection('complaint').where('isRead', isEqualTo: false).where('reportBy', isEqualTo: FirebaseAuth.instance.currentUser?.uid ?? '').snapshots();
+        // Listen to all complaints, then filter client-side to catch different reportBy formats
+        final stream = FirebaseFirestore.instance.collection('complaint').snapshots();
 
         return StreamBuilder<QuerySnapshot>(
           stream: stream,
           builder: (context, s2) {
-            final unread = s2.data?.docs.length ?? 0;
+            final uid = FirebaseAuth.instance.currentUser?.uid;
+            int unread = 0;
+
+            for (final doc in s2.data?.docs ?? const []) {
+              final data = doc.data() as Map<String, dynamic>? ?? {};
+
+              // skip if already read
+              final isRead = data['isRead'] == true;
+              if (isRead) continue;
+
+              final rb = data['reportBy'] ?? data['reportedBy'];
+              bool matches = false;
+
+              if (sid.isNotEmpty) {
+                // match DocumentReference or string paths containing sid
+                if (rb is DocumentReference) {
+                  final path = rb.path;
+                  if (path.endsWith('/$sid') || path.contains(sid)) matches = true;
+                } else if (rb is String) {
+                  if (rb == sid || rb.endsWith('/$sid') || rb.contains('/student/$sid') || rb.contains('/collection/student/$sid')) {
+                    matches = true;
+                  }
+                }
+              }
+
+              if (!matches && uid != null) {
+                if (rb == uid) matches = true;
+                else if (rb is String && rb.contains(uid)) matches = true;
+                else if (rb is DocumentReference && rb.path.contains(uid)) matches = true;
+              }
+
+              if (matches) unread++;
+            }
+
             final hasUnread = unread > 0;
             return InkWell(
               onTap: () {
