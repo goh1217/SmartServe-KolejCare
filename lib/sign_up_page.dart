@@ -68,6 +68,43 @@ class _SignUpPageState extends State<SignUpPage> {
     return result.docs.isEmpty;
   }
 
+  void _showTermsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Terms & Conditions'),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'By creating an account, you agree to the following terms and our Privacy Policy.',
+                style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+              ),
+              SizedBox(height: 16),
+              Text('1. User Accounts', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('You are responsible for maintaining the confidentiality of your account and for all activities that occur under your account. You must provide accurate and complete information.'),
+              SizedBox(height: 12),
+              Text('2. User Conduct', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('You agree to use the SmartServe platform only for lawful purposes. You will not submit false, misleading, or malicious information, including fraudulent damage reports.'),
+              SizedBox(height: 12),
+              Text('3. Data & Privacy', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('We collect personal data such as your name, email, and contact details to provide our services. We also collect information related to your complaints and reports to manage and resolve them effectively. We do not sell your data. We may share it with university staff or technicians solely for resolving your issues.'),
+              SizedBox(height: 12),
+              Text('4. Termination', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('We reserve the right to suspend or terminate your account at our discretion if you violate these terms, without prior notice.'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('CLOSE'),
+          ),
+        ],
+      ),
+    );
+  }
 
   Future<void> _signUp() async {
     if (!_formKey.currentState!.validate()) return;
@@ -325,236 +362,44 @@ class _SignUpPageState extends State<SignUpPage> {
                     const SizedBox(height: 20),
                     _buildLabel('Select Role'),
                     DropdownButtonFormField<String>(
-                      decoration: _buildInputDecoration(''),
+                      decoration: _buildInputDecoration('Select your role'),
                       value: _selectedRole,
-                      hint: const Text('Choose your role'),
-                      isExpanded: true,
-                      items: _roles.map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value[0].toUpperCase() + value.substring(1)),
-                        );
+                      items: _roles.map((role) {
+                        return DropdownMenuItem(value: role, child: Text(role[0].toUpperCase() + role.substring(1)));
                       }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _selectedRole = newValue;
-                        });
-                      },
+                      onChanged: (value) => setState(() => _selectedRole = value),
                       validator: (value) => value == null ? 'Please select a role' : null,
                     ),
-
-                    if (_selectedRole == 'student') ...[
-                      const SizedBox(height: 20),
-                      _buildLabel('Matric No'),
-                      TextFormField(
-                        controller: _matricController,
-                        decoration: _buildInputDecoration('e.g., A23CS1234'),
-                        validator: (value) => value == null || value.isEmpty ? 'Please enter your matric number' : null,
-                      ),
-                      const SizedBox(height: 20),
-                      _buildLabel('Phone Number'),
-                      TextFormField(
-                        controller: _phoneController,
-                        decoration: _buildInputDecoration('Enter your phone number'),
-                        keyboardType: TextInputType.phone,
-                        validator: (value) => value == null || value.isEmpty ? 'Please enter your phone number' : null,
-                      ),
-                      const SizedBox(height: 20),
-                      _buildLabel('Year of Study'),
-                      DropdownButtonFormField<int>(
-                        decoration: _buildInputDecoration(''),
-                        value: _selectedYear,
-                        hint: const Text('Choose your year'),
-                        isExpanded: true,
-                        items: _years.map((int value) {
-                          return DropdownMenuItem<int>(
-                            value: value,
-                            child: Text(value.toString()),
-                          );
-                        }).toList(),
-                        onChanged: (int? newValue) {
-                          setState(() {
-                            _selectedYear = newValue;
-                          });
-                        },
-                        validator: (value) => value == null ? 'Please select your year of study' : null,
-                      ),
-                      const SizedBox(height: 20),
-                      _buildLabel('Resident College'),
-                      TextFormField(
-                        controller: _collegeController,
-                        decoration: _buildInputDecoration('Enter your college name(e.g. KTDI)'),
-                        validator: (value) => value == null || value.isEmpty ? 'Please enter your college name' : null,
-                      ),
-                      const SizedBox(height: 20),
-                      _buildLabel('Block'),
-                      TextFormField(
-                        controller: _blockController,
-                        decoration: _buildInputDecoration('e.g., M20'),
-                        validator: (value) => value == null || value.isEmpty ? 'Please enter your block' : null,
-                      ),
-                      const SizedBox(height: 20),
-                      _buildLabel('Gender'),
-                      DropdownButtonFormField<String>(
-                        decoration: _buildInputDecoration(''),
-                        value: _selectedGender,
-                        hint: const Text('Select gender'),
-                        isExpanded: true,
-                        items: _genderOptions.map((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            _selectedGender = newValue;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      _buildLabel('Room Number'),
-                      TextFormField(
-                        controller: _roomController,
-                        decoration: _buildInputDecoration('e.g., 210'),
-                        keyboardType: TextInputType.text,
-                      ),
-                      const SizedBox(height: 20),
-                      _buildLabel('Wing (if applicable)'),
-                      DropdownButtonFormField<String>(
-                        decoration: _buildInputDecoration(''),
-                        value: _selectedWing,
-                        hint: const Text('Select wing (A / B / C)'),
-                        isExpanded: true,
-                        items: _wingOptions.map((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            _selectedWing = newValue;
-                          });
-                        },
-                      ),
-                    ],
-
-                    if (_selectedRole == 'staff') ...[
-                      const SizedBox(height: 20),
-                      _buildLabel('Staff No'),
-                      TextFormField(
-                        controller: _staffNoController,
-                        decoration: _buildInputDecoration('e.g., STNO001'),
-                        validator: (value) => value == null || value.isEmpty ? 'Please enter your staff number' : null,
-                      ),
-                      const SizedBox(height: 20),
-                      _buildLabel('Phone Number'),
-                      TextFormField(
-                        controller: _phoneController,
-                        decoration: _buildInputDecoration('Enter your phone number'),
-                        keyboardType: TextInputType.phone,
-                        validator: (value) => value == null || value.isEmpty ? 'Please enter your phone number' : null,
-                      ),
-                      const SizedBox(height: 20),
-                      _buildLabel('Staff Rank'),
-                      DropdownButtonFormField<String>(
-                        decoration: _buildInputDecoration(''),
-                        value: _selectedStaffRank,
-                        hint: const Text('Choose your rank'),
-                        isExpanded: true,
-                        items: _staffRanks.map((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value[0].toUpperCase() + value.substring(1)),
-                          );
-                        }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            _selectedStaffRank = newValue;
-                          });
-                        },
-                        validator: (value) => value == null ? 'Please select a rank' : null,
-                      ),
-                      const SizedBox(height: 20),
-                      _buildLabel('Work College'),
-                      TextFormField(
-                        controller: _workCollegeController,
-                        decoration: _buildInputDecoration('Enter your work college'),
-                        validator: (value) => value == null || value.isEmpty ? 'Please enter your work college' : null,
-                      ),
-                    ],
-
-                    if (_selectedRole == 'technician') ...[
-                      const SizedBox(height: 20),
-                      _buildLabel('Phone Number'),
-                      TextFormField(
-                        controller: _phoneController,
-                        decoration: _buildInputDecoration('Enter your phone number'),
-                        keyboardType: TextInputType.phone,
-                        validator: (value) => value == null || value.isEmpty ? 'Please enter your phone number' : null,
-                      ),
-                      const SizedBox(height: 20),
-                      _buildLabel('Maintenance Field'),
-                      DropdownButtonFormField<String>(
-                        decoration: _buildInputDecoration(''),
-                        value: _selectedMaintenanceField,
-                        hint: const Text('Choose your specialization'),
-                        isExpanded: true,
-                        items: _maintenanceFields.map((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            _selectedMaintenanceField = newValue;
-                          });
-                        },
-                        validator: (value) => value == null ? 'Please select a specialization' : null,
-                      ),
-                      const SizedBox(height: 20),
-                      _buildLabel('Monthly Salary'),
-                      TextFormField(
-                        controller: _salaryController,
-                        decoration: _buildInputDecoration('Enter your monthly salary'),
-                        keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) return 'Please enter a salary';
-                          if (int.tryParse(value) == null) return 'Please enter a valid number';
-                          return null;
-                        },
-                      ),
-                    ],
-
+                    if (_selectedRole != null) ..._buildRoleSpecificFields(),
                     const SizedBox(height: 20),
                     _buildLabel('Password'),
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
                       decoration: _buildInputDecoration('Enter your password').copyWith(
-                        suffixIcon: _buildObscureIcon(_obscurePassword, () {
-                          setState(() => _obscurePassword = !_obscurePassword);
-                        }),
+                        suffixIcon: IconButton(
+                          icon: Icon(_obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 20),
+                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                        ),
                       ),
                       validator: (value) => value == null || value.length < 6 ? 'Password must be at least 6 characters' : null,
                     ),
                     const SizedBox(height: 20),
-                    _buildLabel('Confirm password'),
+                    _buildLabel('Confirm Password'),
                     TextFormField(
                       controller: _confirmPasswordController,
                       obscureText: _obscureConfirmPassword,
-                      decoration: _buildInputDecoration('Re-enter your password').copyWith(
-                        suffixIcon: _buildObscureIcon(_obscureConfirmPassword, () {
-                          setState(() => _obscureConfirmPassword = !_obscureConfirmPassword);
-                        }),
+                      decoration: _buildInputDecoration('Confirm your password').copyWith(
+                        suffixIcon: IconButton(
+                          icon: Icon(_obscureConfirmPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 20),
+                          onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                        ),
                       ),
                       validator: (value) => value != _passwordController.text ? 'Passwords do not match' : null,
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
                     Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SizedBox(
                           width: 24,
@@ -562,7 +407,6 @@ class _SignUpPageState extends State<SignUpPage> {
                           child: Checkbox(
                             value: _acceptedTerms,
                             onChanged: (value) => setState(() => _acceptedTerms = value ?? false),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -571,22 +415,21 @@ class _SignUpPageState extends State<SignUpPage> {
                             text: TextSpan(
                               style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                               children: [
-                                const TextSpan(text: 'I understood the '),
+                                const TextSpan(text: 'I have read and agree to the '),
                                 TextSpan(
-                                  text: 'terms & policy',
-                                  style: TextStyle(color: Colors.blue[600], decoration: TextDecoration.underline),
-                                  recognizer: TapGestureRecognizer()..onTap = () { /* Handle terms */ },
+                                  text: 'Terms & Conditions',
+                                  style: TextStyle(color: Colors.blue[600], fontWeight: FontWeight.bold),
+                                  recognizer: TapGestureRecognizer()..onTap = _showTermsDialog,
                                 ),
-                                const TextSpan(text: '.'),
                               ],
                             ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 32),
                     _isLoading
-                        ? const Center(child: CircularProgressIndicator())
+                        ? const CircularProgressIndicator()
                         : SizedBox(
                             width: double.infinity,
                             height: 48,
@@ -595,15 +438,25 @@ class _SignUpPageState extends State<SignUpPage> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.blue[600],
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                elevation: 0,
+                                foregroundColor: Colors.white,
                               ),
-                              child: const Text(
-                                'SIGN UP',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
-                              ),
+                              child: const Text('Sign Up', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                             ),
                           ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
+                    RichText(
+                      text: TextSpan(
+                        style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                        children: [
+                          const TextSpan(text: 'Already have an account? '),
+                          TextSpan(
+                            text: 'Sign In',
+                            style: TextStyle(color: Colors.blue[600], fontWeight: FontWeight.bold),
+                            recognizer: TapGestureRecognizer()..onTap = () => Navigator.of(context).pop(),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -612,6 +465,61 @@ class _SignUpPageState extends State<SignUpPage> {
         ),
       ),
     );
+  }
+
+  List<Widget> _buildRoleSpecificFields() {
+    switch (_selectedRole) {
+      case 'student':
+        return [
+          const SizedBox(height: 20),
+          _buildLabel('Matric No'),
+          TextFormField(
+            controller: _matricController,
+            decoration: _buildInputDecoration('Enter your matric number'),
+            validator: (value) => value == null || value.isEmpty ? 'Please enter your matric number' : null,
+          ),
+          const SizedBox(height: 20),
+          _buildLabel('Resident College'),
+          TextFormField(
+            controller: _collegeController,
+            decoration: _buildInputDecoration('Enter your college name'),
+            validator: (value) => value == null || value.isEmpty ? 'Please enter your college' : null,
+          ),
+        ];
+      case 'staff':
+        return [
+          const SizedBox(height: 20),
+          _buildLabel('Staff No'),
+          TextFormField(
+            controller: _staffNoController,
+            decoration: _buildInputDecoration('Enter your staff number'),
+            validator: (value) => value == null || value.isEmpty ? 'Please enter your staff number' : null,
+          ),
+          const SizedBox(height: 20),
+          _buildLabel('Work College / Department'),
+          TextFormField(
+            controller: _workCollegeController,
+            decoration: _buildInputDecoration('Enter your work college or department'),
+            validator: (value) => value == null || value.isEmpty ? 'This field is required' : null,
+          ),
+        ];
+      case 'technician':
+        return [
+          const SizedBox(height: 20),
+          _buildLabel('Maintenance Field'),
+          DropdownButtonFormField<String>(
+            decoration: _buildInputDecoration('Select maintenance field'),
+            value: _selectedMaintenanceField,
+            items: _maintenanceFields.map((field) {
+              return DropdownMenuItem(value: field, child: Text(field));
+            }).toList(),
+            onChanged: (value) => setState(() => _selectedMaintenanceField = value),
+            validator: (value) => value == null ? 'Please select a field' : null,
+          ),
+        ];
+      default:
+        return [];
+    }
   }
 
   Widget _buildLabel(String text) {
@@ -645,17 +553,6 @@ class _SignUpPageState extends State<SignUpPage> {
         borderSide: BorderSide(color: Colors.blue[600]!),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-    );
-  }
-
-  Widget _buildObscureIcon(bool isObscured, VoidCallback onPressed) {
-    return IconButton(
-      icon: Icon(
-        isObscured ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-        color: Colors.grey[600],
-        size: 20,
-      ),
-      onPressed: onPressed,
     );
   }
 }
