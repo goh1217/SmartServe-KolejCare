@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_generative_ai/google_generative_ai.dart'; // <-- New Import
+import 'notification_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 // IMPORTANT: Replace this with your actual Gemini API Key.
 // For production apps, use environment variables, not hardcoding.
@@ -17,6 +20,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   final TextEditingController _controller = TextEditingController();
 
   final List<Map<String, dynamic>> _messages = [];
+  bool _isTyping = false;
 
   // Initialize the Gemini Model Client
   late final GenerativeModel _model = GenerativeModel(
@@ -41,6 +45,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   // Modified to be async and call Gemini
   void _generateBotResponse(String userInput) async {
+    // Show typing indicator
+    setState(() {
+      _isTyping = true;
+    });
+
     // A small delay for better UX before generating a response
     await Future.delayed(const Duration(milliseconds: 300));
     
@@ -79,6 +88,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         final response = await _model.generateContent(content);
 
         botReply = response.text ?? "Sorry, the AI model returned an empty response. Try again.";
+        
+        // Clean up markdown formatting to make it look less AI-generated
+        botReply = botReply.replaceAll('**', '');
       } catch (e) {
         // Catch any errors (like network issues, invalid key, rate limits)
         botReply = "I ran into an error trying to connect to the AI. Please check your API key and internet connection.";
@@ -89,6 +101,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
     // Update the UI with the bot's final response
     setState(() {
+      _isTyping = false;
       _messages.add({
         'text': botReply,
         'isUser': false,
@@ -158,28 +171,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     ),
                   ],
                 ),
-                GestureDetector(
-                  onTap: () {},
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.06),
-                          blurRadius: 12,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.notifications_rounded,
-                      color: Color(0xFF5E4DB2),
-                      size: 22,
-                    ),
-                  ),
-                ),
+                _buildBellIcon(),
               ],
             ),
           ),
@@ -193,8 +185,13 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 ? _buildWelcomeCard()
                 : ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              itemCount: _messages.length,
+              itemCount: _messages.length + (_isTyping ? 1 : 0),
               itemBuilder: (context, index) {
+                // Show typing indicator at the end
+                if (_isTyping && index == _messages.length) {
+                  return _buildTypingIndicator();
+                }
+
                 final msg = _messages[index];
                 final isUser = msg['isUser'] as bool;
 
@@ -447,6 +444,162 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildTypingIndicator() {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+            bottomLeft: Radius.circular(4),
+            bottomRight: Radius.circular(20),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildDot(0),
+            const SizedBox(width: 4),
+            _buildDot(1),
+            const SizedBox(width: 4),
+            _buildDot(2),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDot(int index) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 600),
+      builder: (context, value, child) {
+        final delay = index * 0.2;
+        final animValue = ((value + delay) % 1.0);
+        final scale = 0.5 + (animValue * 0.5);
+        final opacity = 0.3 + (animValue * 0.7);
+        
+        return Transform.scale(
+          scale: scale,
+          child: Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: const Color(0xFF5E4DB2).withOpacity(opacity),
+              shape: BoxShape.circle,
+            ),
+          ),
+        );
+      },
+      onEnd: () {
+        if (mounted && _isTyping) {
+          setState(() {});
+        }
+      },
+    );
+  }
+
+  // Bell icon with real-time unread badge
+  Widget _buildBellIcon() {
+    return FutureBuilder<String>(
+      future: () async {
+        final user = FirebaseAuth.instance.currentUser;
+        final uid = user?.uid;
+        if (uid == null) return '';
+        final q = await FirebaseFirestore.instance.collection('student').where('authUid', isEqualTo: uid).limit(1).get();
+        if (q.docs.isNotEmpty) return q.docs.first.id;
+        final email = user?.email ?? '';
+        if (email.isNotEmpty) {
+          final qe = await FirebaseFirestore.instance.collection('student').where('email', isEqualTo: email).limit(1).get();
+          if (qe.docs.isNotEmpty) return qe.docs.first.id;
+        }
+        return '';
+      }(),
+      builder: (context, snap) {
+        final sid = snap.data ?? '';
+        if (snap.connectionState == ConnectionState.waiting) {
+          return Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
+            child: const SizedBox(width: 22, height: 22, child: Center(child: CircularProgressIndicator(strokeWidth: 2))),
+          );
+        }
+
+        final stream = sid.isNotEmpty
+            ? FirebaseFirestore.instance.collection('complaint').where('reportBy', isEqualTo: '/collection/student/$sid').where('isRead', isEqualTo: false).snapshots()
+            : FirebaseFirestore.instance.collection('complaint').where('isRead', isEqualTo: false).where('reportBy', isEqualTo: FirebaseAuth.instance.currentUser?.uid ?? '').snapshots();
+
+        return StreamBuilder<QuerySnapshot>(
+          stream: stream,
+          builder: (context, s2) {
+            final unread = s2.data?.docs.length ?? 0;
+            final hasUnread = unread > 0;
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (c) => const NotificationPage()));
+              },
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 12,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Icon(
+                      Icons.notifications_rounded,
+                      color: hasUnread ? const Color(0xFF5E4DB2) : Colors.grey.shade600,
+                      size: 22,
+                    ),
+                    if (hasUnread)
+                      Positioned(
+                        right: -6,
+                        top: -6,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                            boxShadow: [BoxShadow(color: Colors.red.withOpacity(0.45), blurRadius: 8, spreadRadius: 2)],
+                          ),
+                          constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                          child: Center(
+                            child: Text(
+                              unread > 99 ? '99+' : '$unread',
+                              style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

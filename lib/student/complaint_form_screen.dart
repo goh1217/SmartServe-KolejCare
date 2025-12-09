@@ -114,6 +114,7 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
         'urgencyLevel': _selectedUrgency,
         'isRead': false,
         'isArchived': false,
+        'studentID': user.uid,
       });
 
       await docRef.update({'complaintID': docRef.id});

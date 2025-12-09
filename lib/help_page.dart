@@ -7,7 +7,7 @@ import 'package:owtest/settings_page.dart';
 
 // IMPORTANT: Replace this with your actual Gemini API Key.
 // For production apps, use environment variables, not hardcoding.
-const String GEMINI_API_KEY = "AIzaSyCMX9-2sIkUn-1DX0WPjqVBVYFsWvvX10M";
+const String GEMINI_API_KEY = "AIzaSyCpxtmEmB9wz0xQCw7c6ijTc7PLsRuT-Hg";
 
 class HelpPage extends StatefulWidget {
   const HelpPage({Key? key}) : super(key: key);
@@ -131,10 +131,10 @@ class _HelpPageState extends State<HelpPage> {
 
     // Update the UI with the bot's final response
     setState(() {
-      _messages.add({
-        'text': botReply,
-        'isUser': false,
-      });
+      _messages.add(ChatMessage(
+        text: botReply,
+        isUser: false,
+      ));
     });
   }
 
