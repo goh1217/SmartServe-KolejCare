@@ -79,7 +79,7 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
       final complaintRef =
       FirebaseFirestore.instance.collection('complaint').doc(widget.reportId);
 
-      // First, fetch current complaint data
+      // Fetch current complaint data
       final complaintSnapshot = await complaintRef.get();
       final complaintData = complaintSnapshot.data();
 
@@ -91,12 +91,13 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
         final techData = techSnapshot.data();
         if (techData != null && techData['tasksAssigned'] != null) {
           List tasks = List.from(techData['tasksAssigned']);
-          tasks.remove(widget.reportId);
+          tasks.removeWhere((task) =>
+          task is DocumentReference && task.id == widget.reportId);
           await techRef.update({'tasksAssigned': tasks});
         }
       }
 
-      // Update complaint: scheduledDate, status, assignedTo & reviewedBy
+      // Update complaint: scheduledDate, reportStatus, assignedTo & reviewedBy
       await complaintRef.update({
         'scheduledDate': Timestamp.fromDate(pickedDate),
         'reportStatus': 'Pending',
@@ -137,7 +138,6 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
           "${_monthName(updatedScheduledDate!.month)} "
           "${updatedScheduledDate!.year} (Time to be scheduled)";
     } else {
-      // show original string with bracket
       return "${widget.scheduledDate} (Time to be scheduled)";
     }
   }
@@ -146,7 +146,7 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
     await FirebaseFirestore.instance
         .collection('complaint')
         .doc(widget.reportId)
-        .update({'status': 'Cancelled'});
+        .update({'reportStatus': 'Cancelled'});
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Request has been cancelled')),
@@ -224,8 +224,7 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildDetailItem('Repair Status', 'Pending',
-                          valueColor: isDateUpdated ? const Color(0xFF7C4DFF) : null),
+                      _buildDetailItem('Repair Status', widget.status),
                       const Divider(height: 1),
                       _buildDetailItem(
                         'Scheduled Date',
