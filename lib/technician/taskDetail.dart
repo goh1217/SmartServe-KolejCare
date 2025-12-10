@@ -41,6 +41,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   String category = 'Loading...';
   String date = 'Loading...';
   String scheduledTime = '--:--';
+  List<String> timeSlots = []; // List of time slot strings (e.g., "8.00am - 8.30am")
   String title = 'Loading...';
   String location = 'Loading...';
   String description = 'Loading...';
@@ -95,17 +96,21 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
             proofImage = data['proofPic'];
           }
 
-          // Date handling
-          Timestamp? timestamp;
-          if (data['scheduledDate'] != null) {
-            timestamp = data['scheduledDate'] as Timestamp;
-          } else if (data['scheduledDate'] != null) {
-            timestamp = data['scheduledDate'] as Timestamp;
-          } else if (data['reportedDate'] != null) {
-            timestamp = data['reportedDate'] as Timestamp;
-          }
+          // Date and time slot handling
+          // First, try to read scheduledDateTimeSlot (list of timestamps for 30-min intervals)
+          if (data['scheduledDateTimeSlot'] != null && data['scheduledDateTimeSlot'] is List && (data['scheduledDateTimeSlot'] as List).isNotEmpty) {
+            final slots = data['scheduledDateTimeSlot'] as List;
+            _parseTimeSlots(slots);
+          } else {
+            // Fallback to single scheduledDate
+            Timestamp? timestamp;
+            if (data['scheduledDate'] != null) {
+              timestamp = data['scheduledDate'] as Timestamp;
+            } else if (data['reportedDate'] != null) {
+              timestamp = data['reportedDate'] as Timestamp;
+            }
 
-          if (timestamp != null) {
+            if (timestamp != null) {
               // Interpret stored timestamp as local DateTime
               final dt = timestamp.toDate().toLocal();
               date = "${dt.day}/${dt.month}/${dt.year}";
@@ -114,8 +119,9 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
               final minute = dt.minute.toString().padLeft(2, '0');
               final ampm = dt.hour < 12 ? 'AM' : 'PM';
               scheduledTime = '$hour:$minute $ampm';
-          } else {
-            date = widget.time;
+            } else {
+              date = widget.time;
+            }
           }
 
           // Fetch Student Info from studentID or matricNo in complaint
@@ -209,6 +215,51 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
     } catch (e) {
       print("Error fetching student info by ID: $e");
     }
+  }
+
+  /// Parse scheduledDateTimeSlot array and extract date + time slots
+  /// Assumes each element is a Timestamp representing the START of a 30-min slot
+  void _parseTimeSlots(List<dynamic> slots) {
+    if (slots.isEmpty) return;
+
+    // Convert all slots to local DateTime
+    final localDateTimes = <DateTime>[];
+    for (final slot in slots) {
+      if (slot is Timestamp) {
+        localDateTimes.add(slot.toDate().toLocal());
+      }
+    }
+
+    if (localDateTimes.isEmpty) return;
+
+    // Sort by time
+    localDateTimes.sort((a, b) => a.compareTo(b));
+
+    // Extract the date from the first slot (all should be the same date)
+    final firstDt = localDateTimes.first;
+    date = "${firstDt.day}/${firstDt.month}/${firstDt.year}";
+
+    // Generate 30-minute interval slots
+    // Each slot is from startTime to startTime+30min
+    timeSlots.clear();
+    for (int i = 0; i < localDateTimes.length; i++) {
+      final startTime = localDateTimes[i];
+      final endTime = startTime.add(const Duration(minutes: 30));
+
+      // Format times as HH.MMam/pm
+      final startStr = _formatTimeForSlot(startTime);
+      final endStr = _formatTimeForSlot(endTime);
+
+      timeSlots.add('$startStr - $endStr');
+    }
+  }
+
+  /// Format a DateTime as HH.MMam or HH.MMpm (e.g., "8.00am", "9.30pm")
+  String _formatTimeForSlot(DateTime dt) {
+    final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+    final minute = dt.minute.toString().padLeft(2, '0');
+    final ampm = dt.hour < 12 ? 'am' : 'pm';
+    return '$hour.$minute$ampm';
   }
 
   Future<void> _callStudent() async {
@@ -375,43 +426,105 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                           children: [
                             _buildInfoItem('Urgency', urgency),
                             const SizedBox(height: 16),
-                            _buildInfoItem('Scheduled time', ''),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.access_time,
-                                  size: 16,
-                                  color: Colors.black87,
+                            // Display scheduled time slots or single time
+                            if (timeSlots.isNotEmpty) ...[
+                              const Text(
+                                'Scheduled time',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w500,
                                 ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  scheduledTime != '--:--' ? scheduledTime : widget.time,
-                                  style: const TextStyle(
-                                    fontSize: 14,
+                              ),
+                              const SizedBox(height: 4),
+                              // Display date with calendar icon
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.calendar_today,
+                                    size: 16,
                                     color: Colors.black87,
                                   ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.calendar_today,
-                                  size: 16,
-                                  color: Colors.black87,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  date,
-                                  style: const TextStyle(
-                                    fontSize: 14,
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    date,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              // Display time slots with clock icon
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  for (int i = 0; i < timeSlots.length; i++)
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 4),
+                                      child: Row(
+                                        children: [
+                                          if (i == 0)
+                                            const Icon(
+                                              Icons.access_time,
+                                              size: 16,
+                                              color: Colors.black87,
+                                            )
+                                          else
+                                            const SizedBox(width: 16),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            timeSlots[i],
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.black87,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ] else ...[
+                              _buildInfoItem('Scheduled time', ''),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.access_time,
+                                    size: 16,
                                     color: Colors.black87,
                                   ),
-                                ),
-                              ],
-                            ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    scheduledTime != '--:--' ? scheduledTime : widget.time,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.calendar_today,
+                                    size: 16,
+                                    color: Colors.black87,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    date,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ],
                         ),
                       ),
