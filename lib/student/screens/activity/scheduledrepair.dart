@@ -84,18 +84,18 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
       final complaintData = complaintSnapshot.data();
 
       // Remove this complaintID from old technician's tasksAssigned
-      if (complaintData != null && complaintData['assignedTo'] != null) {
-        final oldTechId = complaintData['assignedTo'];
-        final techRef = FirebaseFirestore.instance.collection('technician').doc(oldTechId);
-        final techSnapshot = await techRef.get();
-        final techData = techSnapshot.data();
-        if (techData != null && techData['tasksAssigned'] != null) {
-          List tasks = List.from(techData['tasksAssigned']);
-          tasks.removeWhere((task) =>
-          task is DocumentReference && task.id == widget.reportId);
-          await techRef.update({'tasksAssigned': tasks});
-        }
-      }
+      // if (complaintData != null && complaintData['assignedTo'] != null) {
+      //   final oldTechId = complaintData['assignedTo'];
+      //   final techRef = FirebaseFirestore.instance.collection('technician').doc(oldTechId);
+      //   final techSnapshot = await techRef.get();
+      //   final techData = techSnapshot.data();
+      //   if (techData != null && techData['tasksAssigned'] != null) {
+      //     List tasks = List.from(techData['tasksAssigned']);
+      //     tasks.removeWhere((task) =>
+      //     task is DocumentReference && task.id == widget.reportId);
+      //     await techRef.update({'tasksAssigned': tasks});
+      //   }
+      // }
 
       // Update complaint: scheduledDate, reportStatus, assignedTo & reviewedBy
       await complaintRef.update({
