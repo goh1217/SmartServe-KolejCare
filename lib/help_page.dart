@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:owtest/analytics_page.dart';
 import 'package:owtest/main.dart';
 import 'package:owtest/staff_complaints.dart';
 import 'package:owtest/settings_page.dart';
 
-// IMPORTANT: Replace this with your actual Gemini API Key.
-// For production apps, use environment variables, not hardcoding.
-const String GEMINI_API_KEY = "AIzaSyCpxtmEmB9wz0xQCw7c6ijTc7PLsRuT-Hg";
+// Get API key from environment variables
+String get apiKey => dotenv.env['API_KEY'] ?? '';
 
 class HelpPage extends StatefulWidget {
   const HelpPage({Key? key}) : super(key: key);
@@ -24,7 +24,7 @@ class _HelpPageState extends State<HelpPage> {
   // Initialize the Gemini Model Client
   late final GenerativeModel _model = GenerativeModel(
     model: 'gemini-2.5-flash',
-    apiKey: GEMINI_API_KEY,
+    apiKey: apiKey,
   );
 
   final List<FAQItem> faqs = [
