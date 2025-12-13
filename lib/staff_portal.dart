@@ -351,7 +351,7 @@ class _StaffPortalDashboardState extends State<StaffPortalDashboard> {
           const SizedBox(height: 8),
           Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: textColor ?? color)),
           const SizedBox(height: 4),
-          Text(label, style: TextStyle(fontSize: 13, color: color.withOpacity(0.9)), softWrap: true, textAlign: TextAlign.center),
+          Text(label, style: const TextStyle(fontSize: 13, color: Colors.black87), softWrap: true, textAlign: TextAlign.center),
         ],
       ),
     );

@@ -668,6 +668,7 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
       appBar: AppBar(
         title: const Text('Assign Technician'),
         backgroundColor: const Color(0xFF7C3AED),
+        foregroundColor: Colors.white,
         elevation: 0,
       ),
       body: Column(
