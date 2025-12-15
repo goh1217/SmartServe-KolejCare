@@ -35,7 +35,7 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
   DateTime? updatedScheduledDate; // store actual updated date
   bool isDateUpdated = false;
   String scheduledDateDisplay = '';
-  List<String> timeSlots = [];
+  String scheduledTimeDisplay = '';
   String estimatedDurationDisplay = '';
 
   @override
@@ -70,70 +70,46 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
     try {
       // Process scheduledDateTimeSlot array
       if (data['scheduledDateTimeSlot'] != null && data['scheduledDateTimeSlot'] is List) {
-        List<dynamic> timeSlotData = data['scheduledDateTimeSlot'];
-        print('Found scheduledDateTimeSlot array with ${timeSlotData.length} items');
+        final slots = (data['scheduledDateTimeSlot'] as List).cast<Timestamp>();
         
-        if (timeSlotData.isNotEmpty) {
+        if (slots.isNotEmpty) {
           // Get the date from the first timestamp
-          Timestamp firstTs = timeSlotData[0] as Timestamp;
-          DateTime firstDt = firstTs.toDate();
+          final firstSlot = slots[0];
+          final dt = TimeSlotHelper.toMalaysiaTime(firstSlot);
           
-          List<String> newTimeSlots = [];
-          // Generate time slots (start time - end time with 30 min intervals)
-          for (var i = 0; i < timeSlotData.length; i++) {
-            Timestamp startTs = timeSlotData[i] as Timestamp;
-            DateTime startDt = startTs.toDate();
-            DateTime endDt = startDt.add(const Duration(minutes: 30));
-            
-            String startTime = _formatTime(startDt);
-            String endTime = _formatTime(endDt);
-            newTimeSlots.add('$startTime - $endTime');
-          }
+          // Format the time range from slots
+          final timeRange = TimeSlotHelper.formatTimeSlots(slots, includeDate: false);
           
           setState(() {
-            scheduledDateDisplay = '${firstDt.day.toString().padLeft(2, '0')}/${firstDt.month.toString().padLeft(2, '0')}/${firstDt.year}';
-            timeSlots = newTimeSlots;
+            scheduledDateDisplay = "${dt.day}/${dt.month}/${dt.year}";
+            scheduledTimeDisplay = timeRange ?? '--:--';
           });
-          print('Generated ${timeSlots.length} time slots');
         }
       } else if (data['scheduledDate'] != null) {
-        print('scheduledDateTimeSlot not found, using scheduledDate field');
         // Fallback to old scheduledDate format if scheduledDateTimeSlot doesn't exist
-        Timestamp ts = data['scheduledDate'] as Timestamp;
-        DateTime dt = ts.toDate();
+        Timestamp timestamp = data['scheduledDate'] as Timestamp;
+        final dt = TimeSlotHelper.toMalaysiaTime(timestamp);
+        final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+        final minute = dt.minute.toString().padLeft(2, '0');
+        final ampm = dt.hour < 12 ? 'AM' : 'PM';
+        
         setState(() {
-          scheduledDateDisplay = '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
-          timeSlots = [];
+          scheduledDateDisplay = "${dt.day}/${dt.month}/${dt.year}";
+          scheduledTimeDisplay = '$hour:$minute $ampm';
         });
       } else {
-        print('No scheduled date information found');
         setState(() {
           scheduledDateDisplay = widget.scheduledDate;
-          timeSlots = [];
+          scheduledTimeDisplay = '--:--';
         });
       }
     } catch (e) {
       print('Error processing scheduled date/time: $e');
       setState(() {
         scheduledDateDisplay = widget.scheduledDate;
-        timeSlots = [];
+        scheduledTimeDisplay = '--:--';
       });
     }
-  }
-
-  String _formatTime(DateTime dt) {
-    int hour = dt.hour;
-    String period = hour >= 12 ? 'pm' : 'am';
-    
-    // Convert to 12-hour format
-    if (hour > 12) {
-      hour -= 12;
-    } else if (hour == 0) {
-      hour = 12;
-    }
-    
-    String minute = dt.minute.toString().padLeft(2, '0');
-    return '$hour.$minute$period';
   }
 
   Future<void> _editRequest() async {
@@ -311,7 +287,7 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
           updatedScheduledDate = pickedDate;
           isDateUpdated = true;
           scheduledDateDisplay = '${pickedDate.day.toString().padLeft(2, '0')}/${pickedDate.month.toString().padLeft(2, '0')}/${pickedDate.year}';
-          timeSlots = []; // Clear time slots when date is updated
+          scheduledTimeDisplay = '--:--'; // Clear time slots when date is updated
         });
 
         print('=== Schedule Date Update Complete ===');
@@ -327,22 +303,6 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
         );
       }
     }
-  }
-
-  int _monthNumber(String shortName) {
-    const months = [
-      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
-    return months.indexOf(shortName);
-  }
-
-  String _monthName(int month) {
-    const months = [
-      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
-    return months[month];
   }
 
   Future<void> _cancelRequest() async {
@@ -422,14 +382,14 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
           ),
           
           // Time Slots Section
-          if (timeSlots.isNotEmpty) ...[
+          if (scheduledTimeDisplay.isNotEmpty && scheduledTimeDisplay != '--:--') ...[
             const SizedBox(height: 16),
             Row(
               children: [
                 const Icon(Icons.access_time, size: 14, color: Colors.grey),
                 const SizedBox(width: 8),
                 Text(
-                  'Time Slots',
+                  'Scheduled Time',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[600],
@@ -443,17 +403,19 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
               padding: const EdgeInsets.only(left: 22),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: timeSlots.map((slot) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2),
-                  child: Text(
-                    slot,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      color: Colors.black,
-                      fontWeight: FontWeight.w500,
+                children: scheduledTimeDisplay.split(', ').map((timeSlot) => 
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4.0),
+                    child: Text(
+                      timeSlot,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: Colors.black,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
-                )).toList(),
+                ).toList(),
               ),
             ),
           ],
@@ -588,5 +550,64 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
         ],
       ),
     );
+  }
+}
+
+// TimeSlotHelper class - you need to add this if it doesn't exist in your project
+class TimeSlotHelper {
+  static DateTime toMalaysiaTime(Timestamp timestamp) {
+    // Convert Firestore timestamp to Malaysia time (UTC+8)
+    return timestamp.toDate().toUtc().add(const Duration(hours: 8));
+  }
+
+  static String? formatTimeSlots(List<Timestamp> slots, {bool includeDate = true}) {
+    if (slots.isEmpty) return null;
+
+    // Convert all timestamps to Malaysia time and sort
+    List<DateTime> times = slots.map((ts) => toMalaysiaTime(ts)).toList();
+    times.sort();
+
+    List<String> ranges = [];
+    int i = 0;
+
+    while (i < times.length) {
+      DateTime start = times[i];
+      DateTime end = start.add(const Duration(minutes: 30));
+
+      // Find continuous slots (30-minute intervals)
+      int j = i + 1;
+      while (j < times.length) {
+        if (times[j].difference(end).inMinutes == 0) {
+          end = times[j].add(const Duration(minutes: 30));
+          j++;
+        } else {
+          break;
+        }
+      }
+
+      // Format the time range
+      String startTime = _formatTime(start);
+      String endTime = _formatTime(end);
+      ranges.add('$startTime - $endTime');
+
+      i = j;
+    }
+
+    return ranges.join(', ');
+  }
+
+  static String _formatTime(DateTime dt) {
+    int hour = dt.hour;
+    int minute = dt.minute;
+    String period = hour >= 12 ? 'PM' : 'AM';
+
+    if (hour > 12) {
+      hour -= 12;
+    } else if (hour == 0) {
+      hour = 12;
+    }
+
+    String minuteStr = minute.toString().padLeft(2, '0');
+    return '$hour:$minuteStr $period';
   }
 }
