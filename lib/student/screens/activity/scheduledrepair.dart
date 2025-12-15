@@ -34,10 +34,106 @@ class ScheduledRepairScreen extends StatefulWidget {
 class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
   DateTime? updatedScheduledDate; // store actual updated date
   bool isDateUpdated = false;
+  String scheduledDateDisplay = '';
+  List<String> timeSlots = [];
+  String estimatedDurationDisplay = '';
 
   @override
   void initState() {
     super.initState();
+    _loadScheduleDateTimeSlots();
+  }
+
+  Future<void> _loadScheduleDateTimeSlots() async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('complaint')
+          .doc(widget.reportId)
+          .get();
+
+      if (doc.exists) {
+        final data = doc.data();
+        if (data != null) {
+          await _processScheduleDateTimeSlots(data);
+          // Load estimatedDurationJobDone
+          setState(() {
+            estimatedDurationDisplay = data['estimatedDurationJobDone']?.toString() ?? widget.expectedDuration;
+          });
+        }
+      }
+    } catch (e) {
+      print('Error loading schedule date time slots: $e');
+    }
+  }
+
+  Future<void> _processScheduleDateTimeSlots(Map<String, dynamic> data) async {
+    try {
+      // Process scheduledDateTimeSlot array
+      if (data['scheduledDateTimeSlot'] != null && data['scheduledDateTimeSlot'] is List) {
+        List<dynamic> timeSlotData = data['scheduledDateTimeSlot'];
+        print('Found scheduledDateTimeSlot array with ${timeSlotData.length} items');
+        
+        if (timeSlotData.isNotEmpty) {
+          // Get the date from the first timestamp
+          Timestamp firstTs = timeSlotData[0] as Timestamp;
+          DateTime firstDt = firstTs.toDate();
+          
+          List<String> newTimeSlots = [];
+          // Generate time slots (start time - end time with 30 min intervals)
+          for (var i = 0; i < timeSlotData.length; i++) {
+            Timestamp startTs = timeSlotData[i] as Timestamp;
+            DateTime startDt = startTs.toDate();
+            DateTime endDt = startDt.add(const Duration(minutes: 30));
+            
+            String startTime = _formatTime(startDt);
+            String endTime = _formatTime(endDt);
+            newTimeSlots.add('$startTime - $endTime');
+          }
+          
+          setState(() {
+            scheduledDateDisplay = '${firstDt.day.toString().padLeft(2, '0')}/${firstDt.month.toString().padLeft(2, '0')}/${firstDt.year}';
+            timeSlots = newTimeSlots;
+          });
+          print('Generated ${timeSlots.length} time slots');
+        }
+      } else if (data['scheduledDate'] != null) {
+        print('scheduledDateTimeSlot not found, using scheduledDate field');
+        // Fallback to old scheduledDate format if scheduledDateTimeSlot doesn't exist
+        Timestamp ts = data['scheduledDate'] as Timestamp;
+        DateTime dt = ts.toDate();
+        setState(() {
+          scheduledDateDisplay = '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
+          timeSlots = [];
+        });
+      } else {
+        print('No scheduled date information found');
+        setState(() {
+          scheduledDateDisplay = widget.scheduledDate;
+          timeSlots = [];
+        });
+      }
+    } catch (e) {
+      print('Error processing scheduled date/time: $e');
+      setState(() {
+        scheduledDateDisplay = widget.scheduledDate;
+        timeSlots = [];
+      });
+    }
+  }
+
+  String _formatTime(DateTime dt) {
+    int hour = dt.hour;
+    String period = hour >= 12 ? 'pm' : 'am';
+    
+    // Convert to 12-hour format
+    if (hour > 12) {
+      hour -= 12;
+    } else if (hour == 0) {
+      hour = 12;
+    }
+    
+    String minute = dt.minute.toString().padLeft(2, '0');
+    return '$hour.$minute$period';
   }
 
   Future<void> _editRequest() async {
@@ -214,6 +310,8 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
         setState(() {
           updatedScheduledDate = pickedDate;
           isDateUpdated = true;
+          scheduledDateDisplay = '${pickedDate.day.toString().padLeft(2, '0')}/${pickedDate.month.toString().padLeft(2, '0')}/${pickedDate.year}';
+          timeSlots = []; // Clear time slots when date is updated
         });
 
         print('=== Schedule Date Update Complete ===');
@@ -245,16 +343,6 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ];
     return months[month];
-  }
-
-  String _formatScheduledDate() {
-    if (updatedScheduledDate != null) {
-      return "${updatedScheduledDate!.day.toString().padLeft(2, '0')} "
-          "${_monthName(updatedScheduledDate!.month)} "
-          "${updatedScheduledDate!.year} (Time to be scheduled)";
-    } else {
-      return "${widget.scheduledDate} (Time to be scheduled)";
-    }
   }
 
   Future<void> _cancelRequest() async {
@@ -294,6 +382,81 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
               fontWeight: FontWeight.w500,
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScheduledDateTimeItem() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Date Section
+          Row(
+            children: [
+              const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
+              const SizedBox(width: 8),
+              Text(
+                'Scheduled Date',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.only(left: 22),
+            child: Text(
+              scheduledDateDisplay.isNotEmpty ? scheduledDateDisplay : widget.scheduledDate,
+              style: TextStyle(
+                fontSize: 15,
+                color: isDateUpdated ? const Color(0xFF7C4DFF) : Colors.black,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          
+          // Time Slots Section
+          if (timeSlots.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const Icon(Icons.access_time, size: 14, color: Colors.grey),
+                const SizedBox(width: 8),
+                Text(
+                  'Time Slots',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.only(left: 22),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: timeSlots.map((slot) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Text(
+                    slot,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      color: Colors.black,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                )).toList(),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -341,11 +504,7 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
                     children: [
                       _buildDetailItem('Repair Status', widget.status),
                       const Divider(height: 1),
-                      _buildDetailItem(
-                        'Scheduled Date',
-                        _formatScheduledDate(),
-                        valueColor: isDateUpdated ? const Color(0xFF7C4DFF) : null,
-                      ),
+                      _buildScheduledDateTimeItem(),
                       const Divider(height: 1),
                       _buildDetailItem('Assigned Technician', widget.assignedTechnician),
                       const Divider(height: 1),
@@ -357,7 +516,7 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
                       const Divider(height: 1),
                       _buildDetailItem('Inventory Damage', widget.inventoryDamage),
                       const Divider(height: 1),
-                      _buildDetailItem('Expected Duration', widget.expectedDuration),
+                      _buildDetailItem('Expected Duration', estimatedDurationDisplay.isNotEmpty ? estimatedDurationDisplay : widget.expectedDuration),
                       const Divider(height: 1),
                       _buildDetailItem('Reported On', widget.reportedOn),
                     ],
