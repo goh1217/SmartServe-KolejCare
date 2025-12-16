@@ -27,6 +27,7 @@ dependencies:
   url_launcher: ^6.1.10
   http: ^1.5.0
   flutter_webrtc: ^1.2.1  # Updated WebRTC version (includes Android namespace)
+  socket_io_client: ^3.0.1
   google_generative_ai: ^0.4.7
   table_calendar: ^3.1.1
   flutter_dotenv: ^5.1.0
