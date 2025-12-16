@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'assign_technician.dart';
@@ -15,6 +16,7 @@ class Complaint {
   final String priority;
   final DateTime submitted;
   final String status;
+  final String residentCollege; // Added for filtering
 
   Complaint({
     required this.id,
@@ -26,6 +28,7 @@ class Complaint {
     required this.priority,
     required this.submitted,
     required this.status,
+    required this.residentCollege,
   });
 
   // This is now an async static method to fetch related data
@@ -35,6 +38,7 @@ class Complaint {
     String studentName = 'Unknown Student';
     String studentId = 'Unknown ID';
     String room = 'N/A';
+    String residentCollege = '';
 
     // Handle reportBy being a String path instead of a DocumentReference
     final reportByPath = data['reportBy'] as String?;
@@ -53,13 +57,20 @@ class Complaint {
             final studentData = studentDoc.data() as Map<String, dynamic>;
             studentName = studentData['studentName'] ?? 'Unnamed Student';
 
-            // Construct room from student's college and block
-            final college = studentData['residentCollege'] ?? '';
-            final block = studentData['block'] ?? '';
-            final tempRoom = '$college $block'.trim();
-            if (tempRoom.isNotEmpty) {
-              room = tempRoom;
+            // Format room as: roomNumber,block
+            final roomNumber = studentData['roomNumber']?.toString() ?? '';
+            final block = studentData['block']?.toString() ?? '';
+            
+            final List<String> roomParts = [];
+            if (roomNumber.isNotEmpty) roomParts.add(roomNumber);
+            if (block.isNotEmpty) roomParts.add(block);
+            
+            if (roomParts.isNotEmpty) {
+              room = roomParts.join(',');
             }
+            
+            // Get residentCollege for filtering
+            residentCollege = studentData['residentCollege']?.toString() ?? '';
           }
         }
       } catch (e) {
@@ -78,6 +89,7 @@ class Complaint {
       priority: data['urgencyLevel'] ?? 'Low',
       submitted: (data['reportedDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
       status: data['reportStatus'] ?? 'Unknown',
+      residentCollege: residentCollege,
     );
   }
 }
@@ -91,6 +103,43 @@ class StaffComplaintsPage extends StatefulWidget {
 
 class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
   String selectedFilter = 'ALL';
+  String? _staffWorkCollege;
+  bool _isLoadingStaff = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchStaffWorkCollege();
+  }
+
+  Future<void> _fetchStaffWorkCollege() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user?.email == null) {
+        if (mounted) setState(() => _isLoadingStaff = false);
+        return;
+      }
+
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('staff')
+          .where('email', isEqualTo: user!.email)
+          .limit(1)
+          .get();
+
+      if (mounted && querySnapshot.docs.isNotEmpty) {
+        final staffData = querySnapshot.docs.first.data();
+        setState(() {
+          _staffWorkCollege = staffData['workCollege']?.toString();
+          _isLoadingStaff = false;
+        });
+      } else {
+        if (mounted) setState(() => _isLoadingStaff = false);
+      }
+    } catch (e) {
+      print("Error fetching staff workCollege: $e");
+      if (mounted) setState(() => _isLoadingStaff = false);
+    }
+  }
 
   void _navigateToAssignTechnician(Complaint complaint) async {
     final result = await Navigator.push(
@@ -194,6 +243,14 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
 
                     var complaints = complaintSnapshot.data!;
 
+                    // Filter by staff's workCollege
+                    if (_staffWorkCollege != null && _staffWorkCollege!.isNotEmpty) {
+                      complaints = complaints
+                          .where((c) => c.residentCollege == _staffWorkCollege)
+                          .toList();
+                    }
+
+                    // Filter by status
                     if (selectedFilter != 'ALL') {
                       complaints = complaints
                           .where((c) => c.status == selectedFilter)

@@ -28,6 +28,7 @@ class Complaint {
   final String priority;
   final DateTime submitted;
   final String status;
+  final String residentCollege; // Added for filtering
 
   Complaint({
     required this.id,
@@ -39,6 +40,7 @@ class Complaint {
     required this.priority,
     required this.submitted,
     required this.status,
+    required this.residentCollege,
   });
 
   static Future<Complaint> fromFirestore(DocumentSnapshot doc) async {
@@ -47,6 +49,7 @@ class Complaint {
     String studentName = 'Unknown Student';
     String studentId = 'Unknown ID';
     String room = 'N/A';
+    String residentCollege = '';
 
     final reportByPath = data['reportBy'] as String?;
     if (reportByPath != null && reportByPath.isNotEmpty) {
@@ -61,12 +64,21 @@ class Complaint {
           if (studentDoc.exists) {
             final studentData = studentDoc.data() as Map<String, dynamic>;
             studentName = studentData['studentName'] ?? 'Unnamed Student';
-            final college = studentData['residentCollege'] ?? '';
-            final block = studentData['block'] ?? '';
-            final tempRoom = '$college $block'.trim();
-            if (tempRoom.isNotEmpty) {
-              room = tempRoom;
+            
+            // Format room as: roomNumber,block
+            final roomNumber = studentData['roomNumber']?.toString() ?? '';
+            final block = studentData['block']?.toString() ?? '';
+            
+            final List<String> roomParts = [];
+            if (roomNumber.isNotEmpty) roomParts.add(roomNumber);
+            if (block.isNotEmpty) roomParts.add(block);
+            
+            if (roomParts.isNotEmpty) {
+              room = roomParts.join(',');
             }
+            
+            // Get residentCollege for filtering
+            residentCollege = studentData['residentCollege']?.toString() ?? '';
           }
         }
       } catch (e) {
@@ -84,6 +96,7 @@ class Complaint {
       priority: data['urgencyLevel'] ?? 'Low',
       submitted: (data['reportedDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
       status: data['reportStatus'] ?? 'Unknown',
+      residentCollege: residentCollege,
     );
   }
 }
@@ -416,6 +429,15 @@ class _StaffPortalDashboardState extends State<StaffPortalDashboard> {
 
                 var complaints = complaintSnapshot.data!;
 
+                // Filter by staff's workCollege
+                final workCollege = _staffData?['workCollege']?.toString();
+                if (workCollege != null && workCollege.isNotEmpty) {
+                  complaints = complaints
+                      .where((c) => c.residentCollege == workCollege)
+                      .toList();
+                }
+
+                // Filter by status
                 if (selectedFilter != 'ALL') {
                   complaints = complaints.where((c) => c.status == selectedFilter).toList();
                 }
