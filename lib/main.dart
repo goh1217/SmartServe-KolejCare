@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:owtest/auth_gate.dart';
 import 'firebase_options.dart';
 
@@ -7,6 +8,9 @@ import 'firebase_options.dart';
 Future<void> main() async {
   // Ensures that all Flutter bindings are initialized before we use them.
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables from .env file
+  await dotenv.load(fileName: ".env");
 
   // Waits for Firebase to be initialized before running the app.
   await Firebase.initializeApp(

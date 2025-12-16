@@ -7,6 +7,103 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../firebase_options.dart';
 
+// Helper functions for scheduledDateTimeSlot handling
+class TimeSlotHelper {
+  // Malaysia timezone offset (UTC+8)
+  static const Duration malaysiaOffset = Duration(hours: 8);
+  
+  /// Converts UTC timestamp to Malaysia time
+  static DateTime toMalaysiaTime(Timestamp ts) {
+    return ts.toDate().toUtc().add(malaysiaOffset);
+  }
+  
+  /// Groups continuous time slots (30 minutes apart) together
+  /// Returns list of groups, where each group is a list of continuous slots
+  static List<List<Timestamp>> groupContinuousSlots(List<Timestamp> slots) {
+    if (slots.isEmpty) return [];
+    
+    // Sort slots chronologically
+    final sortedSlots = List<Timestamp>.from(slots)..sort((a, b) => a.compareTo(b));
+    
+    final groups = <List<Timestamp>>[];
+    var currentGroup = <Timestamp>[sortedSlots[0]];
+    
+    for (int i = 1; i < sortedSlots.length; i++) {
+      final current = toMalaysiaTime(sortedSlots[i]);
+      final previous = toMalaysiaTime(sortedSlots[i - 1]);
+      
+      // Check if difference is exactly 30 minutes
+      final difference = current.difference(previous).inMinutes;
+      
+      if (difference == 30) {
+        // Continuous, add to current group
+        currentGroup.add(sortedSlots[i]);
+      } else {
+        // Discontinuous, start new group
+        groups.add(currentGroup);
+        currentGroup = <Timestamp>[sortedSlots[i]];
+      }
+    }
+    
+    // Add the last group
+    groups.add(currentGroup);
+    return groups;
+  }
+  
+  /// Checks if slots are continuous
+  static bool areContinuous(List<Timestamp> slots) {
+    if (slots.length <= 1) return true;
+    
+    final groups = groupContinuousSlots(slots);
+    return groups.length == 1;
+  }
+  
+  /// Formats time slots as string
+  /// Continuous slots: "11:00 AM - 12:30 PM"
+  /// Discontinuous slots: "11:00 AM - 12:00 PM, 12:30 PM - 1:30 PM"
+  static String formatTimeSlots(List<Timestamp> slots, {bool includeDate = false}) {
+    if (slots.isEmpty) return '--:-- AM';
+    
+    final groups = groupContinuousSlots(slots);
+    final formattedRanges = <String>[];
+    
+    for (final group in groups) {
+      final startTime = toMalaysiaTime(group.first);
+      final endTime = toMalaysiaTime(group.last).add(const Duration(minutes: 30));
+      
+      final startStr = _formatTime(startTime);
+      final endStr = _formatTime(endTime);
+      
+      formattedRanges.add('$startStr - $endStr');
+    }
+    
+    String result = formattedRanges.join(', ');
+    
+    if (includeDate && slots.isNotEmpty) {
+      final date = toMalaysiaTime(slots.first);
+      final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      result = '$dateStr  $result';
+    }
+    
+    return result;
+  }
+  
+  /// Helper to format time in 12-hour format
+  static String _formatTime(DateTime dt) {
+    final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+    final minute = dt.minute.toString().padLeft(2, '0');
+    final ampm = dt.hour < 12 ? 'AM' : 'PM';
+    return '$hour:$minute $ampm';
+  }
+  
+  /// Gets the date string from slots (Malaysia time)
+  static String getDateString(List<Timestamp> slots) {
+    if (slots.isEmpty) return '--/--/----';
+    final date = toMalaysiaTime(slots.first);
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -177,13 +274,12 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
                       final data = doc.data() as Map<String, dynamic>;
                       final status = (data['reportStatus'] ?? '').toString().toLowerCase();
                       if (!validStatuses.contains(status)) continue;
-                      Timestamp? scheduledTs;
-                      if (data['scheduledDate'] != null && data['scheduledDate'] is Timestamp) {
-                        scheduledTs = data['scheduledDate'] as Timestamp;
-                      }
-                      if (scheduledTs != null) {
-                        final scheduled = scheduledTs.toDate().toLocal();
-                        final sd = DateTime(scheduled.year, scheduled.month, scheduled.day);
+                      
+                      // Check scheduledDateTimeSlot array
+                      final slots = data['scheduledDateTimeSlot'] as List<dynamic>?;
+                      if (slots != null && slots.isNotEmpty) {
+                        final firstSlot = (slots[0] as Timestamp).toDate().toLocal();
+                        final sd = DateTime(firstSlot.year, firstSlot.month, firstSlot.day);
                         if (sd == today) {
                           totalToday++;
                           if (status == 'complete' || status == 'completed') {
@@ -330,14 +426,22 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
 
                   List<Map<String, dynamic>> normalized = rawTasks.map((doc) {
                     final data = doc.data() as Map<String, dynamic>;
+                    
+                    // Get scheduledDateTimeSlot array
+                    final slots = (data['scheduledDateTimeSlot'] as List<dynamic>?)
+                        ?.cast<Timestamp>()
+                        .toList() ?? [];
+                    
                     DateTime? scheduled;
-                    if (data['scheduledDate'] != null && data['scheduledDate'] is Timestamp) {
-                      scheduled = (data['scheduledDate'] as Timestamp).toDate().toLocal();
+                    if (slots.isNotEmpty) {
+                      scheduled = slots.first.toDate().toLocal();
                     }
+                    
                     DateTime? reported;
                     if (data['reportedDate'] != null && data['reportedDate'] is Timestamp) {
                       reported = (data['reportedDate'] as Timestamp).toDate().toLocal();
                     }
+                    
                     final status = (data['reportStatus'] ?? '').toString();
                     return {
                       'id': doc.id,
@@ -345,6 +449,7 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
                       'scheduled': scheduled,
                       'reported': reported,
                       'status': status,
+                      'slots': slots,
                     };
                   }).toList();
 
@@ -420,23 +525,26 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
                     itemBuilder: (context, index) {
                       final t = filtered[index];
                       final task = t['data'] as Map<String, dynamic>;
+                      final slots = t['slots'] as List<Timestamp>;
 
-                      // Use scheduledDate for display (fallback to reported)
+                      // Format date and time from slots
                       String dateStr = '--/--/----';
-                      String timeStr = '--:--';
-                      final scheduled = t['scheduled'] as DateTime?;
-                      final reported = t['reported'] as DateTime?;
-                      DateTime? displayDate = scheduled ?? reported;
-                      if (displayDate != null) {
-                        dateStr = '${displayDate.year}-${displayDate.month.toString().padLeft(2,'0')}-${displayDate.day.toString().padLeft(2,'0')}';
-                        final hour = displayDate.hour % 12 == 0 ? 12 : displayDate.hour % 12;
-                        final minute = displayDate.minute.toString().padLeft(2, '0');
-                        final ampm = displayDate.hour < 12 ? 'AM' : 'PM';
-                        timeStr = '$hour:$minute $ampm';
+                      String? timeStr;
+                      
+                      if (slots.isNotEmpty) {
+                        try {
+                          dateStr = TimeSlotHelper.getDateString(slots);
+                          timeStr = TimeSlotHelper.formatTimeSlots(slots);
+                        } catch (e) {
+                          print('Error formatting time slots: $e');
+                          timeStr = '--:--';
+                        }
+                      } else {
+                        timeStr = '--:--';
                       }
 
-                      // Combine date and time for display in the card (user requested both)
-                      final scheduledDisplay = dateStr != '--/--/----' ? '$dateStr  $timeStr' : timeStr;
+                      // Combine date and time for display
+                      final scheduledDisplay = dateStr != '--/--/----' && timeStr != null ? '$dateStr  $timeStr' : (timeStr ?? '--:--');
 
                       final imageUrl = (task['damagePic'] != null && task['damagePic'] is String) ? task['damagePic'] as String : null;
 
@@ -621,6 +729,7 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
               ),
             ),
             Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Container(
@@ -642,24 +751,38 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                    Row(
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.access_time,
+                      size: 16,
+                      color: Colors.black54,
+                    ),
+                    const SizedBox(width: 4),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
-                          Icons.access_time,
-                          size: 16,
-                          color: Colors.black54,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          scheduledTime ?? time,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black87,
+                        // Split time slots by comma and display each on new line
+                        ...(scheduledTime?.split(', ') ?? [time]).map(
+                          (slot) => Padding(
+                            padding: const EdgeInsets.only(bottom: 2.0),
+                            child: Text(
+                              slot.trim(),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black87,
+                              ),
+                            ),
                           ),
                         ),
                       ],
                     ),
+                  ],
+                ),
               ],
             ),
           ],

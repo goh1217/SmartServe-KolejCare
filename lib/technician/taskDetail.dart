@@ -95,27 +95,40 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
             proofImage = data['proofPic'];
           }
 
-          // Date handling
-          Timestamp? timestamp;
-          if (data['scheduledDate'] != null) {
-            timestamp = data['scheduledDate'] as Timestamp;
-          } else if (data['scheduledDate'] != null) {
-            timestamp = data['scheduledDate'] as Timestamp;
-          } else if (data['reportedDate'] != null) {
-            timestamp = data['reportedDate'] as Timestamp;
-          }
+          // Date handling - try scheduledDateTimeSlot first (new format)
+          if (data['scheduledDateTimeSlot'] != null && data['scheduledDateTimeSlot'] is List) {
+            final slots = (data['scheduledDateTimeSlot'] as List).cast<Timestamp>();
+            if (slots.isNotEmpty) {
+              // Use first slot for date and time
+              final firstSlot = slots[0];
+              final dt = TimeSlotHelper.toMalaysiaTime(firstSlot);
+              date = "${dt.day}/${dt.month}/${dt.year}";
+              
+              // Format the time range from slots
+              final timeRange = TimeSlotHelper.formatTimeSlots(slots, includeDate: false);
+              scheduledTime = timeRange ?? '--:--';
+            }
+          } else {
+            // Fallback to old format
+            Timestamp? timestamp;
+            if (data['scheduledDate'] != null) {
+              timestamp = data['scheduledDate'] as Timestamp;
+            } else if (data['reportedDate'] != null) {
+              timestamp = data['reportedDate'] as Timestamp;
+            }
 
-          if (timestamp != null) {
-              // Interpret stored timestamp as local DateTime
-              final dt = timestamp.toDate().toLocal();
+            if (timestamp != null) {
+              // Interpret stored timestamp as Malaysia time
+              final dt = TimeSlotHelper.toMalaysiaTime(timestamp);
               date = "${dt.day}/${dt.month}/${dt.year}";
               // Also set scheduled time if scheduledDate provided
               final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
               final minute = dt.minute.toString().padLeft(2, '0');
               final ampm = dt.hour < 12 ? 'AM' : 'PM';
               scheduledTime = '$hour:$minute $ampm';
-          } else {
-            date = widget.time;
+            } else {
+              date = widget.time;
+            }
           }
 
           // Fetch Student Info from studentID or matricNo in complaint
@@ -378,6 +391,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                             _buildInfoItem('Scheduled time', ''),
                             const SizedBox(height: 4),
                             Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Icon(
                                   Icons.access_time,
@@ -385,11 +399,24 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                                   color: Colors.black87,
                                 ),
                                 const SizedBox(width: 4),
-                                Text(
-                                  scheduledTime != '--:--' ? scheduledTime : widget.time,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.black87,
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // Split multiple time slots into separate lines
+                                      ...(scheduledTime != '--:--' ? scheduledTime.split(', ') : [widget.time]).map(
+                                        (timeSlot) => Padding(
+                                          padding: const EdgeInsets.only(bottom: 4.0),
+                                          child: Text(
+                                            timeSlot,
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.black87,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],

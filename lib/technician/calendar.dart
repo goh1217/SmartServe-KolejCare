@@ -24,8 +24,10 @@ class _CalendarPageState extends State<CalendarPage> {
     super.initState();
     _fetchTechnicianDocId();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Scroll to 8 AM by default for better view
-      _scrollController.jumpTo(8 * timeSlotHeight);
+      // Scroll to 8 AM by default for better view - only if scroll controller has positions
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(8 * timeSlotHeight);
+      }
     });
   }
 
@@ -83,6 +85,20 @@ class _CalendarPageState extends State<CalendarPage> {
         .snapshots();
   }
 
+  // Extract first slot date from scheduledDateTimeSlot array
+  DateTime? getFirstSlotDateTime(List<dynamic>? slots) {
+    if (slots == null || slots.isEmpty) return null;
+    try {
+      final firstSlot = slots[0];
+      if (firstSlot is Timestamp) {
+        return TimeSlotHelper.toMalaysiaTime(firstSlot);
+      }
+    } catch (e) {
+      print('Error parsing first slot: $e');
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -124,21 +140,21 @@ class _CalendarPageState extends State<CalendarPage> {
                         final validStatuses = ['completed', 'approved', 'ongoing'];
                         if (!validStatuses.contains(reportStatus)) return false;
 
-                        Timestamp? timestamp;
-                        if (data['scheduledDate'] != null && data['scheduledDate'] is Timestamp) {
-                          timestamp = data['scheduledDate'] as Timestamp;
+                        // Try to get date from scheduledDateTimeSlot array first (new format)
+                        DateTime? taskDateTime;
+                        if (data['scheduledDateTimeSlot'] != null && data['scheduledDateTimeSlot'] is List) {
+                          taskDateTime = getFirstSlotDateTime(data['scheduledDateTimeSlot']);
+                        } else if (data['scheduledDate'] != null && data['scheduledDate'] is Timestamp) {
+                          taskDateTime = TimeSlotHelper.toMalaysiaTime(data['scheduledDate'] as Timestamp);
                         } else if (data['repairDate'] != null && data['repairDate'] is Timestamp) {
-                          timestamp = data['repairDate'] as Timestamp;
+                          taskDateTime = TimeSlotHelper.toMalaysiaTime(data['repairDate'] as Timestamp);
                         }
 
-                        if (timestamp == null) return false;
+                        if (taskDateTime == null) return false;
 
-                        // Interpret stored timestamp as local DateTime for Malaysia/Campus time
-                        final taskDate = timestamp.toDate().toLocal();
-
-                        return taskDate.year == selectedDate.year &&
-                            taskDate.month == selectedDate.month &&
-                            taskDate.day == selectedDate.day;
+                        return taskDateTime.year == selectedDate.year &&
+                            taskDateTime.month == selectedDate.month &&
+                            taskDateTime.day == selectedDate.day;
                       }).toList();
 
                       // Single scrollable area so times, grid lines and events stay aligned
@@ -331,88 +347,110 @@ class _CalendarPageState extends State<CalendarPage> {
 
   Widget _buildEvents(List<QueryDocumentSnapshot> tasks) {
     // Sort tasks by status first, then by proximity to current time
-    // Use local device time for 'now' and interpret stored timestamps as local instants
     final now = DateTime.now();
     final sortedTasks = List<QueryDocumentSnapshot>.from(tasks);
     sortedTasks.sort((a, b) {
       final dataA = a.data() as Map<String, dynamic>;
       final dataB = b.data() as Map<String, dynamic>;
 
-      // Get report status
       final statusA = (dataA['reportStatus'] ?? '').toString().toLowerCase();
       final statusB = (dataB['reportStatus'] ?? '').toString().toLowerCase();
 
-      // Define status priority: Approved and Ongoing first, then Completed
       final priorityA = (statusA == 'approved' || statusA == 'ongoing') ? 0 : 1;
       final priorityB = (statusB == 'approved' || statusB == 'ongoing') ? 0 : 1;
 
-      // If different priorities, sort by priority (0 comes first)
       if (priorityA != priorityB) {
         return priorityA.compareTo(priorityB);
       }
 
-      // Get timestamps
-      Timestamp? timestampA;
-      if (dataA['scheduledDate'] != null && dataA['scheduledDate'] is Timestamp) {
-        timestampA = dataA['scheduledDate'] as Timestamp;
-      } else if (dataA['repairDate'] != null && dataA['repairDate'] is Timestamp) {
-        timestampA = dataA['repairDate'] as Timestamp;
+      DateTime? startA = getFirstSlotDateTime(dataA['scheduledDateTimeSlot']);
+      DateTime? startB = getFirstSlotDateTime(dataB['scheduledDateTimeSlot']);
+      
+      if (startA == null && dataA['scheduledDate'] is Timestamp) {
+        startA = TimeSlotHelper.toMalaysiaTime(dataA['scheduledDate'] as Timestamp);
+      }
+      if (startA == null && dataA['repairDate'] is Timestamp) {
+        startA = TimeSlotHelper.toMalaysiaTime(dataA['repairDate'] as Timestamp);
+      }
+      
+      if (startB == null && dataB['scheduledDate'] is Timestamp) {
+        startB = TimeSlotHelper.toMalaysiaTime(dataB['scheduledDate'] as Timestamp);
+      }
+      if (startB == null && dataB['repairDate'] is Timestamp) {
+        startB = TimeSlotHelper.toMalaysiaTime(dataB['repairDate'] as Timestamp);
       }
 
-      Timestamp? timestampB;
-      if (dataB['scheduledDate'] != null && dataB['scheduledDate'] is Timestamp) {
-        timestampB = dataB['scheduledDate'] as Timestamp;
-      } else if (dataB['repairDate'] != null && dataB['repairDate'] is Timestamp) {
-        timestampB = dataB['repairDate'] as Timestamp;
-      }
+      if (startA == null || startB == null) return 0;
 
-      if (timestampA == null || timestampB == null) return 0;
-
-      // Interpret stored timestamps as local DateTimes
-      final startA = timestampA.toDate().toLocal();
-      final startB = timestampB.toDate().toLocal();
-
-      // Calculate time difference from now (both in Malaysia time)
       final diffA = (startA.difference(now)).abs();
       final diffB = (startB.difference(now)).abs();
 
-      // Sort by closest to current time
       return diffA.compareTo(diffB);
     });
+
+    // Build all event cards - including separate cards for each continuous group
+    final allEventCards = <Widget>[];
+    
+    for (final doc in sortedTasks) {
+      final data = doc.data() as Map<String, dynamic>;
+      final slots = (data['scheduledDateTimeSlot'] ?? []) as List<dynamic>;
+      
+      // Convert to Timestamp list
+      final timestampSlots = <Timestamp>[];
+      for (final slot in slots) {
+        if (slot is Timestamp) {
+          timestampSlots.add(slot);
+        }
+      }
+      
+      if (timestampSlots.isEmpty) {
+        // Fallback to old format
+        DateTime? start;
+        if (data['scheduledDate'] is Timestamp) {
+          start = TimeSlotHelper.toMalaysiaTime(data['scheduledDate'] as Timestamp);
+        } else if (data['repairDate'] is Timestamp) {
+          start = TimeSlotHelper.toMalaysiaTime(data['repairDate'] as Timestamp);
+        }
+        
+        if (start != null) {
+          allEventCards.add(_buildEventCard(
+            doc.id,
+            data['inventoryDamage'] ?? 'No Title',
+            data['roomEntryConsent'] == true ? 'Entry Allowed' : 'Wait for student',
+            start,
+            1.0,
+            _getReportStatusColor(data['reportStatus']),
+            data['reportStatus'],
+          ));
+        }
+      } else {
+        // New format: create separate cards for each continuous group
+        final groups = TimeSlotHelper.groupContinuousSlots(timestampSlots);
+        
+        for (final group in groups) {
+          if (group.isEmpty) continue;
+          
+          final groupStart = TimeSlotHelper.toMalaysiaTime(group.first);
+          final groupEnd = TimeSlotHelper.toMalaysiaTime(group.last).add(const Duration(minutes: 30));
+          final groupDuration = groupEnd.difference(groupStart).inMinutes / 60.0;
+          
+          allEventCards.add(_buildEventCard(
+            doc.id,
+            data['inventoryDamage'] ?? 'No Title',
+            data['roomEntryConsent'] == true ? 'Entry Allowed' : 'Wait for student',
+            groupStart,
+            groupDuration,
+            _getReportStatusColor(data['reportStatus']),
+            data['reportStatus'],
+          ));
+        }
+      }
+    }
 
     return SizedBox(
       height: 24 * timeSlotHeight,
       child: Stack(
-        children: sortedTasks.map((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          // Check both scheduledDate and repairDate
-          Timestamp? timestamp;
-          if (data['scheduledDate'] != null && data['scheduledDate'] is Timestamp) {
-            timestamp = data['scheduledDate'] as Timestamp;
-          } else if (data['repairDate'] != null && data['repairDate'] is Timestamp) {
-            timestamp = data['repairDate'] as Timestamp;
-          }
-
-          if (timestamp == null) return const SizedBox.shrink();
-
-          // Interpret stored timestamp as local DateTime for display
-          final start = timestamp.toDate().toLocal();
-
-          // Default duration 1 hour if not specified
-          final duration = (data['duration'] ?? 1.0).toDouble();
-          // Determine color based on reportStatus
-          Color color = _getReportStatusColor(data['reportStatus']);
-
-          return _buildEventCard(
-            doc.id,
-            data['inventoryDamage'] ?? 'No Title', // Using inventoryDamage as title
-            data['roomEntryConsent'] == true ? 'Entry Allowed' : 'Wait for student', // Placeholder location
-            start,
-            duration,
-            color,
-             data['reportStatus'], // Pass report status to event card
-          );
-        }).toList(),
+        children: allEventCards,
       ),
     );
   }
