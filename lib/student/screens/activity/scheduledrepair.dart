@@ -221,17 +221,65 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
   }
 
   Future<void> _cancelRequest() async {
-    await FirebaseFirestore.instance
-        .collection('complaint')
-        .doc(widget.reportId)
-        .update({'reportStatus': 'Cancelled'});
+    try {
+      final complaintRef =
+      FirebaseFirestore.instance.collection('complaint').doc(widget.reportId);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Request has been cancelled')),
-    );
+      final complaintSnapshot = await complaintRef.get();
+      final complaintData = complaintSnapshot.data();
 
-    Navigator.pop(context);
+      // Step 1: Remove this complaint from technician's tasksAssigned
+      if (complaintData != null && complaintData['assignedTo'] != null) {
+        var assignedToValue = complaintData['assignedTo'];
+
+        String technicianId = '';
+        if (assignedToValue is String) {
+          if (assignedToValue.contains('/')) {
+            technicianId = assignedToValue.split('/').last;
+          } else {
+            technicianId = assignedToValue;
+          }
+        } else if (assignedToValue is DocumentReference) {
+          technicianId = assignedToValue.id;
+        }
+
+        if (technicianId.isNotEmpty) {
+          final techRef =
+          FirebaseFirestore.instance.collection('technician').doc(technicianId);
+
+          await techRef.update({
+            'tasksAssigned': FieldValue.arrayRemove([
+              FirebaseFirestore.instance
+                  .collection('complaint')
+                  .doc(widget.reportId)
+            ])
+          });
+        }
+      }
+
+      // Step 2: Set assignedTo to null and reportStatus to Cancelled
+      await complaintRef.update({
+        'assignedTo': null,
+        'reportStatus': 'Cancelled',
+      });
+
+      setState(() {
+        currentStatus = 'Cancelled'; // Update UI
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Request has been cancelled. Please create new complaint report if needed.')),
+      );
+
+      Navigator.pop(context);
+    } catch (e) {
+      print('Error cancelling request: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
   }
+
 
   Widget _buildDetailItem(String label, String value,
       {bool isFirst = false, bool isLast = false, Color? valueColor}) {
