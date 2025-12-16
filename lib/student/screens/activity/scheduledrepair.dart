@@ -382,7 +382,7 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildDetailItem(
-                        'Repair Status',
+                        'Report Status',
                         currentStatus,
                         valueColor: currentStatus == 'Pending'
                             ? const Color(0xFF7C4DFF)
