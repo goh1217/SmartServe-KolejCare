@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:owtest/analytics_page.dart';
 import 'package:owtest/assign_technician.dart';
 import 'package:owtest/help_page.dart';
+import 'package:owtest/settings_page.dart';
 import 'package:owtest/staff_complaints.dart';
 
 // Main entry widget for the Staff Portal
@@ -286,6 +287,16 @@ class _StaffPortalDashboardState extends State<StaffPortalDashboard> {
           const Text('Staff Portal', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600)),
           const Spacer(),
           IconButton(
+            icon: const Icon(Icons.settings, color: Colors.white),
+            tooltip: 'Settings',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsPage()),
+              );
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
             tooltip: 'Logout',
             onPressed: () async {
@@ -298,39 +309,91 @@ class _StaffPortalDashboardState extends State<StaffPortalDashboard> {
   }
 
   Widget _buildAnalyticsSection() {
+    Query complaintsQuery = FirebaseFirestore.instance.collection('complaint').orderBy('reportedDate', descending: true);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text('System Analytics', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87)),
         const SizedBox(height: 16),
         StreamBuilder<QuerySnapshot>(
-          stream: FirebaseFirestore.instance.collection('complaint').snapshots(),
+          stream: complaintsQuery.snapshots(),
           builder: (context, snapshot) {
-            if (!snapshot.hasData) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasError) {
               return const Center(child: Text('Error loading analytics'));
             }
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: _buildAnalyticsCard(icon: Icons.content_paste, value: '0', label: 'Total\nComplaints', color: const Color(0xFF7C3AED), textColor: Colors.black)),
+                    const SizedBox(width: 12),
+                    Expanded(child: _buildAnalyticsCard(icon: Icons.percent, value: '0%', label: 'Completion\nRate', color: const Color(0xFF7C3AED), textColor: Colors.black)),
+                    const SizedBox(width: 12),
+                    Expanded(child: _buildAnalyticsCard(icon: Icons.pending_actions, value: '0', label: 'Pending\nComplaints', color: const Color(0xFF7C3AED), textColor: Colors.black)),
+                  ],
+                ),
+              );
+            }
 
-            final allDocs = snapshot.data!.docs;
+            var complaintFutures = snapshot.data!.docs.map((doc) => Complaint.fromFirestore(doc)).toList();
 
-            final totalComplaints = allDocs.length;
-            final completedDocs = allDocs.where((doc) => doc['reportStatus'] == 'Completed').toList();
-            final pendingComplaints = allDocs.where((doc) => doc['reportStatus'] == 'Pending').toList();
-            final completionRate = totalComplaints > 0 ? (completedDocs.length / totalComplaints) * 100 : 0.0;
+            return FutureBuilder<List<Complaint>>(
+              future: Future.wait(complaintFutures),
+              builder: (context, complaintSnapshot) {
+                if (complaintSnapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (complaintSnapshot.hasError) {
+                  return const Center(child: Text('Error loading analytics'));
+                }
+                if (!complaintSnapshot.hasData || complaintSnapshot.data!.isEmpty) {
+                  return IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(child: _buildAnalyticsCard(icon: Icons.content_paste, value: '0', label: 'Total\nComplaints', color: const Color(0xFF7C3AED), textColor: Colors.black)),
+                        const SizedBox(width: 12),
+                        Expanded(child: _buildAnalyticsCard(icon: Icons.percent, value: '0%', label: 'Completion\nRate', color: const Color(0xFF7C3AED), textColor: Colors.black)),
+                        const SizedBox(width: 12),
+                        Expanded(child: _buildAnalyticsCard(icon: Icons.pending_actions, value: '0', label: 'Pending\nComplaints', color: const Color(0xFF7C3AED), textColor: Colors.black)),
+                      ],
+                    ),
+                  );
+                }
 
-            return IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(child: _buildAnalyticsCard(icon: Icons.content_paste, value: totalComplaints.toString(), label: 'Total\nComplaints', color: const Color(0xFF7C3AED), textColor: Colors.black)),
-                  const SizedBox(width: 12),
-                  Expanded(child: _buildAnalyticsCard(icon: Icons.percent, value: '${completionRate.toStringAsFixed(0)}%', label: 'Completion\nRate', color: const Color(0xFF7C3AED), textColor: Colors.black)),
-                  const SizedBox(width: 12),
-                  Expanded(child: _buildAnalyticsCard(icon: Icons.pending_actions, value: pendingComplaints.length.toString(), label: 'Pending\nComplaints', color: const Color(0xFF7C3AED), textColor: Colors.black)),
-                ],
-              ),
+                var complaints = complaintSnapshot.data!;
+
+                // Filter by staff's workCollege
+                final workCollege = _staffData?['workCollege']?.toString();
+                if (workCollege != null && workCollege.isNotEmpty) {
+                  complaints = complaints
+                      .where((c) => c.residentCollege == workCollege)
+                      .toList();
+                }
+
+                final totalComplaints = complaints.length;
+                final completedComplaints = complaints.where((c) => c.status == 'Completed').toList();
+                final pendingComplaints = complaints.where((c) => c.status == 'Pending').toList();
+                final completionRate = totalComplaints > 0 ? (completedComplaints.length / totalComplaints) * 100 : 0.0;
+
+                return IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(child: _buildAnalyticsCard(icon: Icons.content_paste, value: totalComplaints.toString(), label: 'Total\nComplaints', color: const Color(0xFF7C3AED), textColor: Colors.black)),
+                      const SizedBox(width: 12),
+                      Expanded(child: _buildAnalyticsCard(icon: Icons.percent, value: '${completionRate.toStringAsFixed(0)}%', label: 'Completion\nRate', color: const Color(0xFF7C3AED), textColor: Colors.black)),
+                      const SizedBox(width: 12),
+                      Expanded(child: _buildAnalyticsCard(icon: Icons.pending_actions, value: pendingComplaints.length.toString(), label: 'Pending\nComplaints', color: const Color(0xFF7C3AED), textColor: Colors.black)),
+                    ],
+                  ),
+                );
+              },
             );
           },
         ),

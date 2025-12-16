@@ -496,6 +496,20 @@ class _SignUpPageState extends State<SignUpPage> {
             validator: (value) => value == null || value.isEmpty ? 'Please enter your staff number' : null,
           ),
           const SizedBox(height: 20),
+          _buildLabel('Staff Rank'),
+          DropdownButtonFormField<String>(
+            decoration: _buildInputDecoration('Select staff rank'),
+            value: _selectedStaffRank,
+            items: _staffRanks.map((rank) {
+              return DropdownMenuItem(
+                value: rank,
+                child: Text(rank[0].toUpperCase() + rank.substring(1)),
+              );
+            }).toList(),
+            onChanged: (value) => setState(() => _selectedStaffRank = value),
+            validator: (value) => value == null ? 'Please select a staff rank' : null,
+          ),
+          const SizedBox(height: 20),
           _buildLabel('Work College / Department'),
           TextFormField(
             controller: _workCollegeController,
