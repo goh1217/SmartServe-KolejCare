@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_generative_ai/google_generative_ai.dart'; // <-- New Import
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'notification_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
-// IMPORTANT: Replace this with your actual Gemini API Key.
-// For production apps, use environment variables, not hardcoding.
-const String GEMINI_API_KEY = "AIzaSyCMX9-2sIkUn-1DX0WPjqVBVYFsWvvX10M";
 
 class ChatbotScreen extends StatefulWidget {
   const ChatbotScreen({super.key});
@@ -18,6 +15,7 @@ class ChatbotScreen extends StatefulWidget {
 
 class _ChatbotScreenState extends State<ChatbotScreen> {
   final TextEditingController _controller = TextEditingController();
+  late final String _geminiApiKey = dotenv.env['API_KEY'] ?? '';
 
   final List<Map<String, dynamic>> _messages = [];
   bool _isTyping = false;
@@ -25,7 +23,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   // Initialize the Gemini Model Client
   late final GenerativeModel _model = GenerativeModel(
     model: 'gemini-2.5-flash',
-    apiKey: "AIzaSyCMX9-2sIkUn-1DX0WPjqVBVYFsWvvX10M",
+    apiKey: _geminiApiKey,
   );
 
   void _sendMessage(String text) {
