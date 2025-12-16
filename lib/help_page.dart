@@ -7,7 +7,7 @@ import 'package:owtest/staff_complaints.dart';
 import 'package:owtest/settings_page.dart';
 
 // Get API key from environment variables
-String get apiKey => dotenv.env['API_KEY'] ?? '';
+String get apiKey => dotenv.env['API_KEY1'] ?? '';
 
 class HelpPage extends StatefulWidget {
   const HelpPage({Key? key}) : super(key: key);
