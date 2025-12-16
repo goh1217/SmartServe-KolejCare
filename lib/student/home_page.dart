@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:owtest/auth_gate.dart';
 import 'package:owtest/student/complaint_form_screen.dart';
 import 'services/weatherService.dart';
 
@@ -1355,8 +1356,26 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
                       _buildBellIcon(),
                       IconButton(
                         icon: const Icon(Icons.logout),
-                        onPressed: () {
-                          FirebaseAuth.instance.signOut();
+                        onPressed: () async {
+                          try {
+                            await FirebaseAuth.instance.signOut();
+                            if (!mounted) return;
+                            Navigator.of(context).pushAndRemoveUntil(
+                              MaterialPageRoute(builder: (_) => const AuthGate()),
+                              (route) => false,
+                            );
+                          } catch (e) {
+                            if (kDebugMode) {
+                              print('Error during logout: $e');
+                            }
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Failed to log out. Please try again.'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
                         },
                       ),
                     ],
