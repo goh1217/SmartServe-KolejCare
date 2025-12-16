@@ -37,11 +37,13 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
   String scheduledDateDisplay = '';
   String scheduledTimeDisplay = '';
   String estimatedDurationDisplay = '';
+  String currentStatus = ''; // store latest reportStatus
 
   @override
   void initState() {
     super.initState();
     _loadScheduleDateTimeSlots();
+    currentStatus = widget.status; // initialize with original status
   }
 
   Future<void> _loadScheduleDateTimeSlots() async {
@@ -76,11 +78,8 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
         final slots = (data['scheduledDateTimeSlot'] as List).cast<Timestamp>();
 
         if (slots.isNotEmpty) {
-          // Get the date from the first timestamp
           final firstSlot = slots[0];
           final dt = TimeSlotHelper.toMalaysiaTime(firstSlot);
-
-          // Format the time range from slots
           final timeRange = TimeSlotHelper.formatTimeSlots(slots, includeDate: false);
 
           setState(() {
@@ -89,7 +88,6 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
           });
         }
       } else if (data['scheduledDate'] != null) {
-        // Fallback to old scheduledDate format if scheduledDateTimeSlot doesn't exist
         Timestamp timestamp = data['scheduledDate'] as Timestamp;
         final dt = TimeSlotHelper.toMalaysiaTime(timestamp);
         final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
@@ -116,7 +114,6 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
   }
 
   Future<void> _editRequest() async {
-    // Show warning dialog first
     bool proceed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -135,12 +132,10 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
           ),
         ],
       ),
-    ) ??
-        false;
+    ) ?? false;
 
-    if (!proceed) return; // User cancelled
+    if (!proceed) return;
 
-    // Show date picker
     DateTime initialDate = updatedScheduledDate ?? DateTime.now();
     DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -152,34 +147,24 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
 
     if (pickedDate != null) {
       try {
-        // Update Firestore
         final complaintRef =
         FirebaseFirestore.instance.collection('complaint').doc(widget.reportId);
 
-        // Fetch current complaint data
         final complaintSnapshot = await complaintRef.get();
         final complaintData = complaintSnapshot.data();
 
-        print('=== Starting Schedule Date Update ===');
-        print('Complaint ID: ${widget.reportId}');
-
-        // Create suggestedDate timestamp
         final suggestedDateTimestamp = Timestamp.fromDate(pickedDate);
 
-        // Step 1: Create suggestedDate attribute in complaint
-        print('Step 1: Creating suggestedDate attribute...');
+        // Step 1: create suggestedDate & set reportStatus to Pending
         await complaintRef.update({
           'suggestedDate': suggestedDateTimestamp,
           'reportStatus': 'Pending',
         });
-        print('✓ suggestedDate created and reportStatus set to Pending');
 
-        // Step 2: Remove this complaintID from old technician's tasksAssigned
+        // Step 2: remove complaint from old technician tasksAssigned
         if (complaintData != null && complaintData['assignedTo'] != null) {
           var assignedToValue = complaintData['assignedTo'];
-          print('Step 2: Retrieved assignedTo (raw): $assignedToValue');
 
-          // Extract the technician ID
           String technicianId = '';
           if (assignedToValue is String) {
             if (assignedToValue.contains('/')) {
@@ -191,13 +176,10 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
             technicianId = assignedToValue.id;
           }
 
-          print('Extracted technician ID: $technicianId');
-
           if (technicianId.isNotEmpty) {
             final techRef =
             FirebaseFirestore.instance.collection('technician').doc(technicianId);
 
-            // 🔧 FIX: Use arrayRemove to safely remove complaint reference
             await techRef.update({
               'tasksAssigned': FieldValue.arrayRemove([
                 FirebaseFirestore.instance
@@ -205,28 +187,24 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
                     .doc(widget.reportId)
               ])
             });
-            print('✓ Task removed from technician successfully');
-          } else {
-            print('⚠ Could not extract technician ID from assignedTo value');
           }
-        } else {
-          print('⚠ assignedTo is null or empty');
         }
 
-        // Step 3: Set assignedTo to null
-        print('Step 3: Setting assignedTo to null...');
+        // Step 3: set assignedTo to null
         await complaintRef.update({'assignedTo': null});
-        print('✓ assignedTo set to null');
+
+        // Fetch latest reportStatus
+        final updatedDoc = await complaintRef.get();
+        final latestStatus = updatedDoc.data()?['reportStatus']?.toString() ?? widget.status;
 
         setState(() {
           updatedScheduledDate = pickedDate;
           isDateUpdated = true;
           scheduledDateDisplay =
           '${pickedDate.day.toString().padLeft(2, '0')}/${pickedDate.month.toString().padLeft(2, '0')}/${pickedDate.year}';
-          scheduledTimeDisplay = '--:--'; // Clear time slots when date is updated
+          scheduledTimeDisplay = '--:--';
+          currentStatus = latestStatus; // update status in UI
         });
-
-        print('=== Schedule Date Update Complete ===');
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -234,8 +212,7 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
                   'Scheduled date updated successfully! Admin will review and reassign.')),
         );
       } catch (e) {
-        print('❌ Error updating scheduled date: $e');
-        print('Stack trace: $e');
+        print('Error updating scheduled date: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),
         );
@@ -404,7 +381,13 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildDetailItem('Repair Status', widget.status),
+                      _buildDetailItem(
+                        'Repair Status',
+                        currentStatus,
+                        valueColor: currentStatus == 'Pending'
+                            ? const Color(0xFF7C4DFF)
+                            : null,
+                      ),
                       const Divider(height: 1),
                       _buildScheduledDateTimeItem(),
                       const Divider(height: 1),
