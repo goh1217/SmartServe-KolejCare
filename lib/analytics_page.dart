@@ -1,10 +1,53 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:owtest/staff_complaints.dart';
 import 'package:owtest/settings_page.dart';
 
-class AnalyticsPage extends StatelessWidget {
+class AnalyticsPage extends StatefulWidget {
   const AnalyticsPage({Key? key}) : super(key: key);
+
+  @override
+  State<AnalyticsPage> createState() => _AnalyticsPageState();
+}
+
+class _AnalyticsPageState extends State<AnalyticsPage> {
+  Map<String, dynamic>? _staffData;
+  bool _isLoadingStaff = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchStaffWorkCollege();
+  }
+
+  Future<void> _fetchStaffWorkCollege() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user?.email == null) {
+        if (mounted) setState(() => _isLoadingStaff = false);
+        return;
+      }
+
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('staff')
+          .where('email', isEqualTo: user!.email)
+          .limit(1)
+          .get();
+
+      if (mounted && querySnapshot.docs.isNotEmpty) {
+        setState(() {
+          _staffData = querySnapshot.docs.first.data();
+          _isLoadingStaff = false;
+        });
+      } else {
+        if (mounted) setState(() => _isLoadingStaff = false);
+      }
+    } catch (e) {
+      print("Error fetching staff workCollege: $e");
+      if (mounted) setState(() => _isLoadingStaff = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +114,28 @@ class AnalyticsPage extends StatelessWidget {
                 return const Center(child: Text('No complaints available.'));
               }
 
-              final complaints = complaintSnapshot.data!;
+              var complaints = complaintSnapshot.data!;
+
+              // Filter by staff's workCollege
+              final workCollege = _staffData?['workCollege']?.toString();
+              if (workCollege != null && workCollege.isNotEmpty) {
+                complaints = complaints
+                    .where((c) => c.residentCollege == workCollege)
+                    .toList();
+              }
+
+              if (complaints.isEmpty) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32),
+                    child: Text(
+                      'No complaints found for your assigned college.',
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                );
+              }
 
               // --- Main Analytics Calculations ---
               final totalComplaints = complaints.length;

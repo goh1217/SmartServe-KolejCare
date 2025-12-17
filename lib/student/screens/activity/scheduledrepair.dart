@@ -37,11 +37,13 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
   String scheduledDateDisplay = '';
   String scheduledTimeDisplay = '';
   String estimatedDurationDisplay = '';
+  String currentStatus = ''; // store latest reportStatus
 
   @override
   void initState() {
     super.initState();
     _loadScheduleDateTimeSlots();
+    currentStatus = widget.status; // initialize with original status
   }
 
   Future<void> _loadScheduleDateTimeSlots() async {
@@ -57,7 +59,9 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
           await _processScheduleDateTimeSlots(data);
           // Load estimatedDurationJobDone
           setState(() {
-            estimatedDurationDisplay = data['estimatedDurationJobDone']?.toString() ?? widget.expectedDuration;
+            estimatedDurationDisplay =
+                data['estimatedDurationJobDone']?.toString() ??
+                    widget.expectedDuration;
           });
         }
       }
@@ -69,30 +73,27 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
   Future<void> _processScheduleDateTimeSlots(Map<String, dynamic> data) async {
     try {
       // Process scheduledDateTimeSlot array
-      if (data['scheduledDateTimeSlot'] != null && data['scheduledDateTimeSlot'] is List) {
+      if (data['scheduledDateTimeSlot'] != null &&
+          data['scheduledDateTimeSlot'] is List) {
         final slots = (data['scheduledDateTimeSlot'] as List).cast<Timestamp>();
-        
+
         if (slots.isNotEmpty) {
-          // Get the date from the first timestamp
           final firstSlot = slots[0];
           final dt = TimeSlotHelper.toMalaysiaTime(firstSlot);
-          
-          // Format the time range from slots
           final timeRange = TimeSlotHelper.formatTimeSlots(slots, includeDate: false);
-          
+
           setState(() {
             scheduledDateDisplay = "${dt.day}/${dt.month}/${dt.year}";
             scheduledTimeDisplay = timeRange ?? '--:--';
           });
         }
       } else if (data['scheduledDate'] != null) {
-        // Fallback to old scheduledDate format if scheduledDateTimeSlot doesn't exist
         Timestamp timestamp = data['scheduledDate'] as Timestamp;
         final dt = TimeSlotHelper.toMalaysiaTime(timestamp);
         final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
         final minute = dt.minute.toString().padLeft(2, '0');
         final ampm = dt.hour < 12 ? 'AM' : 'PM';
-        
+
         setState(() {
           scheduledDateDisplay = "${dt.day}/${dt.month}/${dt.year}";
           scheduledTimeDisplay = '$hour:$minute $ampm';
@@ -113,7 +114,6 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
   }
 
   Future<void> _editRequest() async {
-    // Show warning dialog first
     bool proceed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -134,9 +134,8 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
       ),
     ) ?? false;
 
-    if (!proceed) return; // User cancelled
+    if (!proceed) return;
 
-    // Show date picker
     DateTime initialDate = updatedScheduledDate ?? DateTime.now();
     DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -148,156 +147,72 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
 
     if (pickedDate != null) {
       try {
-        // Update Firestore
-        final complaintRef = FirebaseFirestore.instance.collection('complaint').doc(widget.reportId);
+        final complaintRef =
+        FirebaseFirestore.instance.collection('complaint').doc(widget.reportId);
 
-        // Fetch current complaint data
         final complaintSnapshot = await complaintRef.get();
         final complaintData = complaintSnapshot.data();
 
-        print('=== Starting Schedule Date Update ===');
-        print('Complaint ID: ${widget.reportId}');
-
-        // Create suggestedDate timestamp
         final suggestedDateTimestamp = Timestamp.fromDate(pickedDate);
 
-        // Step 1: Create suggestedDate attribute in complaint
-        print('Step 1: Creating suggestedDate attribute...');
+        // Step 1: create suggestedDate & set reportStatus to Pending
         await complaintRef.update({
           'suggestedDate': suggestedDateTimestamp,
           'reportStatus': 'Pending',
         });
-        print('✓ suggestedDate created and reportStatus set to Pending');
 
-        // Step 2: Remove this complaintID from old technician's tasksAssigned
+        // Step 2: remove complaint from old technician tasksAssigned
         if (complaintData != null && complaintData['assignedTo'] != null) {
           var assignedToValue = complaintData['assignedTo'];
-          print('Step 2: Retrieved assignedTo (raw): $assignedToValue');
-          
-          // Extract the technician ID from the path if it's in format "/collection/technician/ID"
+
           String technicianId = '';
           if (assignedToValue is String) {
-            // If it's a string path like "/collection/technician/3JKwJEvy0EmPNq8fh6LL"
             if (assignedToValue.contains('/')) {
               technicianId = assignedToValue.split('/').last;
             } else {
-              // If it's just an ID
               technicianId = assignedToValue;
             }
           } else if (assignedToValue is DocumentReference) {
-            // If it's already a DocumentReference
             technicianId = assignedToValue.id;
           }
-          
-          print('Extracted technician ID: $technicianId');
-          
+
           if (technicianId.isNotEmpty) {
-            final techRef = FirebaseFirestore.instance.collection('technician').doc(technicianId);
-            
-            // Fetch technician document to see current tasksAssigned
-            final techSnapshot = await techRef.get();
-            if (techSnapshot.exists) {
-              final tasksAssigned = techSnapshot.data()?['tasksAssigned'] as List<dynamic>? ?? [];
-              print('Current tasksAssigned count: ${tasksAssigned.length}');
-              print('tasksAssigned items: $tasksAssigned');
-              
-              // Log each item's type and value
-              for (int i = 0; i < tasksAssigned.length; i++) {
-                final item = tasksAssigned[i];
-                print('Item $i: type=${item.runtimeType}, value=$item');
-                if (item is DocumentReference) {
-                  print('  - DocumentReference id: ${item.id}, path: ${item.path}');
-                }
-              }
-              
-              // Build updated list by filtering out the complaint ID
-              final updatedTasks = <dynamic>[];
-              bool foundAndRemoved = false;
-              
-              for (var item in tasksAssigned) {
-                bool shouldRemove = false;
-                
-                // Check if it's a DocumentReference
-                if (item is DocumentReference) {
-                  print('Checking DocumentReference: id=${item.id} vs complaint=${widget.reportId}');
-                  // Match by ID
-                  if (item.id == widget.reportId) {
-                    shouldRemove = true;
-                    foundAndRemoved = true;
-                    print('  → MATCH FOUND! Removing reference with id: ${item.id}');
-                  }
-                } 
-                // Check if it's a string (path like "/complaint/JD4VDnkcnmOFOB0rpjO5")
-                else if (item is String) {
-                  print('Checking String: "$item" vs complaint="complaint/${widget.reportId}"');
-                  // Match against patterns like "/complaint/ID" or "complaint/ID"
-                  if (item.endsWith(widget.reportId) || 
-                      item == '/complaint/${widget.reportId}' || 
-                      item == 'complaint/${widget.reportId}') {
-                    shouldRemove = true;
-                    foundAndRemoved = true;
-                    print('  → MATCH FOUND! Removing string path: $item');
-                  }
-                }
-                
-                if (!shouldRemove) {
-                  updatedTasks.add(item);
-                }
-              }
+            final techRef =
+            FirebaseFirestore.instance.collection('technician').doc(technicianId);
 
-              print('Original count: ${tasksAssigned.length}, Updated count: ${updatedTasks.length}');
-
-              // Update with the filtered list only if something was removed
-              if (foundAndRemoved) {
-                print('Removing task by replacing array with filtered list...');
-                await techRef.update({
-                  'tasksAssigned': updatedTasks,
-                });
-                print('✓ Task removed from technician successfully');
-                
-                // Verify removal
-                await Future.delayed(const Duration(milliseconds: 500)); // Small delay for consistency
-                final verifySnapshot = await techRef.get();
-                final verifyTasks = verifySnapshot.data()?['tasksAssigned'] as List<dynamic>? ?? [];
-                print('Verified tasksAssigned count after removal: ${verifyTasks.length}');
-                print('Remaining tasks: $verifyTasks');
-              } else {
-                print('⚠ No matching task found to remove');
-                print('Expected to find complaint ID: ${widget.reportId}');
-                print('Searched for patterns: /complaint/${widget.reportId} or complaint/${widget.reportId}');
-              }
-            } else {
-              print('❌ Technician document not found for ID: $technicianId');
-            }
-          } else {
-            print('⚠ Could not extract technician ID from assignedTo value');
+            await techRef.update({
+              'tasksAssigned': FieldValue.arrayRemove([
+                FirebaseFirestore.instance
+                    .collection('complaint')
+                    .doc(widget.reportId)
+              ])
+            });
           }
-        } else {
-          print('⚠ assignedTo is null or empty');
         }
 
-        // Step 3: Set assignedTo to null
-        print('Step 3: Setting assignedTo to null...');
-        await complaintRef.update({
-          'assignedTo': null,
-        });
-        print('✓ assignedTo set to null');
+        // Step 3: set assignedTo to null
+        await complaintRef.update({'assignedTo': null});
+
+        // Fetch latest reportStatus
+        final updatedDoc = await complaintRef.get();
+        final latestStatus = updatedDoc.data()?['reportStatus']?.toString() ?? widget.status;
 
         setState(() {
           updatedScheduledDate = pickedDate;
           isDateUpdated = true;
-          scheduledDateDisplay = '${pickedDate.day.toString().padLeft(2, '0')}/${pickedDate.month.toString().padLeft(2, '0')}/${pickedDate.year}';
-          scheduledTimeDisplay = '--:--'; // Clear time slots when date is updated
+          scheduledDateDisplay =
+          '${pickedDate.day.toString().padLeft(2, '0')}/${pickedDate.month.toString().padLeft(2, '0')}/${pickedDate.year}';
+          scheduledTimeDisplay = '--:--';
+          currentStatus = latestStatus; // update status in UI
         });
 
-        print('=== Schedule Date Update Complete ===');
-        
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Scheduled date updated successfully! Admin will review and reassign.')),
+          const SnackBar(
+              content: Text(
+                  'Scheduled date updated successfully! Admin will review and reassign.')),
         );
       } catch (e) {
-        print('❌ Error updating scheduled date: $e');
-        print('Stack trace: $e');
+        print('Error updating scheduled date: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),
         );
@@ -306,17 +221,65 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
   }
 
   Future<void> _cancelRequest() async {
-    await FirebaseFirestore.instance
-        .collection('complaint')
-        .doc(widget.reportId)
-        .update({'reportStatus': 'Cancelled'});
+    try {
+      final complaintRef =
+      FirebaseFirestore.instance.collection('complaint').doc(widget.reportId);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Request has been cancelled')),
-    );
+      final complaintSnapshot = await complaintRef.get();
+      final complaintData = complaintSnapshot.data();
 
-    Navigator.pop(context);
+      // Step 1: Remove this complaint from technician's tasksAssigned
+      if (complaintData != null && complaintData['assignedTo'] != null) {
+        var assignedToValue = complaintData['assignedTo'];
+
+        String technicianId = '';
+        if (assignedToValue is String) {
+          if (assignedToValue.contains('/')) {
+            technicianId = assignedToValue.split('/').last;
+          } else {
+            technicianId = assignedToValue;
+          }
+        } else if (assignedToValue is DocumentReference) {
+          technicianId = assignedToValue.id;
+        }
+
+        if (technicianId.isNotEmpty) {
+          final techRef =
+          FirebaseFirestore.instance.collection('technician').doc(technicianId);
+
+          await techRef.update({
+            'tasksAssigned': FieldValue.arrayRemove([
+              FirebaseFirestore.instance
+                  .collection('complaint')
+                  .doc(widget.reportId)
+            ])
+          });
+        }
+      }
+
+      // Step 2: Set assignedTo to null and reportStatus to Cancelled
+      await complaintRef.update({
+        'assignedTo': null,
+        'reportStatus': 'Cancelled',
+      });
+
+      setState(() {
+        currentStatus = 'Cancelled'; // Update UI
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Request has been cancelled. Please create new complaint report if needed.')),
+      );
+
+      Navigator.pop(context);
+    } catch (e) {
+      print('Error cancelling request: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
   }
+
 
   Widget _buildDetailItem(String label, String value,
       {bool isFirst = false, bool isLast = false, Color? valueColor}) {
@@ -353,7 +316,6 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Date Section
           Row(
             children: [
               const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
@@ -372,7 +334,9 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
           Padding(
             padding: const EdgeInsets.only(left: 22),
             child: Text(
-              scheduledDateDisplay.isNotEmpty ? scheduledDateDisplay : widget.scheduledDate,
+              scheduledDateDisplay.isNotEmpty
+                  ? scheduledDateDisplay
+                  : widget.scheduledDate,
               style: TextStyle(
                 fontSize: 15,
                 color: isDateUpdated ? const Color(0xFF7C4DFF) : Colors.black,
@@ -380,8 +344,6 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
               ),
             ),
           ),
-          
-          // Time Slots Section
           if (scheduledTimeDisplay.isNotEmpty && scheduledTimeDisplay != '--:--') ...[
             const SizedBox(height: 16),
             Row(
@@ -403,8 +365,10 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
               padding: const EdgeInsets.only(left: 22),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: scheduledTimeDisplay.split(', ').map((timeSlot) => 
-                  Padding(
+                children: scheduledTimeDisplay
+                    .split(', ')
+                    .map(
+                      (timeSlot) => Padding(
                     padding: const EdgeInsets.only(bottom: 4.0),
                     child: Text(
                       timeSlot,
@@ -415,7 +379,8 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
                       ),
                     ),
                   ),
-                ).toList(),
+                )
+                    .toList(),
               ),
             ),
           ],
@@ -464,7 +429,13 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildDetailItem('Repair Status', widget.status),
+                      _buildDetailItem(
+                        'Report Status',
+                        currentStatus,
+                        valueColor: currentStatus == 'Pending'
+                            ? const Color(0xFF7C4DFF)
+                            : null,
+                      ),
                       const Divider(height: 1),
                       _buildScheduledDateTimeItem(),
                       const Divider(height: 1),
@@ -478,7 +449,11 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
                       const Divider(height: 1),
                       _buildDetailItem('Inventory Damage', widget.inventoryDamage),
                       const Divider(height: 1),
-                      _buildDetailItem('Expected Duration', estimatedDurationDisplay.isNotEmpty ? estimatedDurationDisplay : widget.expectedDuration),
+                      _buildDetailItem(
+                          'Expected Duration',
+                          estimatedDurationDisplay.isNotEmpty
+                              ? estimatedDurationDisplay
+                              : widget.expectedDuration),
                       const Divider(height: 1),
                       _buildDetailItem('Reported On', widget.reportedOn),
                     ],
@@ -553,17 +528,15 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
   }
 }
 
-// TimeSlotHelper class - you need to add this if it doesn't exist in your project
+// TimeSlotHelper class
 class TimeSlotHelper {
   static DateTime toMalaysiaTime(Timestamp timestamp) {
-    // Convert Firestore timestamp to Malaysia time (UTC+8)
     return timestamp.toDate().toUtc().add(const Duration(hours: 8));
   }
 
   static String? formatTimeSlots(List<Timestamp> slots, {bool includeDate = true}) {
     if (slots.isEmpty) return null;
 
-    // Convert all timestamps to Malaysia time and sort
     List<DateTime> times = slots.map((ts) => toMalaysiaTime(ts)).toList();
     times.sort();
 
@@ -574,7 +547,6 @@ class TimeSlotHelper {
       DateTime start = times[i];
       DateTime end = start.add(const Duration(minutes: 30));
 
-      // Find continuous slots (30-minute intervals)
       int j = i + 1;
       while (j < times.length) {
         if (times[j].difference(end).inMinutes == 0) {
@@ -585,7 +557,6 @@ class TimeSlotHelper {
         }
       }
 
-      // Format the time range
       String startTime = _formatTime(start);
       String endTime = _formatTime(end);
       ranges.add('$startTime - $endTime');

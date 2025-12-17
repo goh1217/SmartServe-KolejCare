@@ -89,6 +89,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         
         // Clean up markdown formatting to make it look less AI-generated
         botReply = botReply.replaceAll('**', '');
+        // Strip leading bullet markers like "* " that clutter the UI
+        botReply = botReply.replaceAll(RegExp(r'^\s*[\*\-]\s+', multiLine: true), '');
       } catch (e) {
         // Catch any errors (like network issues, invalid key, rate limits)
         botReply = "I ran into an error trying to connect to the AI. Please check your API key and internet connection.";
