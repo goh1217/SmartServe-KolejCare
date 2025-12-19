@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-class WaitingApprovalScreen extends StatelessWidget {
+class WaitingApprovalScreen extends StatefulWidget {
+  final String? complaintId;
   final String reportStatus;
   final String damageCategory;
   final String damageLocation;
@@ -10,6 +13,7 @@ class WaitingApprovalScreen extends StatelessWidget {
 
   const WaitingApprovalScreen({
     super.key,
+    this.complaintId,
     required this.reportStatus,
     required this.damageCategory,
     required this.damageLocation,
@@ -17,6 +21,66 @@ class WaitingApprovalScreen extends StatelessWidget {
     required this.inventoryDamageTitle,
     required this.reportedOn,
   });
+
+  @override
+  State<WaitingApprovalScreen> createState() => _WaitingApprovalScreenState();
+}
+
+class _WaitingApprovalScreenState extends State<WaitingApprovalScreen> {
+  String? cantCompleteReason;
+  String? cantCompleteProof;
+  String loadedReportStatus = '';
+  String loadedDamageCategory = '';
+  String loadedDamageLocation = '';
+  String loadedInventoryDamage = '';
+  String loadedInventoryDamageTitle = '';
+  String loadedReportedOn = '';
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.complaintId != null) {
+      _loadComplaintData();
+    }
+  }
+
+  Future<void> _loadComplaintData() async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('complaint')
+          .doc(widget.complaintId)
+          .get();
+
+      if (doc.exists) {
+        final data = doc.data() as Map<String, dynamic>;
+        setState(() {
+          loadedReportStatus = data['reportStatus'] ?? widget.reportStatus;
+          loadedDamageCategory = data['damageCategory'] ?? widget.damageCategory;
+          loadedDamageLocation = data['damageLocation'] ?? widget.damageLocation;
+          loadedInventoryDamage = data['inventoryDamage'] ?? widget.inventoryDamage;
+          loadedInventoryDamageTitle = data['inventoryDamageTitle'] ?? widget.inventoryDamageTitle;
+          cantCompleteReason = data['reasonCantComplete'];
+          cantCompleteProof = data['reasonCantCompleteProof'];
+          
+          // Format reported date
+          if (data['reportedDate'] != null) {
+            Timestamp ts = data['reportedDate'] as Timestamp;
+            DateTime dt = ts.toDate();
+            loadedReportedOn = '${dt.day} ${_monthName(dt.month)} ${dt.year}, ${dt.hour}:${dt.minute.toString().padLeft(2, '0')} ${dt.hour < 12 ? 'AM' : 'PM'}';
+          } else {
+            loadedReportedOn = widget.reportedOn;
+          }
+        });
+      }
+    } catch (e) {
+      print('Error loading complaint data: $e');
+    }
+  }
+
+  String _monthName(int month) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return months[month - 1];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,17 +119,68 @@ class WaitingApprovalScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildDetailItem('Report Status', reportStatus, isFirst: true),
+                _buildDetailItem('Report Status', loadedReportStatus.isNotEmpty ? loadedReportStatus : widget.reportStatus, isFirst: true),
                 const Divider(height: 1),
-                _buildDetailItem('Damage Category', damageCategory),
+                _buildDetailItem('Damage Category', loadedDamageCategory.isNotEmpty ? loadedDamageCategory : widget.damageCategory),
                 const Divider(height: 1),
-                _buildDetailItem('Damage Location', damageLocation),
+                _buildDetailItem('Damage Location', loadedDamageLocation.isNotEmpty ? loadedDamageLocation : widget.damageLocation),
                 const Divider(height: 1),
-                _buildDetailItem('Damage Title', inventoryDamageTitle),
+                _buildDetailItem('Damage Title', loadedInventoryDamageTitle.isNotEmpty ? loadedInventoryDamageTitle : widget.inventoryDamageTitle),
                 const Divider(height: 1),
-                _buildDetailItem('Inventory Damage', inventoryDamage),
+                _buildDetailItem('Inventory Damage', loadedInventoryDamage.isNotEmpty ? loadedInventoryDamage : widget.inventoryDamage),
                 const Divider(height: 1),
-                _buildDetailItem('Reported On', reportedOn, isLast: true),
+                _buildDetailItem('Reported On', loadedReportedOn.isNotEmpty ? loadedReportedOn : widget.reportedOn, isLast: false),
+                if (cantCompleteReason != null && cantCompleteReason!.isNotEmpty) ...[
+                  const Divider(height: 1),
+                  _buildDetailItem('Reason for Incomplete Task', cantCompleteReason!, isLast: false),
+                ],
+                if (cantCompleteProof != null && cantCompleteProof!.isNotEmpty) ...[
+                  const Divider(height: 1),
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Proof Photo',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            cantCompleteProof!,
+                            width: double.infinity,
+                            height: 200,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                width: double.infinity,
+                                height: 200,
+                                color: Colors.grey.shade300,
+                                child: const Icon(Icons.image, size: 50),
+                              );
+                            },
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Center(
+                                child: CircularProgressIndicator(
+                                  value: loadingProgress.expectedTotalBytes != null
+                                      ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                      : null,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

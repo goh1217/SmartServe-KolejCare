@@ -372,7 +372,7 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
 
             const SizedBox(height: 24),
 
-            // Tabs: Today's tasks / Approved / Ongoing / Completed
+            // Tabs: Today's tasks / Approved / Ongoing / Completed / Incomplete
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: SingleChildScrollView(
@@ -387,6 +387,8 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
                       _buildTab('Ongoing', 2),
                       const SizedBox(width: 8),
                       _buildTab('Completed', 3),
+                      const SizedBox(width: 8),
+                      _buildTab('Incomplete', 4),
                     ],
                   ),
                 ),
@@ -482,13 +484,19 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
                         final status = (t['status'] ?? '').toString().toLowerCase();
                         return status == 'ongoing';
                       }).toList();
-                    } else {
+                    } else if (selectedTab == 3) {
                       // Completed
-                    filtered = validTasks.where((t) {
-                      final status = (t['status'] ?? '').toString().toLowerCase();
+                      filtered = validTasks.where((t) {
+                        final status = (t['status'] ?? '').toString().toLowerCase();
                         return status == 'complete' || status == 'completed';
-                    }).toList();
-                  }
+                      }).toList();
+                    } else {
+                      // Incomplete - pending status complaints
+                      filtered = normalized.where((t) {
+                        final status = (t['status'] ?? '').toString().toLowerCase();
+                        return status == 'pending';
+                      }).toList();
+                    }
 
                   // Sort: Approved/Ongoing by earliest to latest scheduled date, then Completed at bottom
                   filtered.sort((a, b) {
@@ -543,8 +551,8 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
                         timeStr = '--:--';
                       }
 
-                      // Combine date and time for display
-                      final scheduledDisplay = dateStr != '--/--/----' && timeStr != null ? '$dateStr  $timeStr' : (timeStr ?? '--:--');
+                      // Display date and time on separate lines
+                      final scheduledDisplay = '$dateStr\n$timeStr';
 
                       final imageUrl = (task['damagePic'] != null && task['damagePic'] is String) ? task['damagePic'] as String : null;
 

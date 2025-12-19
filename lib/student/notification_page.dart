@@ -3,6 +3,11 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
+import 'complaint_detail_screen.dart';
+import 'screens/activity/ongoingrepair.dart';
+import 'screens/activity/completedrepair.dart';
+import 'screens/activity/scheduledrepair.dart';
+import 'screens/activity/waitappro.dart';
 
 class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key});
@@ -34,12 +39,13 @@ class _NotificationPageState extends State<NotificationPage> {
   }
 
   Future<void> _markAllAsReadOnEnter() async {
-    // Wait 3 seconds so user can see unread notifications first
-    await Future.delayed(const Duration(seconds: 3));
-    if (mounted && notifications.isNotEmpty && !_hasMarkedAsRead) {
-      await _markAllAsRead(showSnackbar: false);
-      _hasMarkedAsRead = true;
-    }
+    // Disabled auto-mark-as-read to keep badge accurate when status changes
+    // Users can still manually mark all as read using the button
+    // await Future.delayed(const Duration(seconds: 3));
+    // if (mounted && notifications.isNotEmpty && !_hasMarkedAsRead) {
+    //   await _markAllAsRead(showSnackbar: false);
+    //   _hasMarkedAsRead = true;
+    // }
   }
 
   @override
@@ -288,25 +294,26 @@ class _NotificationPageState extends State<NotificationPage> {
               createdAt: items[i].createdAt,
               isRead: false, // Force unread
               lastChangedAt: nowMs, // Mark when it changed
+              lastStatusUpdate: nowMs, // Update lastStatusUpdate to current time
+              assignedTo: items[i].assignedTo,
+              reasonCantComplete: items[i].reasonCantComplete,
+              reasonCantCompleteProof: items[i].reasonCantCompleteProof,
+              damageLocation: items[i].damageLocation,
+              scheduledDate: items[i].scheduledDate,
+              expectedDuration: items[i].expectedDuration,
+              reportedOn: items[i].reportedOn,
+              statusChangeCount: items[i].statusChangeCount,
             );
           }
         }
       }
 
       // IMPROVED SORT: 
-      // 1. Unread first (isRead = false)
-      // 2. Within unread, sort by lastChangedAt (newest changes first)
-      // 3. Then by createdAt (newest first)
+      // Sort by lastStatusUpdate timestamp (newest first) - most recently updated complaints on top
       items.sort((a, b) {
-        // Primary sort: unread before read
-        if (a.isRead != b.isRead) {
-          return a.isRead ? 1 : -1; // false (unread) comes first
-        }
-        
-        // Secondary sort: newest status change first
-        final aChanged = a.lastChangedAt ?? a.createdAt ?? 0;
-        final bChanged = b.lastChangedAt ?? b.createdAt ?? 0;
-        return bChanged.compareTo(aChanged); // Descending (newest first)
+        final aTime = a.lastStatusUpdate ?? a.createdAt ?? 0;
+        final bTime = b.lastStatusUpdate ?? b.createdAt ?? 0;
+        return bTime.compareTo(aTime); // Descending (newest first)
       });
 
       if (kDebugMode) {
@@ -334,6 +341,15 @@ class _NotificationPageState extends State<NotificationPage> {
     final category = (data['damageCategory'] ?? data['damage_category'] ?? data['category'] ?? '').toString();
     final inventory = (data['inventoryDamage'] ?? data['inventory_damage'] ?? data['damageDesc'] ?? data['description'] ?? '').toString();
     final isRead = data['isRead'] ?? false;
+    final assignedTo = data['assignedTo'];
+    final reasonCantComplete = data['reasonCantComplete'];
+    final reasonCantCompleteProof = data['reasonCantCompleteProof'];
+    final damageLocation = (data['damageLocation'] ?? '').toString();
+    final scheduledDate = (data['scheduledDate'] ?? '').toString();
+    final expectedDuration = (data['estimatedDurationJobDone'] ?? '').toString();
+    final reportedOn = (data['reportedDate'] != null) 
+        ? DateTime.fromMillisecondsSinceEpoch((data['reportedDate'] as Timestamp).millisecondsSinceEpoch).toString()
+        : '';
     
     int? createdMs;
     final createdVal = data['createdAt'] ?? data['timestamp'] ?? data['created'];
@@ -361,6 +377,18 @@ class _NotificationPageState extends State<NotificationPage> {
       lastChangedMs = int.tryParse(lastChangedVal);
     }
     
+    int? lastStatusUpdateMs;
+    final lastStatusUpdateVal = data['lastStatusUpdate'];
+    if (lastStatusUpdateVal is Timestamp) {
+      lastStatusUpdateMs = lastStatusUpdateVal.millisecondsSinceEpoch;
+    } else if (lastStatusUpdateVal is int) {
+      lastStatusUpdateMs = lastStatusUpdateVal;
+    } else if (lastStatusUpdateVal is double) {
+      lastStatusUpdateMs = lastStatusUpdateVal.toInt();
+    } else if (lastStatusUpdateVal is String) {
+      lastStatusUpdateMs = int.tryParse(lastStatusUpdateVal);
+    }
+    
     return _ComplaintNotification(
       id: d.id,
       status: statusRaw,
@@ -369,6 +397,15 @@ class _NotificationPageState extends State<NotificationPage> {
       createdAt: createdMs,
       isRead: isRead,
       lastChangedAt: lastChangedMs,
+      lastStatusUpdate: lastStatusUpdateMs,
+      assignedTo: assignedTo,
+      reasonCantComplete: reasonCantComplete,
+      reasonCantCompleteProof: reasonCantCompleteProof,
+      damageLocation: damageLocation,
+      scheduledDate: scheduledDate,
+      expectedDuration: expectedDuration,
+      reportedOn: reportedOn,
+      statusChangeCount: (data['statusChangeCount'] as int?) ?? 0,
     );
   }
 
@@ -382,7 +419,10 @@ class _NotificationPageState extends State<NotificationPage> {
           final docRef = FirebaseFirestore.instance
               .collection('complaint')
               .doc(notification.id);
-          batch.update(docRef, {'isRead': true});
+          batch.update(docRef, {
+            'isRead': true,
+            'statusChangeCount': 0, // Reset statusChangeCount when marking as read
+          });
           count++;
         }
       }
@@ -407,6 +447,14 @@ class _NotificationPageState extends State<NotificationPage> {
   }
 
   int get unreadCount => notifications.where((n) => !n.isRead).length;
+  
+  int get notificationBadgeCount {
+    // Badge shows count of status changes for unread complaints
+    // If no status change yet (statusChangeCount = 0), count as 1
+    return notifications
+      .where((n) => !n.isRead)
+      .fold<int>(0, (sum, n) => sum + (n.statusChangeCount > 0 ? n.statusChangeCount : 1));
+  }
 
   Color _colorForStatus(String s) {
     if (s.contains('reject') || s == 'rejected') return Colors.red;
@@ -471,7 +519,7 @@ class _NotificationPageState extends State<NotificationPage> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  '$unreadCount',
+                  notificationBadgeCount > 99 ? '99+' : '$notificationBadgeCount',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,
@@ -597,7 +645,7 @@ class _NotificationPageState extends State<NotificationPage> {
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  'Updates automatically • ${notifications.length} report${notifications.length != 1 ? 's' : ''}${unreadCount > 0 ? ' • $unreadCount unread' : ''}',
+                                  'Updates automatically • ${notifications.length} report${notifications.length != 1 ? 's' : ''}${notificationBadgeCount > 0 ? ' • $notificationBadgeCount unread' : ''}',
                                   style: TextStyle(
                                     fontSize: 13,
                                     color: Colors.green.shade700,
@@ -619,16 +667,103 @@ class _NotificationPageState extends State<NotificationPage> {
                               final icon = _iconForStatus(n.status);
                               final title = n.category.isNotEmpty ? n.category : 'Report ${n.id}';
                               final subtitle = n.inventory.isNotEmpty ? n.inventory : 'No description';
-                              return _NotificationCard(
-                                icon: icon,
-                                iconColor: Colors.white,
-                                iconBgColor: color.withOpacity(0.12),
-                                title: title,
-                                subtitle: subtitle,
-                                statusText: n.status.toUpperCase(),
-                                showStatusDot: true,
-                                statusColor: color,
-                                isRead: n.isRead,
+                              
+                              // Check if complaint is incomplete: pending status with no real technician assigned (only default path)
+                              final isIncomplete = n.status == 'pending' && 
+                                  n.reasonCantComplete != null && 
+                                  n.reasonCantCompleteProof != null;
+                              
+                              return GestureDetector(
+                                onTap: () {
+                                  Widget targetScreen;
+                                  if (n.status == 'ongoing') {
+                                    targetScreen = OngoingRepairScreen(complaintId: n.id);
+                                  } else if (n.status == 'completed') {
+                                    targetScreen = CompletedRepairScreen();
+                                  } else if (n.status == 'approved') {
+                                    targetScreen = ScheduledRepairScreen(
+                                      reportId: n.id,
+                                      status: 'Approved',
+                                      scheduledDate: n.scheduledDate,
+                                      assignedTechnician: n.assignedTo?.toString() ?? '',
+                                      damageCategory: n.category,
+                                      damageLocation: n.damageLocation,
+                                      inventoryDamage: n.inventory,
+                                      inventoryDamageTitle: n.inventory,
+                                      expectedDuration: n.expectedDuration,
+                                      reportedOn: n.reportedOn,
+                                    );
+                                  } else if (n.status == 'pending') {
+                                    targetScreen = WaitingApprovalScreen(
+                                      complaintId: n.id,
+                                      reportStatus: 'Pending',
+                                      damageCategory: n.category,
+                                      damageLocation: '',
+                                      inventoryDamage: n.inventory,
+                                      inventoryDamageTitle: n.inventory,
+                                      reportedOn: '',
+                                    );
+                                  } else {
+                                    targetScreen = ComplaintDetailScreen(complaintID: n.id);
+                                  }
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => targetScreen,
+                                    ),
+                                  );
+                                },
+                                child: Column(
+                                  children: [
+                                    _NotificationCard(
+                                      icon: icon,
+                                      iconColor: Colors.white,
+                                      iconBgColor: color.withOpacity(0.12),
+                                      title: title,
+                                      subtitle: subtitle,
+                                      statusText: n.status.toUpperCase(),
+                                      showStatusDot: true,
+                                      statusColor: color,
+                                      isRead: n.isRead,
+                                      complaintId: n.id,
+                                    ),
+                                    if (isIncomplete)
+                                      Container(
+                                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: Colors.red.shade50,
+                                          borderRadius: const BorderRadius.only(
+                                            bottomLeft: Radius.circular(12),
+                                            bottomRight: Radius.circular(12),
+                                          ),
+                                          border: Border(
+                                            bottom: BorderSide(color: Colors.red.shade300, width: 2),
+                                            left: BorderSide(color: Colors.red.shade300, width: 2),
+                                            right: BorderSide(color: Colors.red.shade300, width: 2),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.info, color: Colors.red.shade700, size: 20),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Text(
+                                                'Sorry, your complaint has not completed yet. We will assign a new technician for you to complete task ASAP.',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.red.shade700,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                                maxLines: 3,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                  ],
+                                ),
                               );
                             },
                           ),
@@ -648,6 +783,15 @@ class _ComplaintNotification {
   final int? createdAt;
   final bool isRead;
   final int? lastChangedAt;
+  final int? lastStatusUpdate;
+  final dynamic assignedTo;
+  final dynamic reasonCantComplete;
+  final dynamic reasonCantCompleteProof;
+  final String damageLocation;
+  final String scheduledDate;
+  final String expectedDuration;
+  final String reportedOn;
+  final int statusChangeCount;
 
   _ComplaintNotification({
     required this.id,
@@ -657,6 +801,15 @@ class _ComplaintNotification {
     this.createdAt,
     this.isRead = false,
     this.lastChangedAt,
+    this.lastStatusUpdate,
+    this.assignedTo,
+    this.reasonCantComplete,
+    this.reasonCantCompleteProof,
+    this.damageLocation = '',
+    this.scheduledDate = '',
+    this.expectedDuration = '',
+    this.reportedOn = '',
+    this.statusChangeCount = 0,
   });
 }
 
@@ -671,6 +824,7 @@ class _NotificationCard extends StatelessWidget {
   final bool showStatusDot;
   final Color? statusColor;
   final bool isRead;
+  final String? complaintId;
 
   const _NotificationCard({
     required this.icon,
@@ -683,6 +837,7 @@ class _NotificationCard extends StatelessWidget {
     this.showStatusDot = false,
     this.statusColor,
     this.isRead = false,
+    this.complaintId,
   });
 
   @override

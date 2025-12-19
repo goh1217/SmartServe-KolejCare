@@ -32,12 +32,20 @@ class ScheduledRepairScreen extends StatefulWidget {
 }
 
 class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
-  DateTime? updatedScheduledDate; // store actual updated date
+  DateTime? updatedScheduledDate;
   bool isDateUpdated = false;
   String scheduledDateDisplay = '';
   String scheduledTimeDisplay = '';
   String estimatedDurationDisplay = '';
-  String currentStatus = ''; // store latest reportStatus
+  String currentStatus = '';
+  String loadedReportId = '';
+  String loadedStatus = '';
+  String loadedAssignedTechnician = '';
+  String loadedDamageCategory = '';
+  String loadedDamageLocation = '';
+  String loadedInventoryDamage = '';
+  String loadedInventoryDamageTitle = '';
+  String loadedReportedOn = '';
 
   @override
   void initState() {

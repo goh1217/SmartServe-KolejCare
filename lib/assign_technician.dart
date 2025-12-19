@@ -495,6 +495,9 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
           'lastStatusUpdate': FieldValue.serverTimestamp(),
           'reviewedBy': reviewedByPath,
           'reviewedOn': FieldValue.serverTimestamp(),
+          'statusChangeCount': FieldValue.increment(1),
+          'lastStatusChangedAt': FieldValue.serverTimestamp(),
+          'assignmentNotificationRead': false,
         });
 
         transaction.update(techRef, {
@@ -593,7 +596,9 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
         'rejectionReason': reason,
         'isRead': false,
         'lastStatusUpdate': FieldValue.serverTimestamp(),
+        'lastStatusChangedAt': FieldValue.serverTimestamp(),
         'reviewedOn': FieldValue.serverTimestamp(),
+        'statusChangeCount': FieldValue.increment(1),
       });
 
       if (mounted) {

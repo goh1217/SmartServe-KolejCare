@@ -107,6 +107,7 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
         'reportBy': '/collection/student/${user.uid}',
         'reportStatus': 'Pending',
         'reportedDate': FieldValue.serverTimestamp(),
+        'lastStatusUpdate': FieldValue.serverTimestamp(),
         'reviewedBy': '/collection/staff',
         'roomEntryConsent': _consentGiven,
         'scheduledDate': null,
@@ -115,6 +116,7 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
         'isRead': false,
         'isArchived': false,
         'studentID': user.uid,
+        'statusChangeCount': 1,
       });
 
       await docRef.update({'complaintID': docRef.id});
