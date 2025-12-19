@@ -26,6 +26,10 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
   String reportedOn = '20 Nov 2025, 12:40 PM';
   String inventoryDamageTitle = '';
   String damageLocation = '';
+  
+  // For can't complete reason
+  String? cantCompleteReason;
+  String? cantCompleteProof;
 
   bool isCancelled = false;
 
@@ -60,6 +64,10 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
           inventoryDamageTitle = data['inventoryDamageTitle'] ?? 'N/A';
           expectedDuration = data['estimatedDurationJobDone']?.toString() ?? '0';
           damageLocation = data['damageLocation'] ?? 'N/A';
+          
+          // Load can't complete reason and proof
+          cantCompleteReason = data['reasonCantComplete'];
+          cantCompleteProof = data['reasonCantCompleteProof'];
           
           // Format the scheduled date
           if (data['scheduledDate'] != null) {
@@ -414,56 +422,122 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                 children: [
                   _infoCard('ReportID', reportID),
                   _infoCard('Repair Status', reportStatus),
-                  _infoCard('Scheduled Date', scheduledDate),
+                  if (reportStatus.toLowerCase() != 'pending')
+                    _infoCard('Scheduled Date', scheduledDate),
                   _infoCard('Assigned Technician', assignedTechnician),
                   _infoCard('Damage Category', damageCategory),
                   _infoCard('Inventory Damage', inventoryDamage),
                   _infoCard('Expected Duration', expectedDuration),
                   _infoCard('Reported On', reportedOn),
+                  
+                  // Display can't complete reason if it exists
+                  if (cantCompleteReason != null && cantCompleteReason!.isNotEmpty)
+                    Container(
+                      decoration: _cardDecoration(),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      margin: const EdgeInsets.symmetric(vertical: 6),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Reason for Incomplete Task',
+                              style: GoogleFonts.poppins(
+                                  fontSize: 12, color: const Color(0xFF90929C))),
+                          const SizedBox(height: 4),
+                          Text(cantCompleteReason!,
+                              style: GoogleFonts.poppins(
+                                  fontSize: 14, fontWeight: FontWeight.w500)),
+                        ],
+                      ),
+                    ),
+                  
+                  // Display can't complete proof image if it exists
+                  if (cantCompleteProof != null && cantCompleteProof!.isNotEmpty)
+                    Container(
+                      decoration: _cardDecoration(),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      margin: const EdgeInsets.symmetric(vertical: 6),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Proof Photo',
+                              style: GoogleFonts.poppins(
+                                  fontSize: 12, color: const Color(0xFF90929C))),
+                          const SizedBox(height: 8),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(
+                              cantCompleteProof!,
+                              width: double.infinity,
+                              height: 200,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: double.infinity,
+                                  height: 200,
+                                  color: Colors.grey.shade300,
+                                  child: const Icon(Icons.image, size: 50),
+                                );
+                              },
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Center(
+                                  child: CircularProgressIndicator(
+                                    value: loadingProgress.expectedTotalBytes != null
+                                        ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                        : null,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: isCancelled ? null : _editOrConfirm,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF8C7DF5),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: Text(
-                      isEditingDate ? 'Confirm' : 'Edit Request',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: Colors.white,
+            if (reportStatus.toLowerCase() != 'pending')
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: isCancelled ? null : _editOrConfirm,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF8C7DF5),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: Text(
+                        isEditingDate ? 'Confirm' : 'Edit Request',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: isCancelled ? null : _cancelRequest,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFA6E6E),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: Text(
-                      'Cancel Request',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: Colors.white,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: isCancelled ? null : _cancelRequest,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFFA6E6E),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: Text(
+                        'Cancel Request',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
           ],
         ),
       ),

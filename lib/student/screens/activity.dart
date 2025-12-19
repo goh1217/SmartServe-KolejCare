@@ -111,6 +111,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
           builder: (context, s2) {
             final uid = FirebaseAuth.instance.currentUser?.uid;
             int unread = 0;
+            int notificationBadgeCount = 0;
 
             for (final doc in s2.data?.docs ?? const []) {
               final data = doc.data() as Map<String, dynamic>? ?? {};
@@ -137,7 +138,13 @@ class _ActivityScreenState extends State<ActivityScreen> {
                 else if (rb is DocumentReference && rb.path.contains(uid)) matches = true;
               }
 
-              if (matches) unread++;
+              if (matches) {
+                unread++;
+                // Badge shows count of status changes for unread complaints
+                // If no status change yet (statusChangeCount = 0), count as 1
+                final statusChangeCount = (data['statusChangeCount'] as int?) ?? 0;
+                notificationBadgeCount += (statusChangeCount > 0 ? statusChangeCount : 1);
+              }
             }
 
             final hasUnread = unread > 0;
@@ -181,7 +188,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                           constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
                           child: Center(
                             child: Text(
-                              unread > 99 ? '99+' : '$unread',
+                              notificationBadgeCount > 99 ? '99+' : '$notificationBadgeCount',
                               style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
                             ),
                           ),

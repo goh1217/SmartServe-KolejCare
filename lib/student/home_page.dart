@@ -959,7 +959,8 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
           stream: stream,
           builder: (context, s2) {
             final uid = FirebaseAuth.instance.currentUser?.uid;
-            int unread = 0;
+            int unreadCount = 0;
+            int notificationBadgeCount = 0;
 
             for (final doc in s2.data?.docs ?? const []) {
               final data = doc.data() as Map<String, dynamic>? ?? {};
@@ -990,10 +991,17 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
                 else if (rb is DocumentReference && rb.path.contains(uid)) matches = true;
               }
 
-              if (matches) unread++;
+              if (matches) {
+                unreadCount++;
+                // Badge shows count of status changes for unread complaints
+                // If no status change yet (statusChangeCount = 0), count as 1
+                final statusChangeCount = (data['statusChangeCount'] as int?) ?? 0;
+                notificationBadgeCount += (statusChangeCount > 0 ? statusChangeCount : 1);
+              }
             }
 
-            final hasUnread = unread > 0;
+            // Use same badge logic as notification page (sum of statusChangeCount)
+            final hasUnread = unreadCount > 0;
             return InkWell(
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (c) => const NotificationPage()));
@@ -1024,7 +1032,7 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
                           constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
                           child: Center(
                             child: Text(
-                              unread > 99 ? '99+' : '$unread',
+                              notificationBadgeCount > 99 ? '99+' : '$notificationBadgeCount',
                               style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                             ),
                           ),

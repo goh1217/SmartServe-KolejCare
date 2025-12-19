@@ -55,6 +55,10 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   
   // For proof submission
   String? proofImage; // Placeholder for proof image URL or path logic if implemented
+  
+  // For can't complete submission
+  String? reasonCantCompleteProof;
+  String reasonCantCompleteText = '';
 
   @override
   void initState() {
@@ -635,34 +639,36 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
               child: Column(
                 children: [
                   _buildActionButton(),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton(
-                      onPressed: () {
-                        // Navigate to Calendar
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => const CalendarPage()),
-                        );
-                      },
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: const BorderSide(color: Colors.grey, width: 1.5),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  if (status.toLowerCase() != 'pending') ...[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: () {
+                          // Navigate to Calendar
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => const CalendarPage()),
+                          );
+                        },
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          side: const BorderSide(color: Colors.grey, width: 1.5),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
-                      ),
-                      child: const Text(
-                        'View on calendar',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                        child: const Text(
+                          'View on calendar',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -670,83 +676,84 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
             const SizedBox(height: 16),
 
             // Student Info Card
-            Container(
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 35,
-                    backgroundImage: NetworkImage(studentImage),
-                    onBackgroundImageError: (exception, stackTrace) {
-                      // Handle error silently
-                    },
-                    child: studentImage.contains('placeholder')
-                        ? const Icon(Icons.person, size: 35)
-                        : null,
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          studentName,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          studentPhoneNumber.isEmpty ? 'Phone: Not available' : 'Phone: $studentPhoneNumber',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.orange,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          studentRole,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ],
+            if (status.toLowerCase() != 'pending')
+              Container(
+                margin: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
                     ),
-                  ),
-                  GestureDetector(
-                    onTap: _callStudent,
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF6C63FF),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.phone,
-                        color: Colors.white,
-                        size: 24,
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 35,
+                      backgroundImage: NetworkImage(studentImage),
+                      onBackgroundImageError: (exception, stackTrace) {
+                        // Handle error silently
+                      },
+                      child: studentImage.contains('placeholder')
+                          ? const Icon(Icons.person, size: 35)
+                          : null,
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            studentName,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            studentPhoneNumber.isEmpty ? 'Phone: Not available' : 'Phone: $studentPhoneNumber',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.orange,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            studentRole,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                ],
+                    GestureDetector(
+                      onTap: _callStudent,
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF6C63FF),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.phone,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
 
             const SizedBox(height: 80),
           ],
@@ -847,103 +854,136 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
     // Check if status is In Progress (case insensitive)
     bool isInProgress = status.toLowerCase() == 'in progress' || status.toLowerCase() == 'ongoing';
     bool isCompleted = status.toLowerCase() == 'completed';
+    bool isPending = status.toLowerCase() == 'pending';
 
-    if (isCompleted) {
-      return const SizedBox.shrink(); // Button disappears when completed
+    if (isCompleted || isPending) {
+      return const SizedBox.shrink(); // Button disappears when completed or pending
     }
 
     if (isInProgress) {
-      return SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: () async {
-            // Step 1: pick image
-            File? image = await pickImage();
+      return Column(
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () async {
+                // Step 1: pick image
+                File? image = await pickImage();
 
-            if (image == null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("No image selected.")),
-              );
-              return;
-            }
+                if (image == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("No image selected.")),
+                  );
+                  return;
+                }
 
-            // Step 2: show confirmation preview
-            final confirm = await showDialog<bool>(
-              context: context,
-              builder: (ctx) => AlertDialog(
-                title: const Text('Submit proof image'),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('Please confirm the image before submitting.'),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: 200,
-                      height: 200,
-                      child: Image.file(image, fit: BoxFit.cover),
+                // Step 2: show confirmation preview
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Submit proof image'),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('Please confirm the image before submitting.'),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: 200,
+                          height: 200,
+                          child: Image.file(image, fit: BoxFit.cover),
+                        ),
+                      ],
                     ),
-                  ],
+                    actions: [
+                      TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+                      ElevatedButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Confirm')),
+                    ],
+                  ),
+                );
+
+                if (confirm != true) {
+                  // user cancelled
+                  return;
+                }
+
+                // Show uploading indicator
+                ScaffoldMessenger.of(context).showSnackBar(
+                   const SnackBar(content: Text("Uploading image...")),
+                );
+
+                String? url = await uploadToCloudinary(image);
+
+                if (url == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Image upload failed.")),
+                  );
+                  return;
+                }
+
+                await FirebaseFirestore.instance
+                    .collection("complaint")
+                    .doc(widget.taskId)
+                    .update({
+                  'proofPic': url,
+                  'reportStatus': "Completed",
+                  'lastStatusUpdate': FieldValue.serverTimestamp(),
+                  'isRead': false,
+                  'statusChangeCount': FieldValue.increment(1),
+                });
+
+                setState(() {
+                  proofImage = url; // Update the displayed proof image
+                  status = "Completed";
+                });
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Task marked as completed with image.")),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF00C853), // Green color for completed
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                actions: [
-                  TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
-                  ElevatedButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Confirm')),
-                ],
+                elevation: 2,
               ),
-            );
-
-            if (confirm != true) {
-              // user cancelled
-              return;
-            }
-
-            // Show uploading indicator
-            ScaffoldMessenger.of(context).showSnackBar(
-               const SnackBar(content: Text("Uploading image...")),
-            );
-
-            String? url = await uploadToCloudinary(image);
-
-            if (url == null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Image upload failed.")),
-              );
-              return;
-            }
-
-            await FirebaseFirestore.instance
-                .collection("complaint")
-                .doc(widget.taskId)
-                .update({
-              'proofPic': url,
-              'reportStatus': "Completed",
-            });
-
-            setState(() {
-              proofImage = url; // Update the displayed proof image
-              status = "Completed";
-            });
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Task marked as completed with image.")),
-            );
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF00C853), // Green color for completed
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            elevation: 2,
-          ),
-          child: const Text(
-            'Complete Task',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+              child: const Text(
+                'Complete Task',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
             ),
           ),
-        ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                _showCantCompleteDialog();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFEF5350), // Red color for can't complete
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 2,
+              ),
+              child: const Text(
+                "Can't Complete",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
       );
     } else {
       // Default state: Start Repair
@@ -1052,12 +1092,346 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
     );
   }
 
+  void _showCantCompleteDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFEF5350),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.close_rounded,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Cannot Complete Task',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const Text(
+                              'Please provide reason and proof',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Reason Text Field
+                  const Text(
+                    'Reason for incomplete task',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    onChanged: (value) {
+                      reasonCantCompleteText = value;
+                    },
+                    maxLines: 4,
+                    decoration: InputDecoration(
+                      hintText: 'Explain why you cannot complete this task...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Colors.grey),
+                      ),
+                      contentPadding: const EdgeInsets.all(12),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Image Upload Section
+                  const Text(
+                    'Upload proof photo',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300, width: 2),
+                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.grey.shade50,
+                    ),
+                    child: reasonCantCompleteProof == null
+                        ? GestureDetector(
+                            onTap: () async {
+                              File? image = await pickImage();
+                              if (image != null) {
+                                setDialogState(() {
+                                  reasonCantCompleteProof = image.path;
+                                });
+                              }
+                            },
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.cloud_upload, size: 40, color: Colors.grey),
+                                const SizedBox(height: 8),
+                                const Text(
+                                  'Tap to upload image',
+                                  style: TextStyle(color: Colors.grey),
+                                ),
+                              ],
+                            ),
+                          )
+                        : Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Image.file(
+                                  File(reasonCantCompleteProof!),
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  height: 150,
+                                ),
+                              ),
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setDialogState(() {
+                                      reasonCantCompleteProof = null;
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Action Buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey[300],
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Cancel',
+                            style: TextStyle(
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            if (reasonCantCompleteText.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Please provide a reason'),
+                                ),
+                              );
+                              return;
+                            }
+
+                            if (reasonCantCompleteProof == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Please upload a proof image'),
+                                ),
+                              );
+                              return;
+                            }
+
+                            Navigator.pop(context);
+                            await _submitCantCompleteTask();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFEF5350),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Submit',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _submitCantCompleteTask() async {
+    try {
+      // Show uploading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Uploading proof image...")),
+      );
+
+      // Upload image to Cloudinary
+      File? imageFile = File(reasonCantCompleteProof!);
+      String? proofImageUrl = await uploadToCloudinary(imageFile);
+
+      if (proofImageUrl == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Image upload failed.")),
+        );
+        return;
+      }
+
+      // Update complaint in Firestore
+      await FirebaseFirestore.instance
+          .collection('complaint')
+          .doc(widget.taskId)
+          .update({
+        'reasonCantCompleteProof': proofImageUrl,
+        'reasonCantComplete': reasonCantCompleteText,
+        'reportStatus': 'Pending',
+        'lastStatusUpdate': FieldValue.serverTimestamp(),
+        'isRead': false,
+        'statusChangeCount': FieldValue.increment(1),
+      });
+
+      // Send notification to student
+      await _sendNotificationToStudent();
+
+      setState(() {
+        status = 'Pending';
+        reasonCantCompleteProof = null;
+        reasonCantCompleteText = '';
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Task marked as incomplete. Student and admin have been notified.'),
+        ),
+      );
+    } catch (e) {
+      print("Error submitting can't complete task: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
+  Future<void> _sendNotificationToStudent() async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('complaint')
+          .doc(widget.taskId)
+          .get();
+
+      if (!doc.exists) return;
+
+      final data = doc.data() as Map<String, dynamic>;
+      final String? studentID = data['studentID'] ?? data['matricNo'];
+
+      if (studentID != null && studentID.isNotEmpty) {
+        // Get student document to find their notification collection
+        final studentDoc = await FirebaseFirestore.instance
+            .collection('student')
+            .doc(studentID)
+            .get();
+
+        if (studentDoc.exists) {
+          // Create notification in student's notification collection
+          await FirebaseFirestore.instance
+              .collection('student')
+              .doc(studentID)
+              .collection('notifications')
+              .add({
+            'title': 'Task Incomplete - Reassignment Pending',
+            'message': 'Your maintenance task cannot be completed by the assigned technician. An admin will reassign this task to another technician. Please wait for further updates.',
+            'complaintId': widget.taskId,
+            'type': 'task_incomplete',
+            'timestamp': FieldValue.serverTimestamp(),
+            'read': false,
+          });
+
+          print('Notification sent to student: $studentID');
+        }
+      }
+    } catch (e) {
+      print("Error sending notification to student: $e");
+    }
+  }
+
   Future<void> _updateComplaintStatus(String newStatus) async {
     try {
       await FirebaseFirestore.instance
           .collection('complaint')
           .doc(widget.taskId)
-          .update({'reportStatus': newStatus});
+          .update({
+            'reportStatus': newStatus,
+            'lastStatusUpdate': FieldValue.serverTimestamp(),
+            'isRead': false,
+            'statusChangeCount': FieldValue.increment(1),
+          });
       
       setState(() {
         status = newStatus;
