@@ -99,19 +99,17 @@ class StripeService {
       
       debugPrint("Creating payment intent for amount: $amount $currency with $paymentMethod");
       
-      // Build payment method types array
-      Map<String, dynamic> data = {
+      // Build payload based on the user's selected method.
+      // If FPX is selected, restrict the intent to FPX only so the sheet shows FPX.
+      // Otherwise restrict to card. Do not set automatic_payment_methods here.
+      final Map<String, dynamic> data = {
         'amount': _calculateAmount(amount),
         'currency': currency,
       };
 
-      // Add payment method types
       if (paymentMethod == 'fpx') {
-        // FPX for Malaysian online banking
         data['payment_method_types[0]'] = 'fpx';
-        data['payment_method_types[1]'] = 'card'; // Fallback to card
       } else {
-        // Card payment
         data['payment_method_types[0]'] = 'card';
       }
 
@@ -130,6 +128,7 @@ class StripeService {
       );
 
       debugPrint("✅ Payment intent response: ${response.statusCode}");
+      debugPrint("Response body: ${response.data}");
 
       if (response.data != null) {
         debugPrint("Client secret obtained");
