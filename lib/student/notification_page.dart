@@ -446,6 +446,44 @@ class _NotificationPageState extends State<NotificationPage> {
     }
   }
 
+  Future<void> _markAsRead(String complaintId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('complaint')
+          .doc(complaintId)
+          .update({'isRead': true, 'statusChangeCount': 0});
+
+      if (!mounted) return;
+      setState(() {
+        notifications = notifications.map((n) {
+          if (n.id == complaintId) {
+            return _ComplaintNotification(
+              id: n.id,
+              status: n.status,
+              category: n.category,
+              inventory: n.inventory,
+              createdAt: n.createdAt,
+              isRead: true,
+              lastChangedAt: n.lastChangedAt,
+              lastStatusUpdate: n.lastStatusUpdate,
+              assignedTo: n.assignedTo,
+              reasonCantComplete: n.reasonCantComplete,
+              reasonCantCompleteProof: n.reasonCantCompleteProof,
+              damageLocation: n.damageLocation,
+              scheduledDate: n.scheduledDate,
+              expectedDuration: n.expectedDuration,
+              reportedOn: n.reportedOn,
+              statusChangeCount: 0,
+            );
+          }
+          return n;
+        }).toList();
+      });
+    } catch (e) {
+      if (kDebugMode) print('Error marking $complaintId as read: $e');
+    }
+  }
+
   int get unreadCount => notifications.where((n) => !n.isRead).length;
   
   int get notificationBadgeCount {
@@ -675,6 +713,7 @@ class _NotificationPageState extends State<NotificationPage> {
                               
                               return GestureDetector(
                                 onTap: () {
+                                  _markAsRead(n.id);
                                   Widget targetScreen;
                                   if (n.status == 'ongoing') {
                                     targetScreen = OngoingRepairScreen(complaintId: n.id);
