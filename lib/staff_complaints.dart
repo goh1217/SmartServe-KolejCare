@@ -17,6 +17,9 @@ class Complaint {
   final DateTime submitted;
   final String status;
   final String residentCollege; // Added for filtering
+  final String? reasonCantComplete;
+  final String? reasonCantCompleteProof;
+  final int cantCompleteCount;
 
   Complaint({
     required this.id,
@@ -29,6 +32,9 @@ class Complaint {
     required this.submitted,
     required this.status,
     required this.residentCollege,
+    required this.reasonCantComplete,
+    required this.reasonCantCompleteProof,
+    required this.cantCompleteCount,
   });
 
   // This is now an async static method to fetch related data
@@ -90,6 +96,11 @@ class Complaint {
       submitted: (data['reportedDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
       status: data['reportStatus'] ?? 'Unknown',
       residentCollege: residentCollege,
+      reasonCantComplete: data['reasonCantComplete']?.toString(),
+      reasonCantCompleteProof: data['reasonCantCompleteProof']?.toString(),
+      cantCompleteCount: (data['cantCompleteCount'] is int)
+          ? data['cantCompleteCount'] as int
+          : int.tryParse((data['cantCompleteCount'] ?? '').toString()) ?? 0,
     );
   }
 }
@@ -307,6 +318,9 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
 
   Widget _buildComplaintCard(Complaint complaint) {
     final showAssignButton = complaint.status == 'Pending';
+    final bool hasCantCompleteInfo = (complaint.reasonCantComplete != null && complaint.reasonCantComplete!.isNotEmpty) ||
+        (complaint.reasonCantCompleteProof != null && complaint.reasonCantCompleteProof!.isNotEmpty) ||
+        complaint.cantCompleteCount > 0;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -334,6 +348,27 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
                         fontWeight: FontWeight.bold,
                         color: Colors.black87)),
               ),
+              if (complaint.status == 'Pending' && hasCantCompleteInfo) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.red[50],
+                    border: Border.all(color: Colors.redAccent),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.flag, size: 14, color: Colors.redAccent),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Previously attempted${complaint.cantCompleteCount > 0 ? ' (${complaint.cantCompleteCount})' : ''}',
+                        style: const TextStyle(fontSize: 12, color: Colors.redAccent, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -387,6 +422,7 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
           
           // Assign Technician Button (only for Pending complaints)
           if (showAssignButton) ...[
+            // (previous attempt details removed per request)
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
