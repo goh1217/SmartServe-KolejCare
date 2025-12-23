@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'assign_technician.dart';
+import 'complaint_details.dart';
 
 // Re-using the Complaint model from the staff_portal
 // If this model is used in more places, consider moving it to its own file in `models/`
@@ -322,20 +323,29 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
         (complaint.reasonCantCompleteProof != null && complaint.reasonCantCompleteProof!.isNotEmpty) ||
         complaint.cantCompleteCount > 0;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2))
-        ],
-      ),
-      child: Column(
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ComplaintDetailsPage(complaint: complaint),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2))
+          ],
+        ),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -443,6 +453,7 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
             ),
           ],
         ],
+      ),
       ),
     );
   }
