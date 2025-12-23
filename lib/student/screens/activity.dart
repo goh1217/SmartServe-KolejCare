@@ -768,6 +768,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => WaitingApprovalScreen(
+                                      complaintId: d.id,
                                       reportStatus: data['reportStatus'] ?? 'Pending',
                                       damageCategory: data['damageCategory'] ?? '',
                                       damageLocation: data['damageLocation'] ?? '',
@@ -914,9 +915,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                             damageLocation: data['damageLocation'] ?? '',
                                             inventoryDamageTitle: data['inventoryDamageTitle'] ?? '',
                                             inventoryDamage: data['inventoryDamage'] ?? '',
-                                            duration: data['duration'] ?? '',
-                                            technicianNotes: data['technicianNotes'] ?? '',
-                                            reportedOn: (data['reportedOn'] ?? data['reportedDate'] ?? '').toString(),
                                           ),
                                         ),
                                       );

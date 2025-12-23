@@ -54,10 +54,12 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   String studentId = '';
   
   // For proof submission
-  String? proofImage; // Placeholder for proof image URL or path logic if implemented
+  List<String> proofImages = []; // List to store up to 3 proof images
+  int currentProofImageIndex = 0; // Track current proof image being displayed
   
   // For can't complete submission
-  String? reasonCantCompleteProof;
+  List<String> reasonCantCompleteProofList = []; // List to store up to 3 proof images
+  int currentReasonImageIndex = 0; // Track current reason image being displayed
   String reasonCantCompleteText = '';
 
   @override
@@ -94,10 +96,28 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
             }
             currentImageIndex = 0; // Reset to first image
           }
-          // If there is a proof pic
+          // If there is a proof pic - can be a string or list
           if (data['proofPic'] != null) {
-            proofImage = data['proofPic'];
+            if (data['proofPic'] is List) {
+              proofImages = List<String>.from(data['proofPic'] as List);
+            } else if (data['proofPic'] is String) {
+              proofImages = [data['proofPic'] as String];
+            }
+            currentProofImageIndex = 0; // Reset to first image
           }
+          
+          // If there is a reason can't complete proof - can be a string or list
+          if (data['reasonCantCompleteProof'] != null) {
+            if (data['reasonCantCompleteProof'] is List) {
+              reasonCantCompleteProofList = List<String>.from(data['reasonCantCompleteProof'] as List);
+            } else if (data['reasonCantCompleteProof'] is String) {
+              reasonCantCompleteProofList = [data['reasonCantCompleteProof'] as String];
+            }
+            currentReasonImageIndex = 0; // Reset to first image
+          }
+          
+          // Load reason can't complete text
+          reasonCantCompleteText = data['reasonCantComplete'] ?? '';
 
           // Date handling - try scheduledDateTimeSlot first (new format)
           if (data['scheduledDateTimeSlot'] != null && data['scheduledDateTimeSlot'] is List) {
@@ -581,7 +601,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
             const SizedBox(height: 16),
             
             // Proof submission display if completed
-            if (proofImage != null)
+            if (proofImages.isNotEmpty)
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 padding: const EdgeInsets.all(20),
@@ -608,28 +628,220 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        proofImage!,
-                        width: 160,
-                        height: 120,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            width: 160,
-                            height: 120,
-                            color: Colors.grey.shade300,
-                            child: const Icon(Icons.image, size: 50),
-                          );
-                        },
+                    if (proofImages.length == 1)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          proofImages[0],
+                          width: double.infinity,
+                          height: 200,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              width: double.infinity,
+                              height: 200,
+                              color: Colors.grey.shade300,
+                              child: const Icon(Icons.image, size: 50),
+                            );
+                          },
+                        ),
+                      )
+                    else
+                      Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // Left arrow button
+                              IconButton(
+                                icon: const Icon(Icons.arrow_back_ios),
+                                onPressed: () {
+                                  setState(() {
+                                    currentProofImageIndex = (currentProofImageIndex - 1 + proofImages.length) % proofImages.length;
+                                  });
+                                },
+                              ),
+                              // Image display
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    proofImages[currentProofImageIndex],
+                                    width: double.infinity,
+                                    height: 200,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        width: double.infinity,
+                                        height: 200,
+                                        color: Colors.grey.shade300,
+                                        child: const Icon(Icons.image, size: 50),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                              // Right arrow button
+                              IconButton(
+                                icon: const Icon(Icons.arrow_forward_ios),
+                                onPressed: () {
+                                  setState(() {
+                                    currentProofImageIndex = (currentProofImageIndex + 1) % proofImages.length;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          // Image counter
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              '${currentProofImageIndex + 1} / ${proofImages.length}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
                   ],
                 ),
               ),
             
-            if (proofImage != null) const SizedBox(height: 16),
+            if (proofImages.isNotEmpty) const SizedBox(height: 16),
+
+            // Reason Can't Complete display if incomplete
+            if (reasonCantCompleteProofList.isNotEmpty)
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Reason for Incomplete Task',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      reasonCantCompleteText,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Proof Photos',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    if (reasonCantCompleteProofList.length == 1)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          reasonCantCompleteProofList[0],
+                          width: double.infinity,
+                          height: 200,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              width: double.infinity,
+                              height: 200,
+                              color: Colors.grey.shade300,
+                              child: const Icon(Icons.image, size: 50),
+                            );
+                          },
+                        ),
+                      )
+                    else
+                      Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // Left arrow button
+                              IconButton(
+                                icon: const Icon(Icons.arrow_back_ios),
+                                onPressed: () {
+                                  setState(() {
+                                    currentReasonImageIndex = (currentReasonImageIndex - 1 + reasonCantCompleteProofList.length) % reasonCantCompleteProofList.length;
+                                  });
+                                },
+                              ),
+                              // Image display
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    reasonCantCompleteProofList[currentReasonImageIndex],
+                                    width: double.infinity,
+                                    height: 200,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        width: double.infinity,
+                                        height: 200,
+                                        color: Colors.grey.shade300,
+                                        child: const Icon(Icons.image, size: 50),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                              // Right arrow button
+                              IconButton(
+                                icon: const Icon(Icons.arrow_forward_ios),
+                                onPressed: () {
+                                  setState(() {
+                                    currentReasonImageIndex = (currentReasonImageIndex + 1) % reasonCantCompleteProofList.length;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          // Image counter
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              '${currentReasonImageIndex + 1} / ${reasonCantCompleteProofList.length}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+            
+            if (reasonCantCompleteProofList.isNotEmpty) const SizedBox(height: 16),
 
             const SizedBox(height: 16),
 
@@ -867,78 +1079,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () async {
-                // Step 1: pick image
-                File? image = await pickImage();
-
-                if (image == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("No image selected.")),
-                  );
-                  return;
-                }
-
-                // Step 2: show confirmation preview
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    title: const Text('Submit proof image'),
-                    content: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text('Please confirm the image before submitting.'),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: 200,
-                          height: 200,
-                          child: Image.file(image, fit: BoxFit.cover),
-                        ),
-                      ],
-                    ),
-                    actions: [
-                      TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
-                      ElevatedButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Confirm')),
-                    ],
-                  ),
-                );
-
-                if (confirm != true) {
-                  // user cancelled
-                  return;
-                }
-
-                // Show uploading indicator
-                ScaffoldMessenger.of(context).showSnackBar(
-                   const SnackBar(content: Text("Uploading image...")),
-                );
-
-                String? url = await uploadToCloudinary(image);
-
-                if (url == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Image upload failed.")),
-                  );
-                  return;
-                }
-
-                await FirebaseFirestore.instance
-                    .collection("complaint")
-                    .doc(widget.taskId)
-                    .update({
-                  'proofPic': url,
-                  'reportStatus': "Completed",
-                  'lastStatusUpdate': FieldValue.serverTimestamp(),
-                  'isRead': false,
-                  'statusChangeCount': FieldValue.increment(1),
-                });
-
-                setState(() {
-                  proofImage = url; // Update the displayed proof image
-                  status = "Completed";
-                });
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Task marked as completed with image.")),
-                );
+                _showCompleteTaskDialog();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF00C853), // Green color for completed
@@ -1092,7 +1233,279 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
     );
   }
 
+  void _showCompleteTaskDialog() {
+    List<String> tempProofImages = [];
+    
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF00C853),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.check_circle,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Complete Task',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const Text(
+                              'Upload proof photos (up to 3)',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Image Upload Section
+                  const Text(
+                    'Proof Photos',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  
+                  // Display uploaded images with delete option
+                  if (tempProofImages.isNotEmpty)
+                    Column(
+                      children: [
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: List.generate(tempProofImages.length, (index) {
+                            return Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.file(
+                                    File(tempProofImages[index]),
+                                    width: 100,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 2,
+                                  right: 2,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      setDialogState(() {
+                                        tempProofImages.removeAt(index);
+                                      });
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(2),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.red,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.close,
+                                        color: Colors.white,
+                                        size: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          }),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                    ),
+                  
+                  // Add more images button (if less than 3)
+                  if (tempProofImages.length < 3)
+                    GestureDetector(
+                      onTap: () async {
+                        File? image = await pickImage();
+                        if (image != null) {
+                          setDialogState(() {
+                            tempProofImages.add(image.path);
+                          });
+                        }
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300, width: 2),
+                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.grey.shade50,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.cloud_upload, size: 40, color: Colors.grey),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Tap to upload image (${tempProofImages.length}/3)',
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  
+                  const SizedBox(height: 24),
+
+                  // Action Buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey[300],
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Cancel',
+                            style: TextStyle(
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            if (tempProofImages.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Please upload at least one proof image'),
+                                ),
+                              );
+                              return;
+                            }
+
+                            Navigator.pop(context);
+                            await _submitCompleteTask(tempProofImages);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF00C853),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Submit',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _submitCompleteTask(List<String> imagePaths) async {
+    try {
+      // Show uploading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Uploading proof images...")),
+      );
+
+      // Upload all images to Cloudinary
+      List<String> uploadedUrls = [];
+      for (int i = 0; i < imagePaths.length; i++) {
+        String? url = await uploadToCloudinary(File(imagePaths[i]));
+        if (url != null) {
+          uploadedUrls.add(url);
+        }
+      }
+
+      if (uploadedUrls.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Image upload failed.")),
+        );
+        return;
+      }
+
+      // Update complaint in Firestore with array of images
+      await FirebaseFirestore.instance
+          .collection("complaint")
+          .doc(widget.taskId)
+          .update({
+        'proofPic': uploadedUrls,
+        'reportStatus': "Completed",
+        'lastStatusUpdate': FieldValue.serverTimestamp(),
+        'isRead': false,
+        'statusChangeCount': FieldValue.increment(1),
+      });
+
+      setState(() {
+        proofImages = uploadedUrls;
+        currentProofImageIndex = 0;
+        status = "Completed";
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Task marked as completed with proof images.")),
+      );
+    } catch (e) {
+      print("Error submitting complete task: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
   void _showCantCompleteDialog() {
+    List<String> tempReasonProofImages = [];
+    
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -1134,7 +1547,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                               ),
                             ),
                             const Text(
-                              'Please provide reason and proof',
+                              'Please provide reason and proof photos',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey,
@@ -1175,7 +1588,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
 
                   // Image Upload Section
                   const Text(
-                    'Upload proof photo',
+                    'Proof Photos (up to 3)',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -1183,73 +1596,90 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    height: 150,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300, width: 2),
-                      borderRadius: BorderRadius.circular(12),
-                      color: Colors.grey.shade50,
-                    ),
-                    child: reasonCantCompleteProof == null
-                        ? GestureDetector(
-                            onTap: () async {
-                              File? image = await pickImage();
-                              if (image != null) {
-                                setDialogState(() {
-                                  reasonCantCompleteProof = image.path;
-                                });
-                              }
-                            },
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                  
+                  // Display uploaded images with delete option
+                  if (tempReasonProofImages.isNotEmpty)
+                    Column(
+                      children: [
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: List.generate(tempReasonProofImages.length, (index) {
+                            return Stack(
                               children: [
-                                const Icon(Icons.cloud_upload, size: 40, color: Colors.grey),
-                                const SizedBox(height: 8),
-                                const Text(
-                                  'Tap to upload image',
-                                  style: TextStyle(color: Colors.grey),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.file(
+                                    File(tempReasonProofImages[index]),
+                                    width: 100,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                  ),
                                 ),
-                              ],
-                            ),
-                          )
-                        : Stack(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: Image.file(
-                                  File(reasonCantCompleteProof!),
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                  height: 150,
-                                ),
-                              ),
-                              Positioned(
-                                top: 8,
-                                right: 8,
-                                child: GestureDetector(
-                                  onTap: () {
-                                    setDialogState(() {
-                                      reasonCantCompleteProof = null;
-                                    });
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: const BoxDecoration(
-                                      color: Colors.red,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.close,
-                                      color: Colors.white,
-                                      size: 20,
+                                Positioned(
+                                  top: 2,
+                                  right: 2,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      setDialogState(() {
+                                        tempReasonProofImages.removeAt(index);
+                                      });
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(2),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.red,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.close,
+                                        color: Colors.white,
+                                        size: 16,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                  ),
+                              ],
+                            );
+                          }),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                    ),
+                  
+                  // Add more images button (if less than 3)
+                  if (tempReasonProofImages.length < 3)
+                    GestureDetector(
+                      onTap: () async {
+                        File? image = await pickImage();
+                        if (image != null) {
+                          setDialogState(() {
+                            tempReasonProofImages.add(image.path);
+                          });
+                        }
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300, width: 2),
+                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.grey.shade50,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.cloud_upload, size: 40, color: Colors.grey),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Tap to upload image (${tempReasonProofImages.length}/3)',
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  
                   const SizedBox(height: 24),
 
                   // Action Buttons
@@ -1287,17 +1717,17 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                               return;
                             }
 
-                            if (reasonCantCompleteProof == null) {
+                            if (tempReasonProofImages.isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text('Please upload a proof image'),
+                                  content: Text('Please upload at least one proof image'),
                                 ),
                               );
                               return;
                             }
 
                             Navigator.pop(context);
-                            await _submitCantCompleteTask();
+                            await _submitCantCompleteTask(tempReasonProofImages);
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFEF5350),
@@ -1326,35 +1756,41 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
     );
   }
 
-  Future<void> _submitCantCompleteTask() async {
+  Future<void> _submitCantCompleteTask(List<String> imagePaths) async {
     try {
       // Show uploading indicator
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Uploading proof image...")),
+        const SnackBar(content: Text("Uploading proof images...")),
       );
 
-      // Upload image to Cloudinary
-      File? imageFile = File(reasonCantCompleteProof!);
-      String? proofImageUrl = await uploadToCloudinary(imageFile);
+      // Upload all images to Cloudinary
+      List<String> uploadedUrls = [];
+      for (int i = 0; i < imagePaths.length; i++) {
+        String? url = await uploadToCloudinary(File(imagePaths[i]));
+        if (url != null) {
+          uploadedUrls.add(url);
+        }
+      }
 
-      if (proofImageUrl == null) {
+      if (uploadedUrls.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Image upload failed.")),
         );
         return;
       }
 
-      // Update complaint in Firestore
+      // Update complaint in Firestore with array of images
       await FirebaseFirestore.instance
           .collection('complaint')
           .doc(widget.taskId)
           .update({
-        'reasonCantCompleteProof': proofImageUrl,
+        'reasonCantCompleteProof': uploadedUrls,
         'reasonCantComplete': reasonCantCompleteText,
         'reportStatus': 'Pending',
         'lastStatusUpdate': FieldValue.serverTimestamp(),
         'isRead': false,
         'statusChangeCount': FieldValue.increment(1),
+        'cantCompleteCount': FieldValue.increment(1),
       });
 
       // Send notification to student
@@ -1362,7 +1798,8 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
 
       setState(() {
         status = 'Pending';
-        reasonCantCompleteProof = null;
+        reasonCantCompleteProofList = uploadedUrls;
+        currentReasonImageIndex = 0;
         reasonCantCompleteText = '';
       });
 
