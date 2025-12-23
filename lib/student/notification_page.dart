@@ -6,6 +6,7 @@ import 'dart:async';
 import 'complaint_detail_screen.dart';
 import 'screens/activity/ongoingrepair.dart';
 import 'screens/activity/completedrepair.dart';
+import 'screens/activity/completedrepair2.dart';
 import 'screens/activity/scheduledrepair.dart';
 import 'screens/activity/waitappro.dart';
 
@@ -718,7 +719,16 @@ class _NotificationPageState extends State<NotificationPage> {
                                   if (n.status == 'ongoing') {
                                     targetScreen = OngoingRepairScreen(complaintId: n.id);
                                   } else if (n.status == 'completed') {
-                                    targetScreen = CompletedRepairScreen();
+                                    targetScreen = CompletedRepair2Screen(
+                                      reportId: n.id,
+                                      status: 'Completed',
+                                      completedDate: n.reportedOn ?? '',
+                                      assignedTechnician: n.assignedTo?.toString() ?? '',
+                                      damageCategory: n.category,
+                                      damageLocation: n.damageLocation,
+                                      inventoryDamage: n.inventory,
+                                      inventoryDamageTitle: n.inventory,
+                                    );
                                   } else if (n.status == 'approved') {
                                     targetScreen = ScheduledRepairScreen(
                                       reportId: n.id,
