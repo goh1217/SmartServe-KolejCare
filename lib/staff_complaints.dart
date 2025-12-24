@@ -97,8 +97,20 @@ class Complaint {
       submitted: (data['reportedDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
       status: data['reportStatus'] ?? 'Unknown',
       residentCollege: residentCollege,
-      reasonCantComplete: data['reasonCantComplete']?.toString(),
-      reasonCantCompleteProof: data['reasonCantCompleteProof']?.toString(),
+      reasonCantComplete: data['reasonCantComplete'] is List
+          ? (data['reasonCantComplete'] as List).isNotEmpty
+              ? (data['reasonCantComplete'] as List).first?.toString()
+              : null
+          : data['reasonCantComplete']?.toString(),
+      reasonCantCompleteProof: () {
+        final raw = data['reasonCantCompleteProof'];
+        if (raw == null) return null;
+        if (raw is List) {
+          if (raw.isEmpty) return null;
+          return raw.first?.toString();
+        }
+        return raw.toString();
+      }(),
       cantCompleteCount: (data['cantCompleteCount'] is int)
           ? data['cantCompleteCount'] as int
           : int.tryParse((data['cantCompleteCount'] ?? '').toString()) ?? 0,
@@ -268,6 +280,15 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
                           .where((c) => c.status == selectedFilter)
                           .toList();
                     }
+
+                    // Sort by priority first, then by date (oldest first)
+                    complaints.sort((a, b) {
+                      final priorityCompare = _getPriorityOrder(a.priority).compareTo(_getPriorityOrder(b.priority));
+                      if (priorityCompare != 0) {
+                        return priorityCompare;
+                      }
+                      return a.submitted.compareTo(b.submitted);
+                    });
 
                     if (complaints.isEmpty) {
                       return Center(
@@ -456,6 +477,19 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
       ),
       ),
     );
+  }
+
+  int _getPriorityOrder(String priority) {
+    switch (priority) {
+      case 'High':
+        return 0;
+      case 'Medium':
+        return 1;
+      case 'Low':
+        return 2;
+      default:
+        return 3;
+    }
   }
 
   Color _getStatusColor(String status) {

@@ -288,6 +288,16 @@ class _ComplaintDetailsPageState extends State<ComplaintDetailsPage> {
                             ),
                           );
                         },
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                  : null,
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ] else if (data['damagePic'] is List && (data['damagePic'] as List).isNotEmpty) ...[
@@ -318,6 +328,16 @@ class _ComplaintDetailsPageState extends State<ComplaintDetailsPage> {
                                     ),
                                     child: const Center(
                                       child: Text('Image not available'),
+                                    ),
+                                  );
+                                },
+                                loadingBuilder: (context, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return Center(
+                                    child: CircularProgressIndicator(
+                                      value: loadingProgress.expectedTotalBytes != null
+                                          ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                          : null,
                                     ),
                                   );
                                 },
@@ -354,20 +374,6 @@ class _ComplaintDetailsPageState extends State<ComplaintDetailsPage> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        if (widget.complaint.reasonCantCompleteProof != null &&
-                            widget
-                                .complaint
-                                .reasonCantCompleteProof!
-                                .isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            'Proof: ${widget.complaint.reasonCantCompleteProof}',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.red[700],
-                            ),
-                          ),
-                        ],
                         if (widget.complaint.cantCompleteCount > 0) ...[
                           const SizedBox(height: 8),
                           Text(
@@ -380,6 +386,45 @@ class _ComplaintDetailsPageState extends State<ComplaintDetailsPage> {
                           ),
                         ],
                       ],
+                    ),
+                  ),
+                ],
+
+                // Proof photo for previous attempt (if available)
+                if (widget.complaint.reasonCantCompleteProof != null &&
+                    widget.complaint.reasonCantCompleteProof!.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  _buildSectionTitle('Proof Photo'),
+                  const SizedBox(height: 12),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      widget.complaint.reasonCantCompleteProof!,
+                      fit: BoxFit.cover,
+                      height: 300,
+                      width: double.infinity,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 200,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Center(
+                            child: Text('Image not available'),
+                          ),
+                        );
+                      },
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                : null,
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
