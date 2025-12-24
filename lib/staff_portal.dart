@@ -598,7 +598,11 @@ class _StaffPortalDashboardState extends State<StaffPortalDashboard> {
                 const TextSpan(
                     text: ' | Priority: ',
                     style: TextStyle(fontWeight: FontWeight.w600)),
-                TextSpan(text: complaint.priority),
+                TextSpan(
+                    text: complaint.priority,
+                    style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: _getPriorityColor(complaint.priority))),
               ],
             ),
           ),
@@ -627,6 +631,19 @@ class _StaffPortalDashboardState extends State<StaffPortalDashboard> {
         return Colors.grey[700]!;
       default:
         return const Color(0xFF7C3AED);
+    }
+  }
+
+  Color _getPriorityColor(String priority) {
+    switch (priority) {
+      case 'High':
+        return Colors.red[700]!;
+      case 'Medium':
+        return Colors.orange[700]!;
+      case 'Low':
+        return Colors.green[700]!;
+      default:
+        return Colors.grey[700]!;
     }
   }
 
