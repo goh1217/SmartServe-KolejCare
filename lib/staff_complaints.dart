@@ -127,6 +127,7 @@ class StaffComplaintsPage extends StatefulWidget {
 
 class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
   String selectedFilter = 'ALL';
+  String selectedSort = 'Priority (High to Low)';
   String? _staffWorkCollege;
   bool _isLoadingStaff = true;
 
@@ -205,29 +206,75 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
       ),
       body: Column(
         children: [
-          // Filter Chips
+          // Filter Chips and Sort Dropdown
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  _buildFilterChip('ALL'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip('Pending'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip('Approved'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip('Ongoing'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip('Completed'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip('Rejected'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip('Cancelled'),
-                ],
-              ),
+            child: Column(
+              children: [
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      _buildFilterChip('ALL'),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Pending'),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Approved'),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Ongoing'),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Completed'),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Rejected'),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Cancelled'),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    children: [
+                      const Text('Sort by: ',
+                          style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: DropdownButton<String>(
+                          value: selectedSort,
+                          isExpanded: true,
+                          underline: Container(
+                            height: 1,
+                            color: Colors.grey[300],
+                          ),
+                          items: [
+                            'Priority (High to Low)',
+                            'Priority (Low to High)',
+                            'Date (Oldest First)',
+                            'Date (Newest First)',
+                          ].map((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value,
+                                  style: const TextStyle(fontSize: 12)),
+                            );
+                          }).toList(),
+                          onChanged: (String? newValue) {
+                            if (newValue != null) {
+                              setState(() {
+                                selectedSort = newValue;
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
           // Complaints List
@@ -281,13 +328,24 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
                           .toList();
                     }
 
-                    // Sort by priority first, then by date (oldest first)
+                    // Sort based on selected sort mode
                     complaints.sort((a, b) {
-                      final priorityCompare = _getPriorityOrder(a.priority).compareTo(_getPriorityOrder(b.priority));
-                      if (priorityCompare != 0) {
-                        return priorityCompare;
+                      switch (selectedSort) {
+                        case 'Priority (High to Low)':
+                          final priorityCompare = _getPriorityOrder(a.priority).compareTo(_getPriorityOrder(b.priority));
+                          if (priorityCompare != 0) return priorityCompare;
+                          return a.submitted.compareTo(b.submitted);
+                        case 'Priority (Low to High)':
+                          final priorityCompare = _getPriorityOrder(b.priority).compareTo(_getPriorityOrder(a.priority));
+                          if (priorityCompare != 0) return priorityCompare;
+                          return a.submitted.compareTo(b.submitted);
+                        case 'Date (Oldest First)':
+                          return a.submitted.compareTo(b.submitted);
+                        case 'Date (Newest First)':
+                          return b.submitted.compareTo(a.submitted);
+                        default:
+                          return 0;
                       }
-                      return a.submitted.compareTo(b.submitted);
                     });
 
                     if (complaints.isEmpty) {
@@ -442,7 +500,11 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
                 const TextSpan(
                     text: ' | Priority: ',
                     style: TextStyle(fontWeight: FontWeight.w600)),
-                TextSpan(text: complaint.priority),
+                TextSpan(
+                    text: complaint.priority,
+                    style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: _getPriorityColor(complaint.priority))),
               ],
             ),
           ),
@@ -489,6 +551,19 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
         return 2;
       default:
         return 3;
+    }
+  }
+
+  Color _getPriorityColor(String priority) {
+    switch (priority) {
+      case 'High':
+        return Colors.red[700]!;
+      case 'Medium':
+        return Colors.orange[700]!;
+      case 'Low':
+        return Colors.green[700]!;
+      default:
+        return Colors.grey[700]!;
     }
   }
 
