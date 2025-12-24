@@ -22,6 +22,8 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
 
   String? _selectedMaintenanceType;
   String? _selectedUrgency;
+  String? _aiSuggestedUrgency;
+  bool _userChangedUrgency = false;
   bool _consentGiven = true;
 
   bool _isSubmitted = false;
@@ -55,7 +57,64 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
     if (_pickedImages.length >= 3) return;
     final ImagePicker picker = ImagePicker();
     final XFile? img = await picker.pickImage(source: ImageSource.gallery);
-    if (img != null) setState(() => _pickedImages.add(img));
+    if (img != null) {
+      setState(() => _pickedImages.add(img));
+      await _getAISuggestion(); // get AI urgency after picking images
+    }
+  }
+
+  Future<void> _getAISuggestion() async {
+    if (_pickedImages.isEmpty) return;
+    try {
+      List<String> cloudinaryUrls = [];
+      const cloudName = 'deaju8keu';
+      const uploadPreset = 'flutter upload';
+
+      for (int i = 0; i < _pickedImages.length && i < 3; i++) {
+        final file = _pickedImages[i];
+        Uint8List bytes;
+
+        if (kIsWeb) {
+          bytes = await file.readAsBytes();
+        } else {
+          final rawBytes = await file.readAsBytes();
+          bytes = await FlutterImageCompress.compressWithList(rawBytes, quality: 70) ?? rawBytes;
+        }
+
+        final uri = Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/upload');
+        final request = http.MultipartRequest('POST', uri)
+          ..fields['upload_preset'] = uploadPreset
+          ..files.add(http.MultipartFile.fromBytes('file', bytes, filename: 'ai_preview_$i.jpg'));
+
+        final response = await request.send();
+        final resBody = await response.stream.bytesToString();
+        final data = json.decode(resBody);
+        if (data['secure_url'] != null) cloudinaryUrls.add(data['secure_url']);
+      }
+
+      if (cloudinaryUrls.isEmpty) return;
+
+      // Call AI function (your deployed Firebase function)
+      final functionUrl = "YOUR_FIREBASE_FUNCTION_URL/classifyFurnitureUrgency"; // replace with your deployed URL
+      final response = await http.post(
+        Uri.parse(functionUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'images': cloudinaryUrls}),
+      );
+
+      if (response.statusCode == 200) {
+        final aiData = json.decode(response.body);
+        final aiUrgency = aiData['urgencyLevelAI'] ?? '';
+        if (!_userChangedUrgency) {
+          setState(() {
+            _aiSuggestedUrgency = aiUrgency;
+            _selectedUrgency = aiUrgency;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching AI suggestion: $e');
+    }
   }
 
   Future<void> _handleSubmit() async {
@@ -69,7 +128,6 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
         _locationChoice == null ||
         (_locationChoice == "public" && _publicLocationController.text.trim().isEmpty)
     ) {
-
       showDialog(
         context: context,
         builder: (c) => AlertDialog(
@@ -88,7 +146,6 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw 'User not logged in';
 
-      // ---------------- FETCH STUDENT DATA ----------------
       final studentDoc = await firestore.collection('student').doc(user.uid).get();
       _studentData = studentDoc.data();
       if (_studentData == null) throw 'Student record not found';
@@ -113,6 +170,8 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
         'scheduledDate': null,
         'technicianTip': 0,
         'urgencyLevel': _selectedUrgency,
+        'urgencyLevelAI': _aiSuggestedUrgency,
+        'urgencyConfidence': 0,
         'isRead': false,
         'isArchived': false,
         'studentID': user.uid,
@@ -121,9 +180,8 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
 
       await docRef.update({'complaintID': docRef.id});
 
-      // Upload images to Cloudinary if any
+      List<String> cloudinaryUrls = [];
       if (_pickedImages.isNotEmpty) {
-        List<String> cloudinaryUrls = [];
         const cloudName = 'deaju8keu';
         const uploadPreset = 'flutter upload';
 
@@ -292,8 +350,6 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
                 ),
               ),
             if (_locationChoice == "public") const SizedBox(height: 16),
-            // ----------------------------------------------------------
-
 
             // Image Upload
             GestureDetector(
@@ -319,22 +375,43 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
             Container(
               decoration: _cardDecoration(),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: DropdownButtonFormField<String>(
-                value: _selectedUrgency,
-                items: _urgencyOptions
-                    .map((u) => DropdownMenuItem(
-                  value: u,
-                  child: Text(u, style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF24252C))),
-                ))
-                    .toList(),
-                onChanged: (_isSubmitted || _isSubmitting) ? null : (v) => setState(() => _selectedUrgency = v),
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  hintText: 'Select urgency level',
-                  hintStyle: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF90929C)),
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  DropdownButtonFormField<String>(
+                    value: _selectedUrgency,
+                    items: _urgencyOptions
+                        .map((u) => DropdownMenuItem(
+                      value: u,
+                      child: Text(u, style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF24252C))),
+                    ))
+                        .toList(),
+                    onChanged: (_isSubmitted || _isSubmitting)
+                        ? null
+                        : (v) {
+                      setState(() {
+                        _selectedUrgency = v;
+                        _userChangedUrgency = true;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      hintText: 'Select urgency level',
+                      hintStyle: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF90929C)),
+                    ),
+                  ),
+                  if (!_userChangedUrgency && _aiSuggestedUrgency != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        'as suggested by our intelligent bot assistant',
+                        style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600]),
+                      ),
+                    ),
+                ],
               ),
             ),
+
             const SizedBox(height: 16),
 
             // Consent
