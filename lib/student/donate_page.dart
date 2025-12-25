@@ -11,7 +11,7 @@ class TipsPage extends StatefulWidget {
 }
 
 class _TipsPageState extends State<TipsPage> {
-  int? selectedAmount;
+  double? selectedAmount;
 
   @override
   Widget build(BuildContext context) {
@@ -91,23 +91,64 @@ class _TipsPageState extends State<TipsPage> {
                   Text(
                     'Your donation helps us maintain and improve our facilities for a better experience.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600], height: 1.5),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                      height: 1.5,
+                    ),
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade50,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.amber.shade200),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: Colors.amber.shade700,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Minimum donation: RM 2.00',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.amber.shade900,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [1, 2, 5].map((amt) => _AmountButton(
-                      amount: amt,
-                      isSelected: selectedAmount == amt,
-                      onTap: () => setState(() => selectedAmount = amt),
-                    )).toList(),
+                    children: [2.0, 5.0, 10.0]
+                        .map(
+                          (amt) => _AmountButton(
+                            amount: amt,
+                            isSelected: selectedAmount == amt,
+                            onTap: () => setState(() => selectedAmount = amt),
+                          ),
+                        )
+                        .toList(),
                   ),
                   const SizedBox(height: 20),
                   TextButton(
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const EnterAmountPage()),
+                        MaterialPageRoute(
+                          builder: (context) => const EnterAmountPage(),
+                        ),
                       );
                     },
                     child: const Text(
@@ -129,7 +170,9 @@ class _TipsPageState extends State<TipsPage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => PaymentMethodPage(amount: selectedAmount!),
+                                  builder: (context) => PaymentMethodPage(
+                                    amount: selectedAmount!,
+                                  ),
                                 ),
                               );
                             }
@@ -138,21 +181,32 @@ class _TipsPageState extends State<TipsPage> {
                         backgroundColor: Colors.deepPurple,
                         disabledBackgroundColor: Colors.grey[300],
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         elevation: 2,
                       ),
                       child: const Text(
                         'Done',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextButton(
-                    onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
+                    onPressed: () =>
+                        Navigator.popUntil(context, (route) => route.isFirst),
                     child: Text(
                       'Maybe next time',
-                      style: TextStyle(fontSize: 13, color: Colors.grey[500], fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey[500],
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ],
@@ -166,7 +220,7 @@ class _TipsPageState extends State<TipsPage> {
   }
 }
 
-// --- PAGE 2: CUSTOM AMOUNT (KEYPAD) ---
+// --- PAGE 2: CUSTOM AMOUNT (KEYPAD WITH DECIMAL) ---
 class EnterAmountPage extends StatefulWidget {
   const EnterAmountPage({super.key});
 
@@ -176,100 +230,264 @@ class EnterAmountPage extends StatefulWidget {
 
 class _EnterAmountPageState extends State<EnterAmountPage> {
   String enteredAmount = '';
+  bool hasDecimal = false;
 
   void _onNumberTap(String number) {
     setState(() {
-      if (enteredAmount.length < 6) enteredAmount += number;
+      if (hasDecimal) {
+        final parts = enteredAmount.split('.');
+        if (parts.length > 1 && parts[1].length >= 2) {
+          return;
+        }
+      }
+      if (enteredAmount.length < 8) {
+        enteredAmount += number;
+      }
+    });
+  }
+
+  void _onDecimalTap() {
+    setState(() {
+      if (!hasDecimal && enteredAmount.isNotEmpty) {
+        enteredAmount += '.';
+        hasDecimal = true;
+      } else if (enteredAmount.isEmpty) {
+        enteredAmount = '0.';
+        hasDecimal = true;
+      }
     });
   }
 
   void _onDeleteTap() {
     setState(() {
       if (enteredAmount.isNotEmpty) {
+        if (enteredAmount.endsWith('.')) {
+          hasDecimal = false;
+        }
         enteredAmount = enteredAmount.substring(0, enteredAmount.length - 1);
       }
     });
   }
 
+  double? _getAmount() {
+    if (enteredAmount.isEmpty) return null;
+    try {
+      return double.parse(enteredAmount);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  bool _isValidAmount() {
+    final amount = _getAmount();
+    return amount != null && amount >= 2.0;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final amount = _getAmount();
+    final isValid = _isValidAmount();
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         backgroundColor: Colors.deepPurple,
         elevation: 0,
-        title: const Text('Enter Amount', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Enter Amount',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
-        leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
-      body: Column(
-        children: [
-          const SizedBox(height: 40),
-          const Text('Enter Amount', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.deepPurple)),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text('RM', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.deepPurple)),
-              const SizedBox(width: 8),
-              Container(
-                width: 150, height: 60,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.deepPurple, width: 2),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Column(
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.amber.shade200),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: Colors.amber.shade700,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Minimum: RM 2.00',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.amber.shade900,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Enter Amount',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.deepPurple,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'RM',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.deepPurple,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          width: 180,
+                          height: 55,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: !isValid && amount != null
+                                  ? Colors.red
+                                  : Colors.deepPurple,
+                              width: 2,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              enteredAmount.isEmpty ? '0.00' : enteredAmount,
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: !isValid && amount != null
+                                    ? Colors.red
+                                    : Colors.deepPurple,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    SizedBox(
+                      height: 18,
+                      child: amount != null && amount < 2.0
+                          ? Text(
+                              'Amount must be at least RM 2.00',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.red.shade700,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 35),
+                      child: Column(
+                        children: [
+                          _NumberRow(
+                            numbers: ['1', '2', '3'],
+                            onTap: _onNumberTap,
+                          ),
+                          const SizedBox(height: 16),
+                          _NumberRow(
+                            numbers: ['4', '5', '6'],
+                            onTap: _onNumberTap,
+                          ),
+                          const SizedBox(height: 16),
+                          _NumberRow(
+                            numbers: ['7', '8', '9'],
+                            onTap: _onNumberTap,
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              _NumberButton(
+                                icon: Icons.backspace_outlined,
+                                isIcon: true,
+                                onTap: (_) => _onDeleteTap(),
+                              ),
+                              _NumberButton(value: '0', onTap: _onNumberTap),
+                              _NumberButton(
+                                value: '.',
+                                onTap: (_) => _onDecimalTap(),
+                                isDecimal: true,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                 ),
-                child: Center(
-                  child: Text(
-                    enteredAmount.isEmpty ? '0' : enteredAmount,
-                    style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.deepPurple),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: isValid
+                      ? () {
+                          final finalAmount = _getAmount()!;
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  PaymentMethodPage(amount: finalAmount),
+                            ),
+                          );
+                        }
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    disabledBackgroundColor: Colors.grey[300],
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Done',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               ),
-            ],
-          ),
-          const Spacer(),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40),
-            child: Column(
-              children: [
-                _NumberRow(numbers: ['1', '2', '3'], onTap: _onNumberTap),
-                const SizedBox(height: 20),
-                _NumberRow(numbers: ['4', '5', '6'], onTap: _onNumberTap),
-                const SizedBox(height: 20),
-                _NumberRow(numbers: ['7', '8', '9'], onTap: _onNumberTap),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _NumberButton(icon: Icons.backspace_outlined, isIcon: true, onTap: (_) => _onDeleteTap()),
-                    _NumberButton(value: '0', onTap: _onNumberTap),
-                    const SizedBox(width: 70),
-                  ],
-                ),
-              ],
             ),
-          ),
-          const SizedBox(height: 40),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: enteredAmount.isNotEmpty && int.parse(enteredAmount) > 0
-                    ? () => Navigator.push(context, MaterialPageRoute(builder: (context) => PaymentMethodPage(amount: int.parse(enteredAmount))))
-                    : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple,
-                  disabledBackgroundColor: Colors.grey[300],
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                child: const Text('Done', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -277,7 +495,7 @@ class _EnterAmountPageState extends State<EnterAmountPage> {
 
 // --- PAGE 3: PAYMENT METHOD PAGE ---
 class PaymentMethodPage extends StatefulWidget {
-  final int amount;
+  final double amount;
   const PaymentMethodPage({super.key, required this.amount});
 
   @override
@@ -291,7 +509,10 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
   Future<void> _handlePayment() async {
     if (selectedPaymentMethod == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a payment method'), backgroundColor: Colors.orange),
+        const SnackBar(
+          content: Text('Please select a payment method'),
+          backgroundColor: Colors.orange,
+        ),
       );
       return;
     }
@@ -333,10 +554,13 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
             Text('Success!', style: TextStyle(color: Colors.deepPurple)),
           ],
         ),
-        content: Text('RM ${widget.amount} donation successful!'),
+        content: Text(
+          'RM ${widget.amount.toStringAsFixed(2)} donation successful!',
+        ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+            onPressed: () =>
+                Navigator.of(context).popUntil((route) => route.isFirst),
             child: const Text('Done'),
           ),
         ],
@@ -350,7 +574,12 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
       builder: (context) => AlertDialog(
         title: const Text('Error'),
         content: Text(message),
-        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))],
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
       ),
     );
   }
@@ -361,9 +590,15 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         backgroundColor: Colors.deepPurple,
-        title: const Text('Payment', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Payment',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
-        leading: IconButton(icon: const Icon(Icons.close, color: Colors.white), onPressed: () => Navigator.pop(context)),
+        leading: IconButton(
+          icon: const Icon(Icons.close, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: Stack(
         children: [
@@ -376,17 +611,37 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     child: Column(
                       children: [
-                        const Text('Donation Amount', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                        const Text(
+                          'Donation Amount',
+                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                        ),
                         const SizedBox(height: 8),
-                        Text('RM ${widget.amount}.00', style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.deepPurple)),
+                        Text(
+                          'RM ${widget.amount.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 36,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.deepPurple,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 32),
-                  const Text('Select Payment Method', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.deepPurple)),
+                  const Text(
+                    'Select Payment Method',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.deepPurple,
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   _PaymentOption(
                     icon: Icons.credit_card,
@@ -407,15 +662,35 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _isProcessing ? null : (selectedPaymentMethod != null ? _handlePayment : null),
+                      onPressed: _isProcessing
+                          ? null
+                          : (selectedPaymentMethod != null
+                                ? _handlePayment
+                                : null),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.deepPurple,
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       child: _isProcessing
-                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Text('Pay Now', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              'Pay Now',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
                     ),
                   ),
                 ],
@@ -431,7 +706,11 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                     padding: EdgeInsets.all(24),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
-                      children: [CircularProgressIndicator(), SizedBox(height: 16), Text('Processing payment...')],
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16),
+                        Text('Processing payment...'),
+                      ],
                     ),
                   ),
                 ),
@@ -445,23 +724,37 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
 
 // --- UI COMPONENTS ---
 class _AmountButton extends StatelessWidget {
-  final int amount;
+  final double amount;
   final bool isSelected;
   final VoidCallback onTap;
-  const _AmountButton({required this.amount, required this.isSelected, required this.onTap});
+  const _AmountButton({
+    required this.amount,
+    required this.isSelected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 85, height: 85,
+        width: 85,
+        height: 85,
         decoration: BoxDecoration(
           color: isSelected ? Colors.deepPurple : Colors.deepPurple.shade50,
           shape: BoxShape.circle,
           border: Border.all(color: Colors.deepPurple, width: 2),
         ),
-        child: Center(child: Text('RM$amount', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isSelected ? Colors.white : Colors.deepPurple))),
+        child: Center(
+          child: Text(
+            'RM${amount.toStringAsFixed(0)}',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: isSelected ? Colors.white : Colors.deepPurple,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -474,7 +767,12 @@ class _NumberRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: numbers.map((n) => _NumberButton(value: n, onTap: onTap)).toList());
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: numbers
+          .map((n) => _NumberButton(value: n, onTap: onTap))
+          .toList(),
+    );
   }
 }
 
@@ -482,17 +780,41 @@ class _NumberButton extends StatelessWidget {
   final String? value;
   final IconData? icon;
   final bool isIcon;
+  final bool isDecimal;
   final Function(String) onTap;
-  const _NumberButton({this.value, this.icon, this.isIcon = false, required this.onTap});
+  const _NumberButton({
+    this.value,
+    this.icon,
+    this.isIcon = false,
+    this.isDecimal = false,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => onTap(value ?? ""),
       child: Container(
-        width: 70, height: 70,
-        decoration: BoxDecoration(color: isIcon ? Colors.deepPurple.shade50 : Colors.deepPurple, shape: BoxShape.circle),
-        child: Center(child: isIcon ? Icon(icon, color: Colors.deepPurple) : Text(value!, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white))),
+        width: 65,
+        height: 65,
+        decoration: BoxDecoration(
+          color: isIcon
+              ? Colors.deepPurple.shade50
+              : (isDecimal ? Colors.deepPurple.shade100 : Colors.deepPurple),
+          shape: BoxShape.circle,
+        ),
+        child: Center(
+          child: isIcon
+              ? Icon(icon, color: Colors.deepPurple, size: 22)
+              : Text(
+                  value!,
+                  style: TextStyle(
+                    fontSize: isDecimal ? 28 : 22,
+                    fontWeight: FontWeight.bold,
+                    color: isDecimal ? Colors.deepPurple : Colors.white,
+                  ),
+                ),
+        ),
       ),
     );
   }
@@ -526,7 +848,10 @@ class _PaymentOption extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isSelected ? Colors.deepPurple : Colors.grey.shade300, width: isSelected ? 2 : 1),
+          border: Border.all(
+            color: isSelected ? Colors.deepPurple : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
         ),
         child: Row(
           children: [
@@ -536,12 +861,28 @@ class _PaymentOption extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.deepPurple)),
-                  if (subtitle != null) Text(subtitle!, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.deepPurple,
+                    ),
+                  ),
+                  if (subtitle != null)
+                    Text(
+                      subtitle!,
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
                 ],
               ),
             ),
-            if (showDropdown) Icon(isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: Colors.deepPurple),
+            if (showDropdown)
+              Icon(
+                isExpanded
+                    ? Icons.keyboard_arrow_up
+                    : Icons.keyboard_arrow_down,
+                color: Colors.deepPurple,
+              ),
           ],
         ),
       ),

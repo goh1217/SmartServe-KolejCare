@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'assign_technician.dart';
+import 'complaint_details.dart';
 
 // Re-using the Complaint model from the staff_portal
 // If this model is used in more places, consider moving it to its own file in `models/`
@@ -17,6 +18,9 @@ class Complaint {
   final DateTime submitted;
   final String status;
   final String residentCollege; // Added for filtering
+  final String? reasonCantComplete;
+  final String? reasonCantCompleteProof;
+  final int cantCompleteCount;
 
   Complaint({
     required this.id,
@@ -29,6 +33,9 @@ class Complaint {
     required this.submitted,
     required this.status,
     required this.residentCollege,
+    required this.reasonCantComplete,
+    required this.reasonCantCompleteProof,
+    required this.cantCompleteCount,
   });
 
   // This is now an async static method to fetch related data
@@ -90,6 +97,23 @@ class Complaint {
       submitted: (data['reportedDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
       status: data['reportStatus'] ?? 'Unknown',
       residentCollege: residentCollege,
+      reasonCantComplete: data['reasonCantComplete'] is List
+          ? (data['reasonCantComplete'] as List).isNotEmpty
+              ? (data['reasonCantComplete'] as List).first?.toString()
+              : null
+          : data['reasonCantComplete']?.toString(),
+      reasonCantCompleteProof: () {
+        final raw = data['reasonCantCompleteProof'];
+        if (raw == null) return null;
+        if (raw is List) {
+          if (raw.isEmpty) return null;
+          return raw.first?.toString();
+        }
+        return raw.toString();
+      }(),
+      cantCompleteCount: (data['cantCompleteCount'] is int)
+          ? data['cantCompleteCount'] as int
+          : int.tryParse((data['cantCompleteCount'] ?? '').toString()) ?? 0,
     );
   }
 }
@@ -103,6 +127,7 @@ class StaffComplaintsPage extends StatefulWidget {
 
 class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
   String selectedFilter = 'ALL';
+  String selectedSort = 'Priority (High to Low)';
   String? _staffWorkCollege;
   bool _isLoadingStaff = true;
 
@@ -181,29 +206,75 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
       ),
       body: Column(
         children: [
-          // Filter Chips
+          // Filter Chips and Sort Dropdown
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  _buildFilterChip('ALL'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip('Pending'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip('Approved'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip('Ongoing'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip('Completed'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip('Rejected'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip('Cancelled'),
-                ],
-              ),
+            child: Column(
+              children: [
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      _buildFilterChip('ALL'),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Pending'),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Approved'),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Ongoing'),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Completed'),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Rejected'),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Cancelled'),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    children: [
+                      const Text('Sort by: ',
+                          style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: DropdownButton<String>(
+                          value: selectedSort,
+                          isExpanded: true,
+                          underline: Container(
+                            height: 1,
+                            color: Colors.grey[300],
+                          ),
+                          items: [
+                            'Priority (High to Low)',
+                            'Priority (Low to High)',
+                            'Date (Oldest First)',
+                            'Date (Newest First)',
+                          ].map((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value,
+                                  style: const TextStyle(fontSize: 12)),
+                            );
+                          }).toList(),
+                          onChanged: (String? newValue) {
+                            if (newValue != null) {
+                              setState(() {
+                                selectedSort = newValue;
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
           // Complaints List
@@ -257,6 +328,26 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
                           .toList();
                     }
 
+                    // Sort based on selected sort mode
+                    complaints.sort((a, b) {
+                      switch (selectedSort) {
+                        case 'Priority (High to Low)':
+                          final priorityCompare = _getPriorityOrder(a.priority).compareTo(_getPriorityOrder(b.priority));
+                          if (priorityCompare != 0) return priorityCompare;
+                          return a.submitted.compareTo(b.submitted);
+                        case 'Priority (Low to High)':
+                          final priorityCompare = _getPriorityOrder(b.priority).compareTo(_getPriorityOrder(a.priority));
+                          if (priorityCompare != 0) return priorityCompare;
+                          return a.submitted.compareTo(b.submitted);
+                        case 'Date (Oldest First)':
+                          return a.submitted.compareTo(b.submitted);
+                        case 'Date (Newest First)':
+                          return b.submitted.compareTo(a.submitted);
+                        default:
+                          return 0;
+                      }
+                    });
+
                     if (complaints.isEmpty) {
                       return Center(
                           child: Text('No ${selectedFilter.toLowerCase()} complaints.'));
@@ -307,21 +398,33 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
 
   Widget _buildComplaintCard(Complaint complaint) {
     final showAssignButton = complaint.status == 'Pending';
+    final bool hasCantCompleteInfo = (complaint.reasonCantComplete != null && complaint.reasonCantComplete!.isNotEmpty) ||
+        (complaint.reasonCantCompleteProof != null && complaint.reasonCantCompleteProof!.isNotEmpty) ||
+        complaint.cantCompleteCount > 0;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2))
-        ],
-      ),
-      child: Column(
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ComplaintDetailsPage(complaint: complaint),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2))
+          ],
+        ),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -334,6 +437,27 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
                         fontWeight: FontWeight.bold,
                         color: Colors.black87)),
               ),
+              if (complaint.status == 'Pending' && hasCantCompleteInfo) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.red[50],
+                    border: Border.all(color: Colors.redAccent),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.flag, size: 14, color: Colors.redAccent),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Previously attempted${complaint.cantCompleteCount > 0 ? ' (${complaint.cantCompleteCount})' : ''}',
+                        style: const TextStyle(fontSize: 12, color: Colors.redAccent, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -376,7 +500,11 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
                 const TextSpan(
                     text: ' | Priority: ',
                     style: TextStyle(fontWeight: FontWeight.w600)),
-                TextSpan(text: complaint.priority),
+                TextSpan(
+                    text: complaint.priority,
+                    style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: _getPriorityColor(complaint.priority))),
               ],
             ),
           ),
@@ -387,6 +515,7 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
           
           // Assign Technician Button (only for Pending complaints)
           if (showAssignButton) ...[
+            // (previous attempt details removed per request)
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
@@ -408,7 +537,34 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
           ],
         ],
       ),
+      ),
     );
+  }
+
+  int _getPriorityOrder(String priority) {
+    switch (priority) {
+      case 'High':
+        return 0;
+      case 'Medium':
+        return 1;
+      case 'Low':
+        return 2;
+      default:
+        return 3;
+    }
+  }
+
+  Color _getPriorityColor(String priority) {
+    switch (priority) {
+      case 'High':
+        return Colors.red[700]!;
+      case 'Medium':
+        return Colors.orange[700]!;
+      case 'Low':
+        return Colors.green[700]!;
+      default:
+        return Colors.grey[700]!;
+    }
   }
 
   Color _getStatusColor(String status) {

@@ -5,7 +5,8 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 // Conditional imports for web
 import 'stripe_service_web.dart'
-    if (dart.library.io) 'stripe_service_stub.dart' as web_helper;
+    if (dart.library.io) 'stripe_service_stub.dart'
+    as web_helper;
 
 class StripeService {
   StripeService._();
@@ -22,7 +23,7 @@ class StripeService {
 
   // Make payment with card or FPX
   Future<bool> makePayment({
-    required int amountInRm,
+    required double amountInRm,
     required String paymentMethod, // 'card' or 'fpx'
     String? selectedBank, // For FPX only
   }) async {
@@ -36,7 +37,9 @@ class StripeService {
     }
 
     try {
-      debugPrint("Starting payment for RM$amountInRm using $paymentMethod");
+      debugPrint(
+        "Starting payment for RM${amountInRm.toStringAsFixed(2)} using $paymentMethod",
+      );
 
       // 1. Create Payment Intent with selected payment method
       String? clientSecret = await createPaymentIntent(
@@ -44,7 +47,7 @@ class StripeService {
         currency: 'myr',
         paymentMethod: paymentMethod,
       );
-      
+
       if (clientSecret == null) {
         debugPrint("Failed to create payment intent");
         return false;
@@ -67,20 +70,19 @@ class StripeService {
 
       // 3. Present Payment Sheet
       await Stripe.instance.presentPaymentSheet();
-      
+
       debugPrint("✅ Payment completed successfully");
       return true;
-
     } on StripeException catch (e) {
       debugPrint("❌ Stripe Exception: ${e.error.localizedMessage}");
       debugPrint("Error code: ${e.error.code}");
       debugPrint("Error type: ${e.error.type}");
-      
+
       // User cancelled the payment
       if (e.error.code == FailureCode.Canceled) {
         debugPrint("User cancelled payment");
       }
-      
+
       return false;
     } catch (e, stackTrace) {
       debugPrint("❌ General Error: $e");
@@ -90,15 +92,17 @@ class StripeService {
   }
 
   Future<String?> createPaymentIntent({
-    required int amount,
+    required double amount,
     required String currency,
     required String paymentMethod,
   }) async {
     try {
       final Dio dio = Dio();
-      
-      debugPrint("Creating payment intent for amount: $amount $currency with $paymentMethod");
-      
+
+      debugPrint(
+        "Creating payment intent for amount: ${amount.toStringAsFixed(2)} $currency with $paymentMethod",
+      );
+
       // Build payload based on the user's selected method.
       // If FPX is selected, restrict the intent to FPX only so the sheet shows FPX.
       // Otherwise restrict to card. Do not set automatic_payment_methods here.
@@ -122,7 +126,7 @@ class StripeService {
           contentType: Headers.formUrlEncodedContentType,
           headers: {
             "Authorization": "Bearer ${_secretKey}",
-            "Content-Type": "application/x-www-form-urlencoded"
+            "Content-Type": "application/x-www-form-urlencoded",
           },
         ),
       );
@@ -134,10 +138,9 @@ class StripeService {
         debugPrint("Client secret obtained");
         return response.data['client_secret'];
       }
-      
+
       debugPrint("No data in response");
       return null;
-
     } on DioException catch (e) {
       debugPrint("❌ Dio Error: ${e.message}");
       if (e.response != null) {
@@ -151,20 +154,24 @@ class StripeService {
     }
   }
 
-  String _calculateAmount(int amount) {
-    final calculatedAmount = (amount * 100).toString();
+  String _calculateAmount(double amount) {
+    // Convert RM to cents, rounding to nearest cent
+    final cents = (amount * 100).round();
+    final calculatedAmount = cents.toString();
     debugPrint("Amount in cents: $calculatedAmount");
     return calculatedAmount;
   }
 
   // Web payment flow - creates Stripe Checkout session and redirects
   Future<bool> _makeWebPayment({
-    required int amountInRm,
+    required double amountInRm,
     required String paymentMethod,
     String? selectedBank,
   }) async {
     try {
-      debugPrint("🌐 Starting web payment for RM$amountInRm using $paymentMethod");
+      debugPrint(
+        "🌐 Starting web payment for RM${amountInRm.toStringAsFixed(2)} using $paymentMethod",
+      );
 
       // Create Stripe Checkout Session
       String? sessionUrl = await _createCheckoutSession(
@@ -172,26 +179,25 @@ class StripeService {
         currency: 'myr',
         paymentMethod: paymentMethod,
       );
-      
+
       if (sessionUrl == null) {
         debugPrint("❌ Failed to create checkout session");
         return false;
       }
 
       debugPrint("✅ Checkout session created: $sessionUrl");
-      
+
       // Open Stripe Checkout in a new tab
       web_helper.openUrlInNewTab(sessionUrl);
-      
+
       debugPrint("✅ Redirected to Stripe Checkout (test mode)");
       debugPrint("💳 Use test card: 4242 4242 4242 4242");
       debugPrint("📅 Expiry: Any future date");
       debugPrint("🔒 CVC: Any 3 digits");
-      
+
       // Return true immediately - in production you'd wait for webhook confirmation
       await Future.delayed(const Duration(seconds: 2));
       return true;
-
     } catch (e, stackTrace) {
       debugPrint("❌ Web payment error: $e");
       debugPrint("Stack trace: $stackTrace");
@@ -201,15 +207,17 @@ class StripeService {
 
   // Create Stripe Checkout Session for web payments
   Future<String?> _createCheckoutSession({
-    required int amount,
+    required double amount,
     required String currency,
     required String paymentMethod,
   }) async {
     try {
       final Dio dio = Dio();
-      
-      debugPrint("Creating checkout session for amount: $amount $currency");
-      
+
+      debugPrint(
+        "Creating checkout session for amount: ${amount.toStringAsFixed(2)} $currency",
+      );
+
       final response = await dio.post(
         'https://api.stripe.com/v1/checkout/sessions',
         data: {
@@ -226,7 +234,7 @@ class StripeService {
           contentType: Headers.formUrlEncodedContentType,
           headers: {
             "Authorization": "Bearer ${_secretKey}",
-            "Content-Type": "application/x-www-form-urlencoded"
+            "Content-Type": "application/x-www-form-urlencoded",
           },
         ),
       );
@@ -236,10 +244,9 @@ class StripeService {
       if (response.data != null && response.data['url'] != null) {
         return response.data['url'];
       }
-      
+
       debugPrint("No URL in response");
       return null;
-
     } on DioException catch (e) {
       debugPrint("❌ Dio Error: ${e.message}");
       if (e.response != null) {
