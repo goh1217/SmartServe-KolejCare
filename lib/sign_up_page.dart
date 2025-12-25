@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'widgets/location_picker_widget.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -73,74 +74,6 @@ class _SignUpPageState extends State<SignUpPage> {
         .limit(1)
         .get();
     return result.docs.isEmpty;
-  }
-
-  /// Search for address and convert to GeoPoint using Google Geocoding API
-  Future<void> _searchAddress(String address) async {
-    if (address.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter an address'), backgroundColor: Colors.orange),
-      );
-      return;
-    }
-
-    try {
-      final geocodingKey = dotenv.env['GEOCODING_API_KEY'] ?? '';
-      if (geocodingKey.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Geocoding API key not configured'), backgroundColor: Colors.red),
-        );
-        return;
-      }
-
-      final url =
-          'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(address)}&key=$geocodingKey';
-      final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 10));
-
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body);
-
-        if (json['status'] == 'OK' && json['results'] != null && json['results'].isNotEmpty) {
-          final result = json['results'][0];
-          final location = result['geometry']['location'];
-          
-          setState(() {
-            _livingAddressGeoPoint = GeoPoint(location['lat'], location['lng']);
-            _livingAddressController.text = result['formatted_address'];
-          });
-
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Address found successfully'),
-                backgroundColor: Colors.green,
-              ),
-            );
-          }
-        } else {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Address not found. Please check and try again.'),
-                backgroundColor: Colors.orange,
-              ),
-            );
-          }
-        }
-      } else {
-        throw Exception('Geocoding API error: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error searching address: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error searching address: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
   }
 
   void _showTermsDialog() {
@@ -571,34 +504,18 @@ class _SignUpPageState extends State<SignUpPage> {
           ),
           const SizedBox(height: 20),
           _buildLabel('Living Address'),
-          Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  controller: _livingAddressController,
-                  decoration: _buildInputDecoration('Search your address'),
-                  validator: (value) => value == null || value.isEmpty ? 'Please enter your living address' : null,
-                  onChanged: (_) {
-                    // Clear geopoint if user edits the address
-                    if (_livingAddressGeoPoint != null) {
-                      setState(() => _livingAddressGeoPoint = null);
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey[400]!),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.search, color: Colors.blue),
-                  onPressed: () => _searchAddress(_livingAddressController.text.trim()),
-                  tooltip: 'Search address',
-                ),
-              ),
-            ],
+          LocationPickerWidget(
+            locationMode: 'address',
+            addressController: _livingAddressController,
+            initialAddress: null,
+            editableAddress: true,
+            descriptionController: null,
+            onLocationSelected: (result) {
+              setState(() {
+                _livingAddressGeoPoint = GeoPoint(result.latitude, result.longitude);
+                _livingAddressController.text = result.address;
+              });
+            },
           ),
           if (_livingAddressGeoPoint != null)
             Padding(
@@ -616,7 +533,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Address verified',
+                        'Address verified (Lat: ${_livingAddressGeoPoint!.latitude.toStringAsFixed(4)}, Lng: ${_livingAddressGeoPoint!.longitude.toStringAsFixed(4)})',
                         style: TextStyle(color: Colors.green[700], fontSize: 12),
                       ),
                     ),

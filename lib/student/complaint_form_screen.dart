@@ -422,9 +422,9 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Location Picker Widget (appears when mode is selected)
-            if (_locationChoice != null) ...[
-              if (_isLoadingStudentData && _locationChoice == "room")
+            // Location Picker Widget (appears only when mode is selected and is public area)
+            if (_locationChoice != null && _locationChoice == "public") ...[
+              if (_isLoadingStudentData && _locationChoice == "public")
                 Container(
                   decoration: _cardDecoration(),
                   padding: const EdgeInsets.all(24),
@@ -436,7 +436,7 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
                     ),
                   ),
                 )
-              else if (_studentDataError != null && _locationChoice == "room")
+              else if (_studentDataError != null && _locationChoice == "public")
                 Container(
                   decoration: _cardDecoration(),
                   padding: const EdgeInsets.all(16),

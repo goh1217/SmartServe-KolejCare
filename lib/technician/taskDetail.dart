@@ -1992,6 +1992,14 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
       final taskService = TechnicianTaskService();
       await taskService.startTask(widget.taskId, user.uid);
       
+      // Increment statusChangeCount
+      await FirebaseFirestore.instance
+          .collection('complaint')
+          .doc(widget.taskId)
+          .update({
+            'statusChangeCount': FieldValue.increment(1),
+          });
+      
       setState(() {
         status = 'Ongoing';
       });
@@ -2092,6 +2100,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
           .doc(widget.taskId)
           .update({
             'arrivedAt': FieldValue.serverTimestamp(),
+            'statusChangeCount': FieldValue.increment(1),
           });
       
       setState(() {
