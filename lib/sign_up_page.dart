@@ -2,6 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -24,6 +27,10 @@ class _SignUpPageState extends State<SignUpPage> {
   final _roomController = TextEditingController();
   final _staffNoController = TextEditingController();
   final _workCollegeController = TextEditingController();
+  final _livingAddressController = TextEditingController();
+
+  // Living address location for student
+  GeoPoint? _livingAddressGeoPoint;
 
   String? _selectedRole;
   final List<String> _roles = ['student', 'staff', 'technician'];
@@ -66,6 +73,74 @@ class _SignUpPageState extends State<SignUpPage> {
         .limit(1)
         .get();
     return result.docs.isEmpty;
+  }
+
+  /// Search for address and convert to GeoPoint using Google Geocoding API
+  Future<void> _searchAddress(String address) async {
+    if (address.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter an address'), backgroundColor: Colors.orange),
+      );
+      return;
+    }
+
+    try {
+      final geocodingKey = dotenv.env['GEOCODING_API_KEY'] ?? '';
+      if (geocodingKey.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Geocoding API key not configured'), backgroundColor: Colors.red),
+        );
+        return;
+      }
+
+      final url =
+          'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(address)}&key=$geocodingKey';
+      final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+
+        if (json['status'] == 'OK' && json['results'] != null && json['results'].isNotEmpty) {
+          final result = json['results'][0];
+          final location = result['geometry']['location'];
+          
+          setState(() {
+            _livingAddressGeoPoint = GeoPoint(location['lat'], location['lng']);
+            _livingAddressController.text = result['formatted_address'];
+          });
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Address found successfully'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Address not found. Please check and try again.'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+        }
+      } else {
+        throw Exception('Geocoding API error: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error searching address: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error searching address: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _showTermsDialog() {
@@ -119,6 +194,14 @@ class _SignUpPageState extends State<SignUpPage> {
     if (_selectedRole == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a role.'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    // Check if student has verified their address
+    if (_selectedRole == 'student' && _livingAddressGeoPoint == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please search and verify your address'), backgroundColor: Colors.orange),
       );
       return;
     }
@@ -243,6 +326,7 @@ class _SignUpPageState extends State<SignUpPage> {
         'complaintHistory': [],
         'currentComplaint': [],
         'donationHistory': [],
+        'livingAddress': _livingAddressGeoPoint,
         'uid': user.uid,
       };
       await studentCollection.doc(user.uid).set(studentData);
@@ -485,6 +569,61 @@ class _SignUpPageState extends State<SignUpPage> {
             decoration: _buildInputDecoration('Enter your college name'),
             validator: (value) => value == null || value.isEmpty ? 'Please enter your college' : null,
           ),
+          const SizedBox(height: 20),
+          _buildLabel('Living Address'),
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _livingAddressController,
+                  decoration: _buildInputDecoration('Search your address'),
+                  validator: (value) => value == null || value.isEmpty ? 'Please enter your living address' : null,
+                  onChanged: (_) {
+                    // Clear geopoint if user edits the address
+                    if (_livingAddressGeoPoint != null) {
+                      setState(() => _livingAddressGeoPoint = null);
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey[400]!),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.search, color: Colors.blue),
+                  onPressed: () => _searchAddress(_livingAddressController.text.trim()),
+                  tooltip: 'Search address',
+                ),
+              ),
+            ],
+          ),
+          if (_livingAddressGeoPoint != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: Colors.green.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.check_circle, color: Colors.green, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Address verified',
+                        style: TextStyle(color: Colors.green[700], fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
         ];
       case 'staff':
         return [

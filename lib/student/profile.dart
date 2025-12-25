@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:google_fonts/google_fonts.dart';
 
 class ProfilePage extends StatefulWidget {
   final String userId;
@@ -41,6 +42,13 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   late TextEditingController _blockController;
   late TextEditingController _roomController;
   late TextEditingController _wingController;
+  late TextEditingController _addressSearchController;
+  
+  // Location picker state
+  GeoPoint? _selectedLivingAddress;
+  List<Map<String, dynamic>> _addressSuggestions = [];
+  bool _isSearchingAddress = false;
+  bool _isLoadingAddressSuggestions = false;
 
   @override
   void initState() {
@@ -60,6 +68,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     _blockController = TextEditingController();
     _roomController = TextEditingController();
     _wingController = TextEditingController();
+    _addressSearchController = TextEditingController();
   }
 
   Future<void> _fetchProfileData() async {
@@ -150,6 +159,10 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     _roomController.text = _profileData['roomNumber'] ?? '';
     _wingController.text = _profileData['wing'] ?? '';
     _profileImageUrl = _profileData['photoUrl'] ?? _profileData['profilePic'] ?? null;
+    _selectedLivingAddress = _profileData['livingAddress'] as GeoPoint?;
+    if (_selectedLivingAddress != null) {
+      _addressSearchController.text = 'Lat: ${_selectedLivingAddress!.latitude.toStringAsFixed(4)}, Lng: ${_selectedLivingAddress!.longitude.toStringAsFixed(4)}';
+    }
   }
 
   Future<void> _pickAndUploadProfileImage() async {
@@ -202,16 +215,67 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     }
   }
 
+  /// Search for addresses using OpenStreetMap Nominatim API
+  Future<void> _searchAddresses(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        _addressSuggestions = [];
+        _isSearchingAddress = false;
+      });
+      return;
+    }
+
+    setState(() => _isLoadingAddressSuggestions = true);
+
+    try {
+      final response = await http.get(
+        Uri.parse(
+          'https://nominatim.openstreetmap.org/search?q=$query&format=json&limit=5',
+        ),
+        headers: {'User-Agent': 'SmartServe-Flutter-App'},
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        setState(() {
+          _addressSuggestions = data
+              .map((item) => {
+                    'name': item['display_name'] ?? '',
+                    'lat': double.tryParse(item['lat'].toString()) ?? 0.0,
+                    'lng': double.tryParse(item['lon'].toString()) ?? 0.0,
+                  })
+              .toList();
+          _isSearchingAddress = true;
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) print('Address search error: $e');
+      setState(() {
+        _addressSuggestions = [];
+        _isSearchingAddress = true;
+      });
+    } finally {
+      setState(() => _isLoadingAddressSuggestions = false);
+    }
+  }
+
+  /// Select an address and set the GeoPoint
+  void _selectAddress(Map<String, dynamic> suggestion) {
+    setState(() {
+      _selectedLivingAddress = GeoPoint(suggestion['lat'], suggestion['lng']);
+      _addressSearchController.text = suggestion['name'];
+      _addressSuggestions = [];
+      _isSearchingAddress = false;
+    });
+  }
+
   Future<void> _saveChanges() async {
     try {
       final targetCollection = _loadedCollection.isNotEmpty ? _loadedCollection : 'users';
       final targetDocId = _loadedDocId.isNotEmpty ? _loadedDocId : widget.userId;
       if (targetDocId.isEmpty) throw Exception('No document id available to save profile');
 
-      await FirebaseFirestore.instance
-          .collection(targetCollection)
-          .doc(targetDocId)
-          .set({
+      final updateData = {
         'studentName': _nameController.text,
         'email': _emailController.text,
         'matricNo': _matricController.text,
@@ -222,7 +286,17 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
         'roomNumber': _roomController.text,
         'wing': _wingController.text,
         'photoUrl': _profileImageUrl ?? _profileData['photoUrl'],
-      }, SetOptions(merge: true));
+      };
+
+      // Add livingAddress if it has been set
+      if (_selectedLivingAddress != null) {
+        updateData['livingAddress'] = _selectedLivingAddress;
+      }
+
+      await FirebaseFirestore.instance
+          .collection(targetCollection)
+          .doc(targetDocId)
+          .set(updateData, SetOptions(merge: true));
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Profile updated successfully!')),
@@ -250,6 +324,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     _blockController.dispose();
     _roomController.dispose();
     _wingController.dispose();
+    _addressSearchController.dispose();
     super.dispose();
   }
 
@@ -484,6 +559,133 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                           label: 'Wing',
                           controller: _wingController,
                           icon: Icons.location_on_outlined,
+                        ),
+                        // Address Search Field
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Living Address (GPS Location)',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            if (!_isEditing)
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[100],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.location_on, color: Colors.grey[600]),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        _selectedLivingAddress != null
+                                            ? 'Lat: ${_selectedLivingAddress!.latitude.toStringAsFixed(4)}, Lng: ${_selectedLivingAddress!.longitude.toStringAsFixed(4)}'
+                                            : 'No address set',
+                                        style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            else
+                              Stack(
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[100],
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: TextField(
+                                      controller: _addressSearchController,
+                                      onChanged: _searchAddresses,
+                                      decoration: InputDecoration(
+                                        prefixIcon: Icon(Icons.location_on, color: Colors.grey[600]),
+                                        hintText: 'Search for address...',
+                                        hintStyle: TextStyle(color: Colors.grey[500]),
+                                        border: InputBorder.none,
+                                        contentPadding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  if (_isLoadingAddressSuggestions)
+                                    Positioned(
+                                      right: 16,
+                                      top: 12,
+                                      child: SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.grey[600]!),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            const SizedBox(height: 8),
+                            if (_isSearchingAddress && _addressSuggestions.isNotEmpty)
+                              Container(
+                                constraints: const BoxConstraints(maxHeight: 200),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  border: Border.all(color: Colors.grey[300]!),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: ListView.builder(
+                                  shrinkWrap: true,
+                                  itemCount: _addressSuggestions.length,
+                                  itemBuilder: (context, index) {
+                                    final suggestion = _addressSuggestions[index];
+                                    return ListTile(
+                                      leading: const Icon(Icons.location_on, size: 18, color: Colors.grey),
+                                      title: Text(
+                                        suggestion['name'],
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                      onTap: () => _selectAddress(suggestion),
+                                    );
+                                  },
+                                ),
+                              ),
+                            if (_selectedLivingAddress != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.check_circle, size: 16, color: Colors.green),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'Address selected: Lat ${_selectedLivingAddress!.latitude.toStringAsFixed(4)}, Lng ${_selectedLivingAddress!.longitude.toStringAsFixed(4)}',
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.green,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
                         ),
                       ],
                     ),

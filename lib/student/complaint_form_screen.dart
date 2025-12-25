@@ -37,11 +37,15 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
   //location
   String? _locationChoice; // "room" or "public"
   Map<String, dynamic>? _studentData; // to store student block/room/college
+<<<<<<< Updated upstream
   
   // Location data from the location picker
   String? _selectedAddress;
   double? _selectedLatitude;
   double? _selectedLongitude;
+=======
+  GeoPoint? _livingAddressGeoPoint; // to store living address when "Inside My Room" is selected
+>>>>>>> Stashed changes
 
   final List<String> _maintenanceOptions = ['Furniture', 'Electrical', 'Plumbing', 'Other'];
   final List<String> _urgencyOptions = ['Minor', 'Medium', 'High'];
@@ -129,6 +133,41 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
     boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 4))],
   );
 
+  /// Fetch the student's living address GeoPoint from Firestore
+  Future<void> _fetchLivingAddress() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      final studentDoc = await FirebaseFirestore.instance.collection('student').doc(user.uid).get();
+      if (studentDoc.exists) {
+        final data = studentDoc.data() ?? {};
+        final livingAddress = data['livingAddress'] as GeoPoint?;
+        
+        setState(() {
+          _livingAddressGeoPoint = livingAddress;
+        });
+
+        if (livingAddress == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Living address not found. Please update your profile.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print('Error fetching living address: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error fetching address: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   Future<void> _pickImages() async {
     if (_pickedImages.length >= 3) return;
     final ImagePicker picker = ImagePicker();
@@ -146,9 +185,28 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
         _selectedUrgency == null ||
         _selectedMaintenanceType == null ||
         _locationChoice == null ||
+<<<<<<< Updated upstream
         _selectedAddress == null ||
         _selectedAddress!.isEmpty) {
       _showErrorDialog('Incomplete', 'Please fill all required fields, including address.');
+=======
+        (_locationChoice == "public" && _publicLocationController.text.trim().isEmpty) ||
+        (_locationChoice == "room" && _livingAddressGeoPoint == null)
+    ) {
+
+      showDialog(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: const Text('Incomplete'),
+          content: Text(
+            _locationChoice == "room" && _livingAddressGeoPoint == null
+                ? 'Please set your living address in your profile first.'
+                : 'Please fill all required fields.'
+          ),
+          actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))],
+        ),
+      );
+>>>>>>> Stashed changes
       return;
     }
 
@@ -184,7 +242,7 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
         finalDamageDescription = '';
       }
 
-      final docRef = await firestore.collection('complaint').add({
+      final complaintData = {
         'assignedTo': '/collection/technician',
         'damageCategory': _selectedMaintenanceType,
         'damagePic': null,
@@ -209,7 +267,14 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
         'isArchived': false,
         'studentID': user.uid,
         'statusChangeCount': 1,
-      });
+      };
+
+      // Add repairLocation (GeoPoint) when "Inside My Room" is selected
+      if (_locationChoice == "room" && _livingAddressGeoPoint != null) {
+        complaintData['repairLocation'] = _livingAddressGeoPoint;
+      }
+
+      final docRef = await firestore.collection('complaint').add(complaintData);
 
       await docRef.update({'complaintID': docRef.id});
 
@@ -352,6 +417,7 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
                 onChanged: (_isSubmitted || _isSubmitting || _isLoadingStudentData)
                     ? null
                     : (v) {
+<<<<<<< Updated upstream
                       setState(() {
                         _locationChoice = v;
                         // Clear address when switching modes
@@ -362,6 +428,14 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
                         _selectedLongitude = null;
                       });
                     },
+=======
+                        setState(() => _locationChoice = v);
+                        // When "Inside My Room" is selected, fetch the living address
+                        if (v == "room") {
+                          _fetchLivingAddress();
+                        }
+                      },
+>>>>>>> Stashed changes
                 decoration: const InputDecoration(
                   border: InputBorder.none,
                   hintText: "Select damage location",
