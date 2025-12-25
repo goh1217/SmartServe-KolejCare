@@ -33,7 +33,7 @@ Future<void> main() async {
     debugPrint("Secret key present: ${dotenv.env['STRIPE_SECRET_KEY']?.isNotEmpty ?? false}");
   } catch (e) {
     debugPrint("❌ Error loading .env file: $e");
-    debugPrint("Make sure .env file exists in the root directory");
+    debugPrint("Make sure .env file exists in the root directory and is added to assets in pubspec.yaml");
   }
 
   // Initialize Stripe
