@@ -37,15 +37,12 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
   //location
   String? _locationChoice; // "room" or "public"
   Map<String, dynamic>? _studentData; // to store student block/room/college
-<<<<<<< Updated upstream
+  GeoPoint? _livingAddressGeoPoint; // to store living address when "Inside My Room" is selected
   
   // Location data from the location picker
   String? _selectedAddress;
   double? _selectedLatitude;
   double? _selectedLongitude;
-=======
-  GeoPoint? _livingAddressGeoPoint; // to store living address when "Inside My Room" is selected
->>>>>>> Stashed changes
 
   final List<String> _maintenanceOptions = ['Furniture', 'Electrical', 'Plumbing', 'Other'];
   final List<String> _urgencyOptions = ['Minor', 'Medium', 'High'];
@@ -120,9 +117,9 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
     
     final college = _studentData?['residentCollege'] ?? '';
     final block = _studentData?['block'] ?? '';
+    final room = _studentData?['roomNumber'] ?? '';
 
-    
-    final parts = [college, block].where((p) => p.isNotEmpty).toList();
+    final parts = [college, block, room].where((p) => p.isNotEmpty).toList();
     return parts.join(', ');
   }
 
@@ -185,12 +182,7 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
         _selectedUrgency == null ||
         _selectedMaintenanceType == null ||
         _locationChoice == null ||
-<<<<<<< Updated upstream
-        _selectedAddress == null ||
-        _selectedAddress!.isEmpty) {
-      _showErrorDialog('Incomplete', 'Please fill all required fields, including address.');
-=======
-        (_locationChoice == "public" && _publicLocationController.text.trim().isEmpty) ||
+        (_locationChoice == "public" && _locationDescriptionController.text.trim().isEmpty) ||
         (_locationChoice == "room" && _livingAddressGeoPoint == null)
     ) {
 
@@ -206,7 +198,6 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
           actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))],
         ),
       );
->>>>>>> Stashed changes
       return;
     }
 
@@ -417,25 +408,12 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
                 onChanged: (_isSubmitted || _isSubmitting || _isLoadingStudentData)
                     ? null
                     : (v) {
-<<<<<<< Updated upstream
-                      setState(() {
-                        _locationChoice = v;
-                        // Clear address when switching modes
-                        _locationAddressController.clear();
-                        _locationDescriptionController.clear();
-                        _selectedAddress = null;
-                        _selectedLatitude = null;
-                        _selectedLongitude = null;
-                      });
-                    },
-=======
                         setState(() => _locationChoice = v);
                         // When "Inside My Room" is selected, fetch the living address
                         if (v == "room") {
                           _fetchLivingAddress();
                         }
                       },
->>>>>>> Stashed changes
                 decoration: const InputDecoration(
                   border: InputBorder.none,
                   hintText: "Select damage location",
