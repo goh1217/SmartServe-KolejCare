@@ -6,6 +6,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart'; // Assuming image_picker is available or I will add logic.
 import 'package:http/http.dart' as http;
+import '../services/technician_task_service.dart';
 import 'main.dart'; // For navigation if needed
 import 'calendar.dart'; // For navigation if needed
 import 'profile.dart'; // For navigation if needed
@@ -53,6 +54,13 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   int currentImageIndex = 0; // Track current image being displayed
   String studentId = '';
   
+  // For arrived tracking
+  DateTime? arrivedAt; // Timestamp when technician arrived
+  
+  // Location coordinates for Google Maps
+  double? locationLatitude;
+  double? locationLongitude;
+  
   // For proof submission
   List<String> proofImages = []; // List to store up to 3 proof images
   int currentProofImageIndex = 0; // Track current proof image being displayed
@@ -87,6 +95,26 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
           location = data['damageLocation'] ?? 'No location provided.';
           description = data['inventoryDamage'] ?? 'No description provided.';
           assignmentNotes = data['rejectionReason'] ?? 'No notes provided.';
+          
+          // Load location coordinates if available
+          if (data['repairLocation'] != null) {
+            final geoPoint = data['repairLocation'];
+            locationLatitude = geoPoint.latitude;
+            locationLongitude = geoPoint.longitude;
+            print('DEBUG taskDetail: Loaded repairLocation coordinates: $locationLatitude, $locationLongitude');
+          } else if (data['damageLocationCoordinates'] != null) {
+            // Fallback to old field for backward compatibility
+            final geoPoint = data['damageLocationCoordinates'];
+            locationLatitude = geoPoint.latitude;
+            locationLongitude = geoPoint.longitude;
+            print('DEBUG taskDetail: Loaded damageLocationCoordinates (fallback): $locationLatitude, $locationLongitude');
+          }
+          
+          // Load arrivedAt timestamp if it exists
+          if (data['arrivedAt'] != null && data['arrivedAt'] is Timestamp) {
+            arrivedAt = (data['arrivedAt'] as Timestamp).toDate();
+          }
+          
           // If there is a damagePic field - can be a string or list
           if (data['damagePic'] != null) {
             if (data['damagePic'] is List) {
@@ -469,6 +497,26 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                     ],
                   ),
                 ],
+              ),
+            ),
+
+            // Google Maps Button
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _openLocationInGoogleMaps,
+                  icon: const Icon(Icons.map),
+                  label: const Text('Open Location in Google Maps'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
               ),
             ),
 
@@ -1063,16 +1111,74 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   }
 
   Widget _buildActionButton() {
-    // Check if status is In Progress (case insensitive)
-    bool isInProgress = status.toLowerCase() == 'in progress' || status.toLowerCase() == 'ongoing';
+    // Check task status
     bool isCompleted = status.toLowerCase() == 'completed';
     bool isPending = status.toLowerCase() == 'pending';
+    bool isOngoing = status.toLowerCase() == 'ongoing';
+    bool hasArrived = arrivedAt != null;
 
     if (isCompleted || isPending) {
       return const SizedBox.shrink(); // Button disappears when completed or pending
     }
 
-    if (isInProgress) {
+    // State 1: Show "Start Task" button when task is not yet ongoing
+    if (!isOngoing && !hasArrived) {
+      return SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: () {
+            _showStartRepairDialog();
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF6C63FF),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            elevation: 2,
+          ),
+          child: const Text(
+            'Start Task',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      );
+    }
+
+    // State 2: Show "Arrive" button when task is ongoing but not yet arrived
+    if (isOngoing && !hasArrived) {
+      return SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: () {
+            _showArriveDialog();
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF2196F3),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            elevation: 2,
+          ),
+          child: const Text(
+            'Arrive',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      );
+    }
+
+    // State 3: Show "Complete Task" and "Can't Complete" buttons once arrived
+    if (hasArrived) {
       return Column(
         children: [
           SizedBox(
@@ -1126,32 +1232,44 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
           ),
         ],
       );
-    } else {
-      // Default state: Start Repair
-      return SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: () {
-            _showStartRepairDialog();
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF6C63FF),
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            elevation: 2,
-          ),
-          child: const Text(
-            'Start Repair',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-        ),
+    }
+
+    return const SizedBox.shrink();
+  }
+
+  Future<void> _openLocationInGoogleMaps() async {
+    print('DEBUG: _openLocationInGoogleMaps called');
+    print('DEBUG: locationLatitude = $locationLatitude');
+    print('DEBUG: locationLongitude = $locationLongitude');
+    
+    if (locationLatitude == null || locationLongitude == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Location coordinates not available')),
       );
+      return;
+    }
+
+    final url =
+        'https://www.google.com/maps/search/?api=1&query=$locationLatitude,$locationLongitude';
+    
+    print('DEBUG: Google Maps URL = $url');
+
+    try {
+      if (await canLaunchUrl(Uri.parse(url))) {
+        await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not launch Google Maps')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     }
   }
 
@@ -1190,7 +1308,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.pop(context); // Close dialog
-                        _updateComplaintStatus('Ongoing');
+                        _setStatusToOngoing(); // Change status to ONGOING
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFD32F2F), // Red
@@ -1855,6 +1973,139 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
       }
     } catch (e) {
       print("Error sending notification to student: $e");
+    }
+  }
+
+  Future<void> _setStatusToOngoing() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User not logged in')),
+        );
+        return;
+      }
+
+      print('DEBUG _setStatusToOngoing: Starting task for user.uid=${user.uid}, task=${widget.taskId}');
+
+      // Use TechnicianTaskService to start the task with GPS tracking
+      final taskService = TechnicianTaskService();
+      await taskService.startTask(widget.taskId, user.uid);
+      
+      setState(() {
+        status = 'Ongoing';
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Task started! GPS tracking enabled. Click Arrive when you reach the location.')),
+      );
+    } catch (e) {
+      print('Error starting task: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to start task: $e')),
+      );
+    }
+  }
+
+  void _showArriveDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF2196F3),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.location_on,
+                  color: Colors.white,
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Have you arrived at the repair location?',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _setArrivedAt();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4CAF50), // Green
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Text(
+                        'Yes',
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey[700],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Text(
+                        'Not Yet',
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _setArrivedAt() async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('complaint')
+          .doc(widget.taskId)
+          .update({
+            'arrivedAt': FieldValue.serverTimestamp(),
+          });
+      
+      setState(() {
+        arrivedAt = DateTime.now();
+      });
+      
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Task started! You can now proceed.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to start task: $e')),
+      );
     }
   }
 

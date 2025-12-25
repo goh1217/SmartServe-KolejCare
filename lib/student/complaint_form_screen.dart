@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import '../widgets/location_picker_widget.dart';
 
 class ComplaintFormScreen extends StatefulWidget {
   const ComplaintFormScreen({super.key});
@@ -19,6 +20,8 @@ class ComplaintFormScreen extends StatefulWidget {
 class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _locationAddressController = TextEditingController();
+  final TextEditingController _locationDescriptionController = TextEditingController();
 
   String? _selectedMaintenanceType;
   String? _selectedUrgency;
@@ -26,25 +29,100 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
 
   bool _isSubmitted = false;
   bool _isSubmitting = false;
+  bool _isLoadingStudentData = true;
+  String? _studentDataError;
 
   final List<XFile> _pickedImages = [];
 
   //location
   String? _locationChoice; // "room" or "public"
-  final TextEditingController _publicLocationController = TextEditingController();
   Map<String, dynamic>? _studentData; // to store student block/room/college
+  
+  // Location data from the location picker
+  String? _selectedAddress;
+  double? _selectedLatitude;
+  double? _selectedLongitude;
 
   final List<String> _maintenanceOptions = ['Furniture', 'Electrical', 'Plumbing', 'Other'];
   final List<String> _urgencyOptions = ['Minor', 'Medium', 'High'];
 
   @override
+  void initState() {
+    super.initState();
+    _fetchStudentData();
+  }
+
+  @override
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
-    _publicLocationController.dispose();
+    _locationAddressController.dispose();
+    _locationDescriptionController.dispose();
     super.dispose();
   }
 
+  /// Fetch student data from Firestore to get college and block info
+  Future<void> _fetchStudentData() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw 'User not logged in';
+
+      final studentDoc =
+          await FirebaseFirestore.instance.collection('student').doc(user.uid).get();
+
+      if (!studentDoc.exists) throw 'Student record not found';
+
+      if (mounted) {
+        setState(() {
+          _studentData = studentDoc.data();
+          _isLoadingStudentData = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _studentDataError = e.toString();
+          _isLoadingStudentData = false;
+        });
+      }
+    }
+  }
+
+  void _showErrorDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))],
+      ),
+    );
+  }
+
+  void _showSuccessDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))],
+      ),
+    );
+  }
+
+  /// Generate initial address for room mode from student data
+  String _getInitialRoomAddress() {
+    if (_studentData == null) return '';
+    
+    final college = _studentData?['residentCollege'] ?? '';
+    final block = _studentData?['block'] ?? '';
+
+    
+    final parts = [college, block].where((p) => p.isNotEmpty).toList();
+    return parts.join(', ');
+  }
+
+  /// Build a card decoration style with shadow and rounded corners
   BoxDecoration _cardDecoration() => BoxDecoration(
     color: Colors.white,
     borderRadius: BorderRadius.circular(16),
@@ -62,22 +140,15 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
     final title = _titleController.text.trim();
     final desc = _descriptionController.text.trim();
 
+    // Validation
     if (title.isEmpty ||
         desc.isEmpty ||
         _selectedUrgency == null ||
         _selectedMaintenanceType == null ||
         _locationChoice == null ||
-        (_locationChoice == "public" && _publicLocationController.text.trim().isEmpty)
-    ) {
-
-      showDialog(
-        context: context,
-        builder: (c) => AlertDialog(
-          title: const Text('Incomplete'),
-          content: const Text('Please fill all required fields.'),
-          actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))],
-        ),
-      );
+        _selectedAddress == null ||
+        _selectedAddress!.isEmpty) {
+      _showErrorDialog('Incomplete', 'Please fill all required fields, including address.');
       return;
     }
 
@@ -88,18 +159,39 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw 'User not logged in';
 
-      // ---------------- FETCH STUDENT DATA ----------------
-      final studentDoc = await firestore.collection('student').doc(user.uid).get();
-      _studentData = studentDoc.data();
-      if (_studentData == null) throw 'Student record not found';
+      // Ensure student data is loaded
+      if (_studentData == null) {
+        throw 'Student data not available. Please try again.';
+      }
+
+      // Create GeoPoint from coordinates if available
+      final repairLocation = (_selectedLatitude != null && _selectedLongitude != null)
+          ? GeoPoint(_selectedLatitude!, _selectedLongitude!)
+          : null;
+
+      // For room mode: address should be college+block without room number
+      // For public mode: description goes to damageLocation, not damageLocationDescription
+      final String finalDamageLocation;
+      final String finalDamageDescription;
+      
+      if (_locationChoice == "room") {
+        // Room mode: use initial address (college+block)
+        finalDamageLocation = _getInitialRoomAddress();
+        finalDamageDescription = _locationDescriptionController.text.trim();
+      } else {
+        // Public area mode: description becomes the damage location
+        finalDamageLocation = _locationDescriptionController.text.trim();
+        finalDamageDescription = '';
+      }
 
       final docRef = await firestore.collection('complaint').add({
         'assignedTo': '/collection/technician',
         'damageCategory': _selectedMaintenanceType,
         'damagePic': null,
-        'damageLocation': (_locationChoice == "room")
-            ? "${_studentData?['residentCollege']}, ${_studentData?['block']}, ${_studentData?['roomNumber']}"
-            : _publicLocationController.text.trim(),
+        'damageLocation': finalDamageLocation,
+        'repairLocation': repairLocation,
+        'damageLocationDescription': finalDamageDescription,
+        'damageLocationType': _locationChoice, // 'room' or 'public'
         'feedbackRating': 0,
         'inventoryDamage': desc,
         'inventoryDamageTitle': title,
@@ -135,7 +227,11 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
             bytes = await file.readAsBytes();
           } else {
             final rawBytes = await file.readAsBytes();
-            bytes = await FlutterImageCompress.compressWithList(rawBytes, quality: 70) ?? rawBytes;
+            final compressed = await FlutterImageCompress.compressWithList(
+              rawBytes,
+              quality: 70,
+            );
+            bytes = compressed != null ? compressed : rawBytes;
           }
 
           final uri = Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/upload');
@@ -155,25 +251,11 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
       setState(() => _isSubmitted = true);
 
       if (mounted) {
-        showDialog(
-          context: context,
-          builder: (c) => AlertDialog(
-            title: const Text('Success!'),
-            content: const Text('Complaint submitted successfully.'),
-            actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))],
-          ),
-        );
+        _showSuccessDialog('Success!', 'Complaint submitted successfully.');
       }
     } catch (e) {
       if (mounted) {
-        showDialog(
-          context: context,
-          builder: (c) => AlertDialog(
-            title: const Text('Error'),
-            content: Text('Failed to submit complaint: $e'),
-            actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))],
-          ),
-        );
+        _showErrorDialog('Error', 'Failed to submit complaint: $e');
       }
     } finally {
       setState(() => _isSubmitting = false);
@@ -257,7 +339,7 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
             ),
             const SizedBox(height: 16),
 
-            // LOCATION
+            // LOCATION - Mode Selection
             Container(
               decoration: _cardDecoration(),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -267,9 +349,19 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
                   DropdownMenuItem(value: "room", child: Text("Inside My Room")),
                   DropdownMenuItem(value: "public", child: Text("Public Area")),
                 ],
-                onChanged: (_isSubmitted || _isSubmitting)
+                onChanged: (_isSubmitted || _isSubmitting || _isLoadingStudentData)
                     ? null
-                    : (v) => setState(() => _locationChoice = v),
+                    : (v) {
+                      setState(() {
+                        _locationChoice = v;
+                        // Clear address when switching modes
+                        _locationAddressController.clear();
+                        _locationDescriptionController.clear();
+                        _selectedAddress = null;
+                        _selectedLatitude = null;
+                        _selectedLongitude = null;
+                      });
+                    },
                 decoration: const InputDecoration(
                   border: InputBorder.none,
                   hintText: "Select damage location",
@@ -278,20 +370,60 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
             ),
             const SizedBox(height: 16),
 
-            if (_locationChoice == "public")
-              Container(
-                decoration: _cardDecoration(),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                child: TextField(
-                  controller: _publicLocationController,
-                  enabled: !_isSubmitted && !_isSubmitting,
-                  decoration: const InputDecoration(
-                    hintText: "Enter public area description",
-                    border: InputBorder.none,
+            // Location Picker Widget (appears when mode is selected)
+            if (_locationChoice != null) ...[
+              if (_isLoadingStudentData && _locationChoice == "room")
+                Container(
+                  decoration: _cardDecoration(),
+                  padding: const EdgeInsets.all(24),
+                  child: const Center(
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   ),
+                )
+              else if (_studentDataError != null && _locationChoice == "room")
+                Container(
+                  decoration: _cardDecoration(),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.error_outline, color: Colors.red),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Error loading student data: $_studentDataError',
+                              style: GoogleFonts.poppins(fontSize: 13, color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                )
+              else
+                LocationPickerWidget(
+                  locationMode: _locationChoice,
+                  addressController: _locationAddressController,
+                  initialAddress: _locationChoice == "room" ? _getInitialRoomAddress() : null,
+                  editableAddress: _locationChoice == "room",
+                  descriptionController: _locationChoice == "public" ? _locationDescriptionController : null,
+                  onLocationSelected: (result) {
+                    setState(() {
+                      _selectedAddress = result.address;
+                      _selectedLatitude = result.latitude;
+                      _selectedLongitude = result.longitude;
+                    });
+                  },
                 ),
-              ),
-            if (_locationChoice == "public") const SizedBox(height: 16),
+              const SizedBox(height: 16),
+            ],
+
             // ----------------------------------------------------------
 
 

@@ -6,6 +6,9 @@ import 'taskDetail.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../firebase_options.dart';
+import 'dart:async';
+import '../services/gps_service.dart';
+import '../models/location_model.dart';
 
 // Helper functions for scheduledDateTimeSlot handling
 class TimeSlotHelper {
@@ -136,6 +139,13 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
   String? currentUserId;
   String? technicianDocId; // The actual technician document ID
   String technicianName = 'Technician';
+  
+  // Location tracking variables
+  final GPSService _gpsService = GPSService();
+  StreamSubscription? _locationSubscription;
+  Timer? _periodicLocationUpdateTimer;
+  LocationData? _lastKnownLocation;
+  bool _isAutoTrackingActive = false;
 
   @override
   void initState() {
@@ -143,6 +153,7 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
     currentUserId = FirebaseAuth.instance.currentUser?.uid;
     _fetchTechnicianDocId();
     
+    // Listen for auth state changes
     FirebaseAuth.instance.authStateChanges().listen((User? user) {
       if (mounted) {
         setState(() {
@@ -150,9 +161,19 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
         });
         if (user != null) {
           _fetchTechnicianDocId();
+          // Start auto location tracking when user logs in
+          _startAutoLocationTracking();
+        } else {
+          // Stop auto location tracking when user logs out
+          _stopAutoLocationTracking();
         }
       }
     });
+    
+    // If already logged in, start tracking
+    if (currentUserId != null) {
+      _startAutoLocationTracking();
+    }
   }
 
   // Fetch the technician's document ID from the technician collection
@@ -183,6 +204,166 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
     } catch (e) {
       print('Error fetching technician doc ID: $e');
     }
+  }
+
+  /// Start automatic location tracking for technician
+  Future<void> _startAutoLocationTracking() async {
+    if (_isAutoTrackingActive) {
+      print('[AUTO TRACKING] Tracking already active, skipping...');
+      return;
+    }
+    
+    // Wait for technician doc ID if it's not available yet
+    if (technicianDocId == null) {
+      print('[AUTO TRACKING] Waiting for technician doc ID before starting tracking...');
+      // Give it a moment for _fetchTechnicianDocId to complete
+      await Future.delayed(const Duration(milliseconds: 500));
+      // Try again
+      if (technicianDocId == null) {
+        print('[AUTO TRACKING] Failed to get technician doc ID, retrying...');
+        await _fetchTechnicianDocId();
+        // Wait a bit more
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+      
+      // If still null, don't proceed
+      if (technicianDocId == null) {
+        print('[AUTO TRACKING] Cannot start tracking: technician doc ID is null');
+        return;
+      }
+    }
+
+    print('[AUTO TRACKING] Starting auto location tracking for technician: $technicianDocId');
+    
+    try {
+      // Start GPS tracking with updates every 10 seconds for consistency
+      _gpsService.startTracking(
+        updateInterval: const Duration(seconds: 10),
+      ).then((_) {
+        print('[AUTO TRACKING] GPS tracking started successfully with 10-second interval');
+        if (mounted) {
+          setState(() {
+            _isAutoTrackingActive = true;
+          });
+        }
+
+        // Subscribe to location updates and update Firestore
+        _locationSubscription?.cancel();
+        _locationSubscription = _gpsService.locationStream.listen(
+          (location) {
+            _lastKnownLocation = location;
+            print('[AUTO TRACKING] Location update received: lat=${location.latitude}, lng=${location.longitude}');
+            _updateTechnicianLocationInFirestore(location);
+          },
+          onError: (error) {
+            print('[AUTO TRACKING] Error in location stream: $error');
+          },
+        );
+
+        // Add a periodic timer as fallback to ensure updates every 10 seconds
+        // This ensures consistent updates even if GPS stream has delays
+        _periodicLocationUpdateTimer?.cancel();
+        _periodicLocationUpdateTimer = Timer.periodic(
+          const Duration(seconds: 10),
+          (_) {
+            if (_lastKnownLocation != null && _isAutoTrackingActive) {
+              print('[AUTO TRACKING] Periodic update triggered (10s interval)');
+              _updateTechnicianLocationInFirestore(_lastKnownLocation!);
+            }
+          },
+        );
+        print('[AUTO TRACKING] Periodic location update timer started (10s interval)');
+      }).catchError((error) {
+        print('[AUTO TRACKING] Error starting GPS tracking: $error');
+        // Don't fail silently - show error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Location tracking permission required: $error'),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      });
+    } catch (e) {
+      print('[AUTO TRACKING] Error in _startAutoLocationTracking: $e');
+    }
+  }
+
+  /// Update technician location in Firestore
+  Future<void> _updateTechnicianLocationInFirestore(LocationData location) async {
+    if (technicianDocId == null) {
+      print('[AUTO TRACKING] Cannot update location: technicianDocId is null');
+      return;
+    }
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('technician')
+          .doc(technicianDocId)
+          .update({
+            'currentLocation': GeoPoint(location.latitude, location.longitude),
+            'locationUpdatedAt': Timestamp.now(),
+            'isLocationTrackingActive': true,
+          });
+      print('[AUTO TRACKING] Location updated in Firestore: ${location.latitude}, ${location.longitude}');
+    } catch (e) {
+      print('[AUTO TRACKING] Error updating location in Firestore: $e');
+    }
+  }
+
+  /// Stop automatic location tracking
+  void _stopAutoLocationTracking() {
+    print('[AUTO TRACKING] Stopping auto location tracking...');
+    
+    if (!_isAutoTrackingActive) {
+      print('[AUTO TRACKING] Tracking is not active, skipping...');
+      return;
+    }
+
+    try {
+      // Cancel location stream subscription
+      _locationSubscription?.cancel();
+      _locationSubscription = null;
+
+      // Cancel periodic timer
+      _periodicLocationUpdateTimer?.cancel();
+      _periodicLocationUpdateTimer = null;
+      print('[AUTO TRACKING] Periodic timer cancelled');
+
+      // Stop GPS service
+      _gpsService.stopTracking();
+
+      // Update Firestore to indicate tracking stopped
+      if (technicianDocId != null) {
+        FirebaseFirestore.instance
+            .collection('technician')
+            .doc(technicianDocId)
+            .update({
+              'isLocationTrackingActive': false,
+              'locationTrackingStoppedAt': Timestamp.now(),
+            }).then((_) {
+              print('[AUTO TRACKING] Firestore updated: tracking stopped');
+            }).catchError((e) {
+              print('[AUTO TRACKING] Error updating Firestore on logout: $e');
+            });
+      }
+
+      if (mounted) {
+        setState(() {
+          _isAutoTrackingActive = false;
+        });
+      }
+
+      print('[AUTO TRACKING] Auto location tracking stopped successfully');
+    } catch (e) {
+      print('[AUTO TRACKING] Error in _stopAutoLocationTracking: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    // Clean up location tracking when widget is disposed
+    _stopAutoLocationTracking();
+    super.dispose();
   }
 
   @override
@@ -233,6 +414,10 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
                   const Spacer(),
                   GestureDetector(
                     onTap: () async {
+                      // Stop location tracking before logout
+                      _stopAutoLocationTracking();
+                      
+                      // Sign out from Firebase
                       await FirebaseAuth.instance.signOut();
                       if (mounted) {
                         Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
