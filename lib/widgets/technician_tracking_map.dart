@@ -37,6 +37,7 @@ class _TechnicianTrackingMapState extends State<TechnicianTrackingMap> {
   Timer? _routeUpdateTimer;
   Set<GoogleMarker> _markers = {};
   Set<GooglePolyline> _polylines = {};
+  bool _isFirstLocationUpdate = true; // Track if this is the first location
 
   // Helper method to convert latlong2.LatLng to google_maps_flutter.LatLng
   GoogleLatLng _toGoogleLatLng(latlong.LatLng latLng) {
@@ -91,7 +92,12 @@ class _TechnicianTrackingMapState extends State<TechnicianTrackingMap> {
               setState(() {
                 _technicianLocation = location;
               });
-              _fitMapToBounds();
+              // Only fit bounds on first location update for better UX
+              // This centers the map initially but then keeps it stable as technician moves
+              if (_isFirstLocationUpdate) {
+                _fitMapToBounds();
+                _isFirstLocationUpdate = false;
+              }
               _updateRoute();
             }
           },
@@ -105,17 +111,10 @@ class _TechnicianTrackingMapState extends State<TechnicianTrackingMap> {
           },
         );
 
-    // Update route every 10 seconds to ensure fresh ETA
-    // This aligns with technician's currentLocation update frequency
-    _routeUpdateTimer = Timer.periodic(
-      const Duration(seconds: 10),
-      (_) {
-        if (mounted && _technicianLocation != null) {
-          print('[TRACKING MAP] Periodic route update (10s interval)');
-          _updateRoute();
-        }
-      },
-    );
+    // NOTE: Removed the 10-second timer for route updates
+    // Location updates from Firestore already trigger _updateRoute()
+    // ETA is updated separately in technician_location_page.dart timer
+    // This prevents unnecessary map rebuilds that reset the camera position
 
     // Initial route fetch
     print('[TRACKING MAP] Fetching initial route');
@@ -336,6 +335,25 @@ class _TechnicianTrackingMapState extends State<TechnicianTrackingMap> {
             const Text('Repair location has not been set'),
             const SizedBox(height: 16),
             Text('Coordinates: ${widget.repairLocation.latitude}, ${widget.repairLocation.longitude}'),
+          ],
+        ),
+      );
+    }
+
+    // ⚠️ NEW: Check if technician location is available
+    if (_technicianLocation == null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.location_off, size: 48, color: Colors.orange),
+            const SizedBox(height: 16),
+            const Text('Waiting for technician location...'),
+            const SizedBox(height: 8),
+            const Text('Make sure the technician has logged in'),
+            const Text('and enabled location sharing'),
+            const SizedBox(height: 16),
+            const CircularProgressIndicator(),
           ],
         ),
       );

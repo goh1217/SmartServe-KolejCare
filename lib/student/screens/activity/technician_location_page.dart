@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../services/location_tracking_service.dart';
 import '../../../services/eta_service.dart';
 import '../../../widgets/technician_tracking_map.dart';
+import 'eta_card_widget.dart';
 
 // Type alias
 typedef GoogleLatLng = gmaps.LatLng;
@@ -291,86 +292,14 @@ class _TechnicianLocationPageState extends State<TechnicianLocationPage> {
                   final location = (data['damageLocation'] ?? data['location'] ?? '').toString();
                   final assignedToRaw = (data['assignedTo'] ?? '').toString();
 
-                  // Calculate ETA using Google Directions API with real technician location
-                  Future<String> calculateETAText() async {
-                    try {
-                      // Get technician's current location
-                      final techId = assignedToRaw.split('/').last;
-                      final techLocation = await LocationTrackingService().getTechnicianCurrentLocation(techId);
-
-                      if (techLocation == null) {
-                        print('Technician location not available, using fallback');
-                        final defaultArrival = DateTime.now().add(const Duration(minutes: 30));
-                        return 'Arrive at ${DateFormat('hh:mm a').format(defaultArrival)}';
-                      }
-
-                      // Get repair location coordinates
-                      var repairCoords = data['repairLocation'];
-                      double? repairLat, repairLng;
-
-                      if (repairCoords is GeoPoint) {
-                        repairLat = repairCoords.latitude;
-                        repairLng = repairCoords.longitude;
-                      }
-
-                      if (repairLat == null || repairLng == null) {
-                        print('Repair location not available, using fallback');
-                        final defaultArrival = DateTime.now().add(const Duration(minutes: 30));
-                        return 'Arrive at ${DateFormat('hh:mm a').format(defaultArrival)}';
-                      }
-
-                      // Calculate ETA using Directions API
-                      final eta = await ETAService().calculateETAMinutes(
-                        originLat: techLocation.latitude,
-                        originLng: techLocation.longitude,
-                        destinationLat: repairLat,
-                        destinationLng: repairLng,
-                      );
-
-                      // Calculate arrival time
-                      final arrivalTime = DateTime.now().add(Duration(minutes: eta));
-                      return 'Arrive at ${DateFormat('hh:mm a').format(arrivalTime)}';
-                    } catch (e) {
-                      print('Error calculating ETA: $e');
-                      final defaultArrival = DateTime.now().add(const Duration(minutes: 30));
-                      return 'Arrive at ${DateFormat('hh:mm a').format(defaultArrival)}';
-                    }
-                  }
-
                   return SingleChildScrollView(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // ETA Card
-                        FutureBuilder<String>(
-                          future: calculateETAText(),
-                          builder: (context, etaSnap) {
-                            if (!mounted) return const SizedBox.shrink();
-                            
-                            final etaText = etaSnap.data ?? 'Arrive at --:-- --';
-                            return Container(
-                              decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.green.withOpacity(0.3)),
-                              ),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.schedule, size: 18, color: Colors.green[700]),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    etaText,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.green[700],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+                        // ETA Card - now uses separate stateful widget
+                        ETACardWidget(
+                          complaintId: widget.complaintId ?? '',
+                          assignedToRaw: assignedToRaw,
                         ),
                         const SizedBox(height: 16),
                         // Map Section
@@ -477,7 +406,8 @@ class _TechnicianLocationPageState extends State<TechnicianLocationPage> {
           print('WARNING: repairLocation is (0,0) - probably uninitialized!');
         }
         
-        return GoogleLatLng(coords.latitude, coords.longitude);
+        return
+GoogleLatLng(coords.latitude, coords.longitude);
       }
 
       coords = data['damageLocationCoordinates'];
@@ -499,3 +429,4 @@ class _TechnicianLocationPageState extends State<TechnicianLocationPage> {
     }
   }
 }
+
