@@ -29,7 +29,7 @@ class TechnicianTrackingMap extends StatefulWidget {
 }
 
 class _TechnicianTrackingMapState extends State<TechnicianTrackingMap> {
-  late gmaps.GoogleMapController _mapController;
+  gmaps.GoogleMapController? _mapController; // Changed from late to nullable
   LocationData? _technicianLocation;
   RouteData? _routeData;
   bool _isLoadingRoute = false;
@@ -59,10 +59,12 @@ class _TechnicianTrackingMapState extends State<TechnicianTrackingMap> {
   void dispose() {
     _locationSubscription?.cancel();
     _routeUpdateTimer?.cancel();
-    try {
-      _mapController.dispose();
-    } catch (e) {
-      print('[TRACKING MAP] Error disposing map controller: $e');
+    if (_mapController != null) {
+      try {
+        _mapController?.dispose();
+      } catch (e) {
+        print('[TRACKING MAP] Error disposing map controller: $e');
+      }
     }
     super.dispose();
   }
@@ -163,7 +165,7 @@ class _TechnicianTrackingMapState extends State<TechnicianTrackingMap> {
   }
 
   void _fitMapToBounds() {
-    if (_technicianLocation == null || !mounted) return;
+    if (_technicianLocation == null || !mounted || _mapController == null) return;
 
     try {
       final techLatLng = GoogleLatLng(_technicianLocation!.latitude, _technicianLocation!.longitude);
@@ -177,7 +179,7 @@ class _TechnicianTrackingMapState extends State<TechnicianTrackingMap> {
       final centerLat = (minLat + maxLat) / 2;
       final centerLng = (minLng + maxLng) / 2;
       
-      _mapController.animateCamera(
+      _mapController!.animateCamera(
         gmaps.CameraUpdate.newCameraPosition(
           gmaps.CameraPosition(
             target: GoogleLatLng(centerLat, centerLng),

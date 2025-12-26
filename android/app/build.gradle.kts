@@ -6,6 +6,25 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+import java.io.File
+import java.util.*
+
+// Load .env file
+fun loadEnvFile(): Properties {
+    val properties = Properties()
+    val envFile = File("${rootProject.projectDir}/../.env")
+    if (envFile.exists()) {
+        envFile.inputStream().use { properties.load(it) }
+        println("✓ .env file loaded successfully")
+    } else {
+        println("⚠ Warning: .env file not found at ${envFile.absolutePath}")
+    }
+    return properties
+}
+
+val envProperties = loadEnvFile()
+val googleMapsApiKey = envProperties.getProperty("GOOGLE_MAPS_API_KEY", "PLACEHOLDER_KEY")
+
 android {
     namespace = "com.example.owtest"
     compileSdk = flutter.compileSdkVersion
@@ -30,6 +49,10 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        
+        // Inject Google Maps API key from .env as manifest placeholder
+        manifestPlaceholders["GOOGLE_MAPS_API_KEY"] = googleMapsApiKey
+        println("✓ Google Maps API Key injected (key length: ${googleMapsApiKey.length})")
     }
 
     buildTypes {
