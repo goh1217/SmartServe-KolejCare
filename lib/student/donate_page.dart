@@ -524,7 +524,7 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
     setState(() => _isProcessing = true);
 
     try {
-      final success = await StripeService.instance.makePayment(
+      final result = await StripeService.instance.makePayment(
         amountInRm: widget.amount.toDouble(),
         paymentMethod: selectedPaymentMethod!,
         selectedBank: null,
@@ -533,8 +533,8 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
       if (!mounted) return;
       setState(() => _isProcessing = false);
 
-      if (success) {
-        _showSuccessDialog();
+      if (result != null && result['success'] == true) {
+        _showSuccessDialog(paymentIntentId: result['paymentIntentId']);
       } else {
         _showErrorDialog('Payment was cancelled or failed. Please try again.');
       }
@@ -545,10 +545,9 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
     }
   }
 
-  void _showSuccessDialog() {
-    // Generate receipt details
-    final receiptNo =
-        'RCP${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
+  void _showSuccessDialog({String? paymentIntentId}) {
+    // Generate receipt details - use Stripe payment intent ID if available
+    final receiptNo = paymentIntentId ?? 'RCP${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
     final dateTime = DateTime.now();
     final formattedDate =
         '${dateTime.day.toString().padLeft(2, '0')}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.year}';
@@ -1026,7 +1025,7 @@ class PaymentReceiptPage extends StatelessWidget {
 
                     // Receipt Details
                     _ReceiptRow(
-                      label: 'Receipt No.',
+                      label: 'Payment ID',
                       value: receiptNo,
                       isHighlight: true,
                     ),
@@ -1201,7 +1200,7 @@ class PaymentReceiptPage extends StatelessWidget {
               pw.SizedBox(height: 16),
               pw.Divider(),
               pw.SizedBox(height: 16),
-              _receiptPdfRow('Receipt No.', receiptNo),
+              _receiptPdfRow('Payment ID', receiptNo),
               pw.SizedBox(height: 8),
               _receiptPdfRow('Date', date),
               pw.SizedBox(height: 8),
@@ -1295,7 +1294,7 @@ class PaymentReceiptPage extends StatelessWidget {
               pw.SizedBox(height: 16),
               pw.Divider(),
               pw.SizedBox(height: 16),
-              _receiptPdfRow('Receipt No.', receiptNo),
+              _receiptPdfRow('Payment ID', receiptNo),
               pw.SizedBox(height: 8),
               _receiptPdfRow('Date', date),
               pw.SizedBox(height: 8),

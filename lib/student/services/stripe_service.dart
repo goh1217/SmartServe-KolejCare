@@ -22,18 +22,19 @@ class StripeService {
   }
 
   // Make payment with card or FPX
-  Future<bool> makePayment({
+  Future<Map<String, dynamic>?> makePayment({
     required double amountInRm,
     required String paymentMethod, // 'card' or 'fpx'
     String? selectedBank, // For FPX only
   }) async {
     // Web uses different payment flow (Stripe.js would be ideal, but for demo we'll create intent)
     if (kIsWeb) {
-      return await _makeWebPayment(
+      final webSuccess = await _makeWebPayment(
         amountInRm: amountInRm,
         paymentMethod: paymentMethod,
         selectedBank: selectedBank,
       );
+      return webSuccess ? {'success': true} : null;
     }
 
     try {
@@ -42,23 +43,26 @@ class StripeService {
       );
 
       // 1. Create Payment Intent with selected payment method
-      String? clientSecret = await createPaymentIntent(
+      Map<String, dynamic>? paymentIntentData = await createPaymentIntent(
         amount: amountInRm,
         currency: 'myr',
         paymentMethod: paymentMethod,
       );
 
-      if (clientSecret == null) {
+      if (paymentIntentData == null) {
         debugPrint("Failed to create payment intent");
-        return false;
+        return null;
       }
 
-      debugPrint("Payment intent created successfully");
+      String? clientSecret = paymentIntentData['client_secret'];
+      String? paymentIntentId = paymentIntentData['id'];
+
+      debugPrint("Payment intent created successfully with ID: $paymentIntentId");
 
       // 2. Initialize Payment Sheet
       await Stripe.instance.initPaymentSheet(
         paymentSheetParameters: SetupPaymentSheetParameters(
-          paymentIntentClientSecret: clientSecret,
+          paymentIntentClientSecret: clientSecret!,
           merchantDisplayName: 'SmartServe',
           allowsDelayedPaymentMethods: true,
           returnURL: 'flutterstripe://stripe-redirect',
@@ -72,7 +76,10 @@ class StripeService {
       await Stripe.instance.presentPaymentSheet();
 
       debugPrint("✅ Payment completed successfully");
-      return true;
+      return {
+        'success': true,
+        'paymentIntentId': paymentIntentId,
+      };
     } on StripeException catch (e) {
       debugPrint("❌ Stripe Exception: ${e.error.localizedMessage}");
       debugPrint("Error code: ${e.error.code}");
@@ -83,15 +90,15 @@ class StripeService {
         debugPrint("User cancelled payment");
       }
 
-      return false;
+      return null;
     } catch (e, stackTrace) {
       debugPrint("❌ General Error: $e");
       debugPrint("Stack trace: $stackTrace");
-      return false;
+      return null;
     }
   }
 
-  Future<String?> createPaymentIntent({
+  Future<Map<String, dynamic>?> createPaymentIntent({
     required double amount,
     required String currency,
     required String paymentMethod,
@@ -136,7 +143,10 @@ class StripeService {
 
       if (response.data != null) {
         debugPrint("Client secret obtained");
-        return response.data['client_secret'];
+        return {
+          'client_secret': response.data['client_secret'],
+          'id': response.data['id'],
+        };
       }
 
       debugPrint("No data in response");
