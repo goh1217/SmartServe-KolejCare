@@ -5,6 +5,8 @@ import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 // --- PAGE 1: MAIN TIPS SELECTION ---
 class TipsPage extends StatefulWidget {
@@ -534,6 +536,12 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
       setState(() => _isProcessing = false);
 
       if (result != null && result['success'] == true) {
+        // Save donation to Firestore
+        await _saveDonationToFirestore(
+          paymentIntentId: result['paymentIntentId'],
+          amount: widget.amount.toDouble(),
+          paymentType: selectedPaymentMethod == 'card' ? 'Card' : 'FPX',
+        );
         _showSuccessDialog(paymentIntentId: result['paymentIntentId']);
       } else {
         _showErrorDialog('Payment was cancelled or failed. Please try again.');
@@ -542,6 +550,37 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
       if (!mounted) return;
       setState(() => _isProcessing = false);
       _showErrorDialog('An error occurred: ${e.toString()}');
+    }
+  }
+
+  Future<void> _saveDonationToFirestore({
+    required String? paymentIntentId,
+    required double amount,
+    required String paymentType,
+  }) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        debugPrint('No user logged in, cannot save donation');
+        return;
+      }
+
+      final dateTime = DateTime.now();
+      final docId = paymentIntentId ?? 'RCP${dateTime.millisecondsSinceEpoch.toString().substring(7)}';
+
+      await FirebaseFirestore.instance.collection('donation').doc(docId).set({
+        'paymentId': docId,
+        'amount': amount,
+        'donatedBy': '/collection/student/${user.uid}',
+        'paymentType': paymentType,
+        'donationStatus': 'completed',
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      debugPrint('✅ Donation saved to Firestore: $docId');
+    } catch (e) {
+      debugPrint('❌ Error saving donation to Firestore: $e');
+      // Don't throw error - payment was successful, just log the issue
     }
   }
 
