@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:owtest/student/services/stripe_service.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:intl/intl.dart';
 
 // --- PAGE 1: MAIN TIPS SELECTION ---
 class TipsPage extends StatefulWidget {
@@ -521,7 +525,7 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
 
     try {
       final success = await StripeService.instance.makePayment(
-        amountInRm: widget.amount,
+        amountInRm: widget.amount.toDouble(),
         paymentMethod: selectedPaymentMethod!,
         selectedBank: null,
       );
@@ -542,28 +546,26 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
   }
 
   void _showSuccessDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.green, size: 32),
-            SizedBox(width: 12),
-            Text('Success!', style: TextStyle(color: Colors.deepPurple)),
-          ],
+    // Generate receipt details
+    final receiptNo =
+        'RCP${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
+    final dateTime = DateTime.now();
+    final formattedDate =
+        '${dateTime.day.toString().padLeft(2, '0')}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.year}';
+    final formattedTime =
+        '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => PaymentReceiptPage(
+          receiptNo: receiptNo,
+          amount: widget.amount,
+          paymentMethod: selectedPaymentMethod == 'card'
+              ? 'Card Payment'
+              : 'Online Banking (FPX)',
+          date: formattedDate,
+          time: formattedTime,
         ),
-        content: Text(
-          'RM ${widget.amount.toStringAsFixed(2)} donation successful!',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () =>
-                Navigator.of(context).popUntil((route) => route.isFirst),
-            child: const Text('Done'),
-          ),
-        ],
       ),
     );
   }
@@ -888,4 +890,521 @@ class _PaymentOption extends StatelessWidget {
       ),
     );
   }
+}
+
+// --- PAGE 4: PAYMENT RECEIPT ---
+class PaymentReceiptPage extends StatelessWidget {
+  final String receiptNo;
+  final double amount;
+  final String paymentMethod;
+  final String date;
+  final String time;
+
+  const PaymentReceiptPage({
+    Key? key,
+    required this.receiptNo,
+    required this.amount,
+    required this.paymentMethod,
+    required this.date,
+    required this.time,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey[100],
+      appBar: AppBar(
+        backgroundColor: Colors.deepPurple,
+        title: const Text(
+          'Payment Receipt',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
+
+              // Success Icon
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.check_circle,
+                  size: 70,
+                  color: Colors.green.shade600,
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              const Text(
+                'Payment Successful!',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple,
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              Text(
+                'Thank you for your donation',
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              ),
+
+              const SizedBox(height: 30),
+
+              // Receipt Card
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      spreadRadius: 2,
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Receipt Header
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'RECEIPT',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.deepPurple,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade50,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            'PAID',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green.shade700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Divider
+                    Container(height: 1, color: Colors.grey[300]),
+
+                    const SizedBox(height: 20),
+
+                    // Receipt Details
+                    _ReceiptRow(
+                      label: 'Receipt No.',
+                      value: receiptNo,
+                      isHighlight: true,
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    _ReceiptRow(label: 'Date', value: date),
+
+                    const SizedBox(height: 16),
+
+                    _ReceiptRow(label: 'Time', value: time),
+
+                    const SizedBox(height: 16),
+
+                    _ReceiptRow(label: 'Payment Method', value: paymentMethod),
+
+                    const SizedBox(height: 20),
+
+                    // Divider
+                    Container(height: 1, color: Colors.grey[300]),
+
+                    const SizedBox(height: 20),
+
+                    // Amount Section
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Total Amount',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              'RM ${amount.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.deepPurple,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.deepPurple.shade50,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                'Donation',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.deepPurple,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Bottom Note removed
+
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 30),
+
+              // Action Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _downloadReceipt(context),
+                      icon: const Icon(Icons.download),
+                      label: const Text('Download'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.deepPurple,
+                        side: const BorderSide(color: Colors.deepPurple),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _shareReceipt(context),
+                      icon: const Icon(Icons.share),
+                      label: const Text('Share'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.deepPurple,
+                        side: const BorderSide(color: Colors.deepPurple),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 12),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () =>
+                      Navigator.of(context).popUntil((route) => route.isFirst),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Done',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _downloadReceipt(BuildContext context) async {
+    try {
+      final pdf = pw.Document();
+
+      pdf.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(24),
+          build: (context) => pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Center(
+                child: pw.Text(
+                  'DONATION RECEIPT',
+                  style: pw.TextStyle(
+                    fontSize: 24,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+              ),
+              pw.SizedBox(height: 16),
+              pw.Divider(),
+              pw.SizedBox(height: 16),
+              _receiptPdfRow('Receipt No.', receiptNo),
+              pw.SizedBox(height: 8),
+              _receiptPdfRow('Date', date),
+              pw.SizedBox(height: 8),
+              _receiptPdfRow('Time', time),
+              pw.SizedBox(height: 8),
+              _receiptPdfRow('Payment Method', paymentMethod),
+              pw.SizedBox(height: 16),
+              pw.Divider(),
+              pw.SizedBox(height: 16),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text(
+                    'Total Amount',
+                    style: pw.TextStyle(
+                      fontSize: 16,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                  pw.Text(
+                    'RM ${amount.toStringAsFixed(2)}',
+                    style: pw.TextStyle(
+                      fontSize: 20,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              pw.SizedBox(height: 16),
+              pw.Divider(),
+              pw.SizedBox(height: 16),
+              pw.Center(
+                child: pw.Text(
+                  'Thank you for your donation!',
+                  style: const pw.TextStyle(fontSize: 12),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      final bytes = await pdf.save();
+
+      if (kIsWeb) {
+        // For web: use layoutPdf to trigger download
+        await Printing.layoutPdf(
+          onLayout: (format) async => bytes,
+          name: 'donation_receipt_$receiptNo.pdf',
+        );
+      } else {
+        // For mobile: use sharePdf
+        await Printing.sharePdf(
+          bytes: bytes,
+          filename: 'donation_receipt_$receiptNo.pdf',
+        );
+      }
+
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Receipt downloaded successfully!')),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to download: $e')));
+    }
+  }
+
+  Future<void> _shareReceipt(BuildContext context) async {
+    try {
+      final pdf = pw.Document();
+
+      pdf.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(24),
+          build: (context) => pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Center(
+                child: pw.Text(
+                  'DONATION RECEIPT',
+                  style: pw.TextStyle(
+                    fontSize: 24,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+              ),
+              pw.SizedBox(height: 16),
+              pw.Divider(),
+              pw.SizedBox(height: 16),
+              _receiptPdfRow('Receipt No.', receiptNo),
+              pw.SizedBox(height: 8),
+              _receiptPdfRow('Date', date),
+              pw.SizedBox(height: 8),
+              _receiptPdfRow('Time', time),
+              pw.SizedBox(height: 8),
+              _receiptPdfRow('Payment Method', paymentMethod),
+              pw.SizedBox(height: 16),
+              pw.Divider(),
+              pw.SizedBox(height: 16),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text(
+                    'Total Amount',
+                    style: pw.TextStyle(
+                      fontSize: 16,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                  pw.Text(
+                    'RM ${amount.toStringAsFixed(2)}',
+                    style: pw.TextStyle(
+                      fontSize: 20,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              pw.SizedBox(height: 16),
+              pw.Divider(),
+              pw.SizedBox(height: 16),
+              pw.Center(
+                child: pw.Text(
+                  'Thank you for your donation!',
+                  style: const pw.TextStyle(fontSize: 12),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      final bytes = await pdf.save();
+
+      await Printing.sharePdf(
+        bytes: bytes,
+        filename: 'donation_receipt_$receiptNo.pdf',
+      );
+
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Receipt shared successfully!')),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to share: $e')));
+    }
+  }
+}
+
+class _ReceiptRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool isHighlight;
+
+  const _ReceiptRow({
+    required this.label,
+    required this.value,
+    this.isHighlight = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            color: Colors.grey[600],
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14,
+            color: isHighlight ? Colors.deepPurple : Colors.black87,
+            fontWeight: isHighlight ? FontWeight.bold : FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// PDF helper method for PaymentReceiptPage
+pw.Widget _receiptPdfRow(String label, String value) {
+  return pw.Row(
+    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+    children: [
+      pw.Text(label, style: const pw.TextStyle(fontSize: 12)),
+      pw.Text(
+        value,
+        style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
+      ),
+    ],
+  );
 }
