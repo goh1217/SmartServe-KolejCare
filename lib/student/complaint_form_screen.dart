@@ -1,14 +1,16 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import '../widgets/location_picker_widget.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:tflite_flutter/tflite_flutter.dart';
+import 'package:image/image.dart' as img;
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:http/http.dart' as http;
+import '../widgets/location_picker_widget.dart'; // Restored GPS Widget
 
 class ComplaintFormScreen extends StatefulWidget {
   const ComplaintFormScreen({super.key});
@@ -18,39 +20,41 @@ class ComplaintFormScreen extends StatefulWidget {
 }
 
 class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
+  // --- Controllers (All Restored) ---
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _locationAddressController = TextEditingController();
   final TextEditingController _locationDescriptionController = TextEditingController();
 
+  // --- State Variables ---
   String? _selectedMaintenanceType;
   String? _selectedUrgency;
+  String? _urgencyLevelAI; // Synced with your latest snippet
   bool _consentGiven = true;
-
   bool _isSubmitted = false;
   bool _isSubmitting = false;
+  bool _isAnalyzing = false;
   bool _isLoadingStudentData = true;
-  String? _studentDataError;
 
+  // --- Images & AI ---
   final List<XFile> _pickedImages = [];
+  Interpreter? _interpreter;
 
-  //location
-  String? _locationChoice; // "room" or "public"
-  Map<String, dynamic>? _studentData; // to store student block/room/college
-  GeoPoint? _livingAddressGeoPoint; // to store living address when "Inside My Room" is selected
-  
-  // Location data from the location picker
-  String? _selectedAddress;
+  // --- Location/GPS Data ---
+  String? _locationChoice;
+  Map<String, dynamic>? _studentData;
+  GeoPoint? _livingAddressGeoPoint;
   double? _selectedLatitude;
   double? _selectedLongitude;
 
   final List<String> _maintenanceOptions = ['Furniture', 'Electrical', 'Plumbing', 'Other'];
-  final List<String> _urgencyOptions = ['Minor', 'Medium', 'High'];
+  final List<String> _urgencyOptions = ['High', 'Medium', 'Minor'];
 
   @override
   void initState() {
     super.initState();
-    _fetchStudentData();
+    _fetchStudentData(); // Restored GPS-related data fetch
+    _initModel();
   }
 
   @override
@@ -59,279 +63,241 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
     _descriptionController.dispose();
     _locationAddressController.dispose();
     _locationDescriptionController.dispose();
+    _interpreter?.close();
     super.dispose();
   }
 
-  /// Fetch student data from Firestore to get college and block info
+  // --- AI LOGIC (LOCAL TFLITE - 100% SYNCED) ---
+
+  Future<void> _initModel() async {
+    if (kIsWeb) return;
+    try {
+      _interpreter = await Interpreter.fromAsset('assets/urgency_model.tflite');
+    } catch (e) {
+      debugPrint("Error loading TFLite model: $e");
+    }
+  }
+
+  Future<void> _classifyImages() async {
+    if (_interpreter == null || _pickedImages.isEmpty) return;
+
+    setState(() => _isAnalyzing = true);
+
+    try {
+      double totalHigh = 0;
+      double totalMedium = 0;
+      double totalMinor = 0;
+
+      for (var image in _pickedImages) {
+        final imageData = await image.readAsBytes();
+        img.Image? decoded = img.decodeImage(imageData);
+        if (decoded == null) continue;
+
+        img.Image resized = img.copyResize(decoded, width: 224, height: 224);
+
+        var input = List.generate(1, (i) =>
+            List.generate(224, (j) =>
+                List.generate(224, (k) =>
+                    List.generate(3, (l) => 0.0))));
+
+        for (int y = 0; y < 224; y++) {
+          for (int x = 0; x < 224; x++) {
+            final pixel = resized.getPixel(x, y);
+            // Synced with your specific pixel access logic
+            input[0][y][x][0] = pixel.r.toDouble();
+            input[0][y][x][1] = pixel.g.toDouble();
+            input[0][y][x][2] = pixel.b.toDouble();
+          }
+        }
+
+        var output = List.filled(1 * 3, 0.0).reshape([1, 3]);
+        _interpreter!.run(input, output);
+
+        totalHigh += output[0][0];
+        totalMedium += output[0][1];
+        totalMinor += output[0][2];
+      }
+
+      int count = _pickedImages.length;
+      double avgHigh = totalHigh / count;
+      double avgMedium = totalMedium / count;
+      double avgMinor = totalMinor / count;
+
+      double boostedHigh = avgHigh * 1.5;
+
+      int bestIndex;
+      if (boostedHigh >= avgMedium && boostedHigh >= avgMinor) {
+        bestIndex = 0; // High
+      } else if (avgMedium >= avgMinor) {
+        bestIndex = 1; // Medium
+      } else {
+        bestIndex = 2; // Minor
+      }
+
+      setState(() {
+        _urgencyLevelAI = _urgencyOptions[bestIndex];
+        _selectedUrgency = _urgencyLevelAI;
+      });
+
+    } catch (e) {
+      debugPrint("Error during multi-image AI: $e");
+    } finally {
+      setState(() => _isAnalyzing = false);
+    }
+  }
+
+  // --- GPS / DATA LOGIC ---
+
   Future<void> _fetchStudentData() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
-      if (user == null) throw 'User not logged in';
-
-      final studentDoc =
-          await FirebaseFirestore.instance.collection('student').doc(user.uid).get();
-
-      if (!studentDoc.exists) throw 'Student record not found';
-
-      if (mounted) {
+      if (user == null) return;
+      final doc = await FirebaseFirestore.instance.collection('student').doc(user.uid).get();
+      if (doc.exists) {
         setState(() {
-          _studentData = studentDoc.data();
+          _studentData = doc.data();
           _isLoadingStudentData = false;
         });
       }
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _studentDataError = e.toString();
-          _isLoadingStudentData = false;
-        });
-      }
+      setState(() => _isLoadingStudentData = false);
     }
   }
 
-  void _showErrorDialog(String title, String message) {
-    showDialog(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))],
-      ),
-    );
+  Future<void> _fetchLivingAddress() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final doc = await FirebaseFirestore.instance.collection('student').doc(user.uid).get();
+    if (doc.exists) {
+      setState(() => _livingAddressGeoPoint = doc.data()?['livingAddress'] as GeoPoint?);
+    }
   }
 
-  void _showSuccessDialog(String title, String message) {
-    showDialog(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))],
-      ),
-    );
-  }
-
-  /// Generate initial address for room mode from student data
   String _getInitialRoomAddress() {
     if (_studentData == null) return '';
-    
-    final college = _studentData?['residentCollege'] ?? '';
-    final block = _studentData?['block'] ?? '';
-    final room = _studentData?['roomNumber'] ?? '';
-
-    final parts = [college, block, room].where((p) => p.isNotEmpty).toList();
-    return parts.join(', ');
-  }
-
-  /// Build a card decoration style with shadow and rounded corners
-  BoxDecoration _cardDecoration() => BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(16),
-    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 4))],
-  );
-
-  /// Fetch the student's living address GeoPoint from Firestore
-  Future<void> _fetchLivingAddress() async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
-
-      final studentDoc = await FirebaseFirestore.instance.collection('student').doc(user.uid).get();
-      if (studentDoc.exists) {
-        final data = studentDoc.data() ?? {};
-        final livingAddress = data['livingAddress'] as GeoPoint?;
-        
-        setState(() {
-          _livingAddressGeoPoint = livingAddress;
-        });
-
-        if (livingAddress == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Living address not found. Please update your profile.'),
-              backgroundColor: Colors.orange,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      print('Error fetching living address: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error fetching address: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+    return "${_studentData?['residentCollege'] ?? ''}, ${_studentData?['block'] ?? ''}, ${_studentData?['roomNumber'] ?? ''}";
   }
 
   Future<void> _pickImages() async {
     if (_pickedImages.length >= 3) return;
     final ImagePicker picker = ImagePicker();
-    final XFile? img = await picker.pickImage(source: ImageSource.gallery);
-    if (img != null) setState(() => _pickedImages.add(img));
+    final XFile? imgFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (imgFile != null) {
+      setState(() => _pickedImages.add(imgFile));
+      _classifyImages();
+    }
   }
+
+  // --- SUBMISSION ---
 
   Future<void> _handleSubmit() async {
     final title = _titleController.text.trim();
     final desc = _descriptionController.text.trim();
 
-    // Validation
-    if (title.isEmpty ||
-        desc.isEmpty ||
-        _selectedUrgency == null ||
-        _selectedMaintenanceType == null ||
-        _locationChoice == null ||
-        (_locationChoice == "public" && _locationDescriptionController.text.trim().isEmpty) ||
-        (_locationChoice == "room" && _livingAddressGeoPoint == null)
-    ) {
-
-      showDialog(
-        context: context,
-        builder: (c) => AlertDialog(
-          title: const Text('Incomplete'),
-          content: Text(
-            _locationChoice == "room" && _livingAddressGeoPoint == null
-                ? 'Please set your living address in your profile first.'
-                : 'Please fill all required fields.'
-          ),
-          actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))],
-        ),
-      );
+    if (title.isEmpty || desc.isEmpty || _selectedUrgency == null || _locationChoice == null) {
+      _showDialog('Incomplete', 'Please fill all required fields.');
       return;
     }
 
     setState(() => _isSubmitting = true);
 
     try {
-      final firestore = FirebaseFirestore.instance;
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw 'User not logged in';
 
-      // Ensure student data is loaded
-      if (_studentData == null) {
-        throw 'Student data not available. Please try again.';
-      }
+      final String finalLoc = _locationChoice == "room"
+          ? _getInitialRoomAddress()
+          : _locationDescriptionController.text.trim();
 
-      // Create GeoPoint from coordinates if available
-      final repairLocation = (_selectedLatitude != null && _selectedLongitude != null)
-          ? GeoPoint(_selectedLatitude!, _selectedLongitude!)
-          : null;
-
-      // For room mode: address should be college+block without room number
-      // For public mode: description goes to damageLocation, not damageLocationDescription
-      final String finalDamageLocation;
-      final String finalDamageDescription;
-      
-      if (_locationChoice == "room") {
-        // Room mode: use initial address (college+block)
-        finalDamageLocation = _getInitialRoomAddress();
-        finalDamageDescription = _locationDescriptionController.text.trim();
-      } else {
-        // Public area mode: description becomes the damage location
-        finalDamageLocation = _locationDescriptionController.text.trim();
-        finalDamageDescription = '';
-      }
-
-      final complaintData = {
-        'assignedTo': '/collection/technician',
+      // 1. Create the base complaint document
+      final docRef = await FirebaseFirestore.instance.collection('complaint').add({
         'damageCategory': _selectedMaintenanceType,
-        'damagePic': null,
-        'damageLocation': finalDamageLocation,
-        'repairLocation': repairLocation,
-        'damageLocationDescription': finalDamageDescription,
-        'damageLocationType': _locationChoice, // 'room' or 'public'
-        'feedbackRating': 0,
+        'damageLocation': finalLoc,
+        'repairLocation': _locationChoice == "room" ? _livingAddressGeoPoint : GeoPoint(_selectedLatitude ?? 0, _selectedLongitude ?? 0),
         'inventoryDamage': desc,
         'inventoryDamageTitle': title,
-        'rejectionReason': '',
         'reportBy': '/collection/student/${user.uid}',
         'reportStatus': 'Pending',
         'reportedDate': FieldValue.serverTimestamp(),
-        'lastStatusUpdate': FieldValue.serverTimestamp(),
-        'reviewedBy': '/collection/staff',
         'roomEntryConsent': _consentGiven,
-        'scheduledDate': null,
-        'technicianTip': 0,
         'urgencyLevel': _selectedUrgency,
-        'isRead': false,
-        'isArchived': false,
+        'urgencyLevelAI': _urgencyLevelAI,
         'studentID': user.uid,
+        'isRead': false,
         'statusChangeCount': 1,
-      };
+      });
 
-      // Add repairLocation (GeoPoint) when "Inside My Room" is selected
-      if (_locationChoice == "room" && _livingAddressGeoPoint != null) {
-        complaintData['repairLocation'] = _livingAddressGeoPoint;
-      }
-
-      final docRef = await firestore.collection('complaint').add(complaintData);
-
-      await docRef.update({'complaintID': docRef.id});
-
-      // Upload images to Cloudinary if any
+      // 2. Upload images in parallel and wait for ALL to complete
+      List<String> cloudinaryUrls = [];
       if (_pickedImages.isNotEmpty) {
-        List<String> cloudinaryUrls = [];
-        const cloudName = 'deaju8keu';
-        const uploadPreset = 'flutter upload';
+        print("DEBUG: Starting upload for ${_pickedImages.length} images.");
 
-        for (int i = 0; i < _pickedImages.length && i < 3; i++) {
-          final file = _pickedImages[i];
-          Uint8List bytes;
+        // Map each image to an upload task
+        final uploadTasks = _pickedImages.map((file) async {
+          final rawBytes = await file.readAsBytes();
+          final bytes = kIsWeb ? rawBytes : await FlutterImageCompress.compressWithList(rawBytes, quality: 70) ?? rawBytes;
 
-          if (kIsWeb) {
-            bytes = await file.readAsBytes();
-          } else {
-            final rawBytes = await file.readAsBytes();
-            final compressed = await FlutterImageCompress.compressWithList(
-              rawBytes,
-              quality: 70,
-            );
-            bytes = compressed != null ? compressed : rawBytes;
-          }
-
-          final uri = Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/upload');
+          final uri = Uri.parse('https://api.cloudinary.com/v1_1/deaju8keu/image/upload');
           final request = http.MultipartRequest('POST', uri)
-            ..fields['upload_preset'] = uploadPreset
-            ..files.add(http.MultipartFile.fromBytes('file', bytes, filename: 'complaint_${docRef.id}_$i.jpg'));
+            ..fields['upload_preset'] = 'flutter upload'
+            ..files.add(http.MultipartFile.fromBytes('file', bytes, filename: 'upload.jpg'));
 
-          final response = await request.send();
-          final resBody = await response.stream.bytesToString();
-          final data = json.decode(resBody);
-          if (data['secure_url'] != null) cloudinaryUrls.add(data['secure_url']);
-        }
+          final streamedResponse = await request.send();
+          final response = await http.Response.fromStream(streamedResponse);
 
-        if (cloudinaryUrls.isNotEmpty) await docRef.update({'damagePic': cloudinaryUrls});
+          if (response.statusCode == 200) {
+            final resBody = json.decode(response.body);
+            return resBody['secure_url'] as String?;
+          } else {
+            print("DEBUG: Image upload failed with status ${response.statusCode}");
+            return null;
+          }
+        }).toList();
+
+        // Wait for all tasks to finish
+        final results = await Future.wait(uploadTasks);
+
+        // Filter out any nulls (failed uploads)
+        cloudinaryUrls = results.whereType<String>().toList();
+        print("DEBUG: Successfully uploaded ${cloudinaryUrls.length} out of ${_pickedImages.length} images.");
       }
+
+      // 3. Update the document once with all gathered data
+      await docRef.update({
+        'damagePic': cloudinaryUrls,
+        'complaintID': docRef.id
+      });
 
       setState(() => _isSubmitted = true);
-
-      if (mounted) {
-        _showSuccessDialog('Success!', 'Complaint submitted successfully.');
-      }
+      _showDialog('Success!', 'Complaint submitted successfully.');
     } catch (e) {
-      if (mounted) {
-        _showErrorDialog('Error', 'Failed to submit complaint: $e');
-      }
+      print("DEBUG: Submission Error: $e");
+      _showDialog('Error', 'Failed to submit: $e');
     } finally {
       setState(() => _isSubmitting = false);
     }
   }
 
+  void _showDialog(String title, String content) {
+    showDialog(context: context, builder: (c) => AlertDialog(title: Text(title), content: Text(content), actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))]));
+  }
+
+  BoxDecoration _cardDecoration() => BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(16),
+    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 4))],
+  );
+
   @override
   Widget build(BuildContext context) {
-    final submitButtonText = _isSubmitting ? 'Submitting...' : _isSubmitted ? 'Submitted' : 'Submit Complaint';
     final submitButtonColor = (_isSubmitting || _isSubmitted) ? Colors.grey : const Color(0xFF5F33E1);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9FB),
       appBar: AppBar(
         title: Text('Make a Complaint', style: GoogleFonts.poppins()),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        elevation: 0,
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.pop(context)),
-        actions: [IconButton(icon: const Icon(Icons.logout), onPressed: () => FirebaseAuth.instance.signOut())],
+        backgroundColor: Colors.white, foregroundColor: Colors.black87, elevation: 0,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
@@ -344,18 +310,9 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: DropdownButtonFormField<String>(
                 value: _selectedMaintenanceType,
-                items: _maintenanceOptions
-                    .map((m) => DropdownMenuItem(
-                  value: m,
-                  child: Text(m, style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF24252C))),
-                ))
-                    .toList(),
-                onChanged: (_isSubmitted || _isSubmitting) ? null : (v) => setState(() => _selectedMaintenanceType = v),
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  hintText: 'Select maintenance type',
-                  hintStyle: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF90929C)),
-                ),
+                items: _maintenanceOptions.map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
+                onChanged: _isSubmitting ? null : (v) => setState(() => _selectedMaintenanceType = v),
+                decoration: const InputDecoration(border: InputBorder.none, hintText: 'Select maintenance type'),
               ),
             ),
             const SizedBox(height: 16),
@@ -366,13 +323,8 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               child: TextField(
                 controller: _titleController,
-                enabled: !_isSubmitted && !_isSubmitting,
-                decoration: InputDecoration(
-                  hintText: 'Fragile bed and missing mattress',
-                  hintStyle: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF90929C)),
-                  border: InputBorder.none,
-                ),
-                style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF24252C)),
+                enabled: !_isSubmitting,
+                decoration: const InputDecoration(border: InputBorder.none, hintText: 'Enter complaint title'),
               ),
             ),
             const SizedBox(height: 16),
@@ -383,19 +335,14 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               child: TextField(
                 controller: _descriptionController,
-                enabled: !_isSubmitted && !_isSubmitting,
+                enabled: !_isSubmitting,
                 maxLines: 5,
-                decoration: InputDecoration(
-                  hintText: 'The bed isn’t in good condition. It’s very shaky and feels like it could collapse if I lie down...',
-                  hintStyle: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF90929C)),
-                  border: InputBorder.none,
-                ),
-                style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF24252C)),
+                decoration: const InputDecoration(border: InputBorder.none, hintText: 'Describe the damage details...'),
               ),
             ),
             const SizedBox(height: 16),
 
-            // LOCATION - Mode Selection
+            // Location
             Container(
               decoration: _cardDecoration(),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -405,91 +352,44 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
                   DropdownMenuItem(value: "room", child: Text("Inside My Room")),
                   DropdownMenuItem(value: "public", child: Text("Public Area")),
                 ],
-                onChanged: (_isSubmitted || _isSubmitting || _isLoadingStudentData)
-                    ? null
-                    : (v) {
-                        setState(() => _locationChoice = v);
-                        // When "Inside My Room" is selected, fetch the living address
-                        if (v == "room") {
-                          _fetchLivingAddress();
-                        }
-                      },
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  hintText: "Select damage location",
-                ),
+                onChanged: (v) {
+                  setState(() => _locationChoice = v);
+                  if (v == "room") _fetchLivingAddress();
+                },
+                decoration: const InputDecoration(border: InputBorder.none, hintText: "Select damage location"),
               ),
             ),
+
+            // Restored Map Picker Widget Logic
+            if (_locationChoice != null) ...[
+              const SizedBox(height: 16),
+              LocationPickerWidget(
+                locationMode: _locationChoice,
+                addressController: _locationAddressController,
+                initialAddress: _locationChoice == "room" ? _getInitialRoomAddress() : null,
+                editableAddress: _locationChoice == "room",
+                descriptionController: _locationDescriptionController,
+                onLocationSelected: (result) {
+                  setState(() {
+                    _selectedLatitude = result.latitude;
+                    _selectedLongitude = result.longitude;
+                  });
+                },
+              ),
+            ],
             const SizedBox(height: 16),
 
-            // Location Picker Widget (appears only when mode is selected and is public area)
-            if (_locationChoice != null && _locationChoice == "public") ...[
-              if (_isLoadingStudentData && _locationChoice == "public")
-                Container(
-                  decoration: _cardDecoration(),
-                  padding: const EdgeInsets.all(24),
-                  child: const Center(
-                    child: SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  ),
-                )
-              else if (_studentDataError != null && _locationChoice == "public")
-                Container(
-                  decoration: _cardDecoration(),
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.error_outline, color: Colors.red),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Error loading student data: $_studentDataError',
-                              style: GoogleFonts.poppins(fontSize: 13, color: Colors.red),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                )
-              else
-                LocationPickerWidget(
-                  locationMode: _locationChoice,
-                  addressController: _locationAddressController,
-                  initialAddress: _locationChoice == "room" ? _getInitialRoomAddress() : null,
-                  editableAddress: _locationChoice == "room",
-                  descriptionController: _locationChoice == "public" ? _locationDescriptionController : null,
-                  onLocationSelected: (result) {
-                    setState(() {
-                      _selectedAddress = result.address;
-                      _selectedLatitude = result.latitude;
-                      _selectedLongitude = result.longitude;
-                    });
-                  },
-                ),
-              const SizedBox(height: 16),
-            ],
-
-            // ----------------------------------------------------------
-
-
-            // Image Upload
+            // Image Picker
             GestureDetector(
-              onTap: _isSubmitting || _isSubmitted ? null : _pickImages,
+              onTap: _isSubmitting ? null : _pickImages,
               child: Container(
                 decoration: _cardDecoration(),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
                     const Icon(Icons.photo_camera),
                     const SizedBox(width: 12),
-                    Expanded(child: Text('Upload picture of report item (Max 3)', style: GoogleFonts.poppins(fontSize: 14))),
+                    Expanded(child: Text('Upload picture (Max 3)', style: GoogleFonts.poppins(fontSize: 14))),
                     Text("${_pickedImages.length}/3"),
                     const SizedBox(width: 8),
                     const Icon(Icons.cloud_upload),
@@ -497,47 +397,71 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
-            // Urgency
+            // AI Suggestion UI
+            if (_isAnalyzing)
+              const Padding(
+                padding: EdgeInsets.only(left: 8, bottom: 8),
+                child: Row(
+                  children: [
+                    SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF5F33E1))),
+                    SizedBox(width: 8),
+                    Text("AI is analyzing damage...", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  ],
+                ),
+              )
+            else if (_urgencyLevelAI != null)
+              Padding(
+                padding: const EdgeInsets.only(left: 8, bottom: 12),
+                child: Row(
+                  children: [
+                    const Icon(Icons.auto_awesome, size: 18, color: Color(0xFF5F33E1)),
+                    const SizedBox(width: 6),
+                    Text('AI Recommendation: $_urgencyLevelAI',
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF5F33E1))),
+                  ],
+                ),
+              ),
+
+            // Urgency Dropdown
             Container(
               decoration: _cardDecoration(),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: DropdownButtonFormField<String>(
                 value: _selectedUrgency,
-                items: _urgencyOptions
-                    .map((u) => DropdownMenuItem(
-                  value: u,
-                  child: Text(u, style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF24252C))),
-                ))
-                    .toList(),
-                onChanged: (_isSubmitted || _isSubmitting) ? null : (v) => setState(() => _selectedUrgency = v),
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  hintText: 'Select urgency level',
-                  hintStyle: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF90929C)),
-                ),
+                items: _urgencyOptions.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
+                onChanged: _isSubmitting ? null : (v) => setState(() => _selectedUrgency = v),
+                decoration: const InputDecoration(border: InputBorder.none, hintText: 'Select urgency level'),
               ),
             ),
             const SizedBox(height: 16),
 
-            // Consent
+            // Consent Section
             Container(
               decoration: _cardDecoration(),
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Room Entry Consent', style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w500)),
+                  // Heading
+                  Text('Room Entry Consent',
+                      style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w500)),
                   const SizedBox(height: 8),
-                  Text('I hereby grant permission for authorized staff or technicians to enter my room without my presence...',
-                      style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF90929C))),
+
+                  // THE RESTORED SUBTEXT
+                  Text(
+                    'I hereby grant permission for authorized staff or technicians to enter my room without my presence to carry out the necessary repairs based on this report.',
+                    style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF90929C)),
+                  ),
                   const SizedBox(height: 12),
+
+                  // Yes/No Selection Buttons
                   Row(
                     children: [
                       Expanded(
                         child: GestureDetector(
-                          onTap: _isSubmitted || _isSubmitting ? null : () => setState(() => _consentGiven = true),
+                          onTap: _isSubmitting ? null : () => setState(() => _consentGiven = true),
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             alignment: Alignment.center,
@@ -545,14 +469,15 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
                                 color: _consentGiven ? const Color(0xFFEDE8FF) : Colors.transparent,
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(color: const Color(0xFF5F33E1))),
-                            child: Text('Yes, I consent', style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF5F33E1))),
+                            child: Text('Yes, I consent',
+                                style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF5F33E1))),
                           ),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: GestureDetector(
-                          onTap: _isSubmitted || _isSubmitting ? null : () => setState(() => _consentGiven = false),
+                          onTap: _isSubmitting ? null : () => setState(() => _consentGiven = false),
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             alignment: Alignment.center,
@@ -572,17 +497,16 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Submit
+            // Submit Button
             GestureDetector(
-              onTap: _isSubmitted || _isSubmitting ? null : _handleSubmit,
+              onTap: _isSubmitting ? null : _handleSubmit,
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 decoration: BoxDecoration(color: submitButtonColor, borderRadius: BorderRadius.circular(16)),
-                child: Text(submitButtonText,
-                    textAlign: TextAlign.center, style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                child: Text(_isSubmitting ? 'Submitting...' : 'Submit Complaint',
+                    textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
-            const SizedBox(height: 24),
           ],
         ),
       ),

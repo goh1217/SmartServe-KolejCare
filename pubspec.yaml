@@ -25,7 +25,7 @@ dependencies:
   printing: ^5.13.3
   image_picker: ^0.8.7+5
   flutter_image_compress: ^2.4.0
-  tflite_flutter: ^0.10.0
+  tflite_flutter: ^0.12.1
   url_launcher: ^6.1.10
   http: ^1.5.0
   flutter_webrtc: ^1.2.1  # Updated WebRTC version (includes Android namespace)
@@ -37,6 +37,7 @@ dependencies:
   dio: ^5.9.0
   geolocator: ^14.0.2
   google_maps_flutter: ^2.8.0
+  image: ^4.5.4 # Used for resizing photos to 224x224
 
 dev_dependencies:
   flutter_test:
