@@ -6,7 +6,8 @@ import 'package:owtest/analytics_page.dart';
 import 'package:owtest/assign_technician.dart';
 import 'package:owtest/help_page.dart';
 import 'package:owtest/settings_page.dart';
-import 'package:owtest/staff_complaints.dart';
+import 'package:owtest/staff_complaints.dart' as staff_complaints_module;
+import 'package:owtest/complaint_details.dart';
 
 // Main entry widget for the Staff Portal
 class StaffPortalApp extends StatelessWidget {
@@ -174,7 +175,7 @@ class _StaffPortalDashboardState extends State<StaffPortalDashboard> {
 
   void _onItemTapped(int index) {
     if (index == 1) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => const StaffComplaintsPage()));
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const staff_complaints_module.StaffComplaintsPage()));
     } else if (index == 2) {
       Navigator.push(context, MaterialPageRoute(builder: (context) => const AnalyticsPage()));
     } else if (index == 3) {
@@ -402,7 +403,7 @@ class _StaffPortalDashboardState extends State<StaffPortalDashboard> {
           width: double.infinity,
           height: 50,
           child: ElevatedButton.icon(
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const StaffComplaintsPage())),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const staff_complaints_module.StaffComplaintsPage())),
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF7C3AED), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0),
             icon: const Icon(Icons.list, color: Colors.white),
             label: const Text('View All Complaints', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
@@ -530,87 +531,114 @@ class _StaffPortalDashboardState extends State<StaffPortalDashboard> {
   Widget _buildComplaintCard(Complaint complaint) {
     final showAssignButton = complaint.status == 'Pending';
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2))
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(complaint.title,
-                    style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87)),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                    color: _getStatusColor(complaint.status).withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12)),
-                child: Text(complaint.status,
-                    style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: _getStatusColor(complaint.status))),
-              ),
-            ],
+    return GestureDetector(
+      onTap: () {
+        // Convert staff_portal Complaint to staff_complaints Complaint format
+        final staffComplaintsComplaint = staff_complaints_module.Complaint(
+          id: complaint.id,
+          title: complaint.title,
+          studentId: complaint.studentId,
+          studentName: complaint.studentName,
+          room: complaint.room,
+          category: complaint.category,
+          priority: complaint.priority,
+          submitted: complaint.submitted,
+          status: complaint.status,
+          residentCollege: complaint.residentCollege,
+          reasonCantComplete: null,
+          reasonCantCompleteProof: null,
+          cantCompleteCount: 0,
+        );
+        
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ComplaintDetailsPage(complaint: staffComplaintsComplaint),
           ),
-          const SizedBox(height: 8),
-          RichText(
-            text: TextSpan(
-              style: TextStyle(fontSize: 13, color: Colors.grey[800]),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2))
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const TextSpan(
-                    text: 'Student: ',
-                    style: TextStyle(fontWeight: FontWeight.w600)),
-                TextSpan(text: complaint.studentName),
-                const TextSpan(
-                    text: ' | Room: ',
-                    style: TextStyle(fontWeight: FontWeight.w600)),
-                TextSpan(text: complaint.room),
+                Expanded(
+                  child: Text(complaint.title,
+                      style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87)),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                      color: _getStatusColor(complaint.status).withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12)),
+                  child: Text(complaint.status,
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: _getStatusColor(complaint.status))),
+                ),
               ],
             ),
-          ),
-          const SizedBox(height: 4),
-          RichText(
-            text: TextSpan(
-              style: TextStyle(fontSize: 13, color: Colors.grey[800]),
-              children: [
-                const TextSpan(
-                    text: 'Category: ',
-                    style: TextStyle(fontWeight: FontWeight.w600)),
-                TextSpan(text: complaint.category),
-                const TextSpan(
-                    text: ' | Priority: ',
-                    style: TextStyle(fontWeight: FontWeight.w600)),
-                TextSpan(
-                    text: complaint.priority,
-                    style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: _getPriorityColor(complaint.priority))),
-              ],
+            const SizedBox(height: 8),
+            RichText(
+              text: TextSpan(
+                style: TextStyle(fontSize: 13, color: Colors.grey[800]),
+                children: [
+                  const TextSpan(
+                      text: 'Student: ',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
+                  TextSpan(text: complaint.studentName),
+                  const TextSpan(
+                      text: ' | Room: ',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
+                  TextSpan(text: complaint.room),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-              'Submitted: ${DateFormat.yMMMd().add_jm().format(complaint.submitted)}',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-        ],
+            const SizedBox(height: 4),
+            RichText(
+              text: TextSpan(
+                style: TextStyle(fontSize: 13, color: Colors.grey[800]),
+                children: [
+                  const TextSpan(
+                      text: 'Category: ',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
+                  TextSpan(text: complaint.category),
+                  const TextSpan(
+                      text: ' | Priority: ',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
+                  TextSpan(
+                      text: complaint.priority,
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: _getPriorityColor(complaint.priority))),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+                'Submitted: ${DateFormat.yMMMd().add_jm().format(complaint.submitted)}',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+          ],
+        ),
       ),
     );
   }
