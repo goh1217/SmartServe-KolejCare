@@ -189,6 +189,32 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
     }
   }
 
+  Future<void> _replaceImage(int index) async {
+    if (_isSubmitting) return;
+    final ImagePicker picker = ImagePicker();
+    final XFile? imgFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (imgFile != null) {
+      setState(() {
+        _pickedImages[index] = imgFile;
+        _urgencyLevelAI = null; // Reset AI recommendation
+      });
+      _classifyImages();
+    }
+  }
+
+  void _deleteImage(int index) {
+    if (_isSubmitting) return;
+    setState(() {
+      _pickedImages.removeAt(index);
+      _urgencyLevelAI = null; // Reset AI recommendation
+    });
+    // Re-run AI if there are still images
+    if (_pickedImages.isNotEmpty) {
+      _classifyImages();
+    }
+  }
+
   // --- SUBMISSION ---
 
   Future<void> _handleSubmit() async {
@@ -397,6 +423,135 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
                 ),
               ),
             ),
+            
+            // Image Thumbnails
+            if (_pickedImages.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Container(
+                decoration: _cardDecoration(),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Uploaded Images',
+                      style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: List.generate(_pickedImages.length, (index) {
+                        return Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey.shade300),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: kIsWeb
+                                    ? Image.network(
+                                        _pickedImages[index].path,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return const Icon(Icons.broken_image);
+                                        },
+                                      )
+                                    : FutureBuilder<Uint8List>(
+                                        future: _pickedImages[index].readAsBytes(),
+                                        builder: (context, snapshot) {
+                                          if (snapshot.connectionState == ConnectionState.waiting) {
+                                            return const Center(
+                                              child: CircularProgressIndicator(strokeWidth: 2),
+                                            );
+                                          }
+                                          if (snapshot.hasError || !snapshot.hasData) {
+                                            return const Icon(Icons.broken_image);
+                                          }
+                                          return Image.memory(
+                                            snapshot.data!,
+                                            fit: BoxFit.cover,
+                                          );
+                                        },
+                                      ),
+                              ),
+                            ),
+                            // Replace button (tap on image) - placed before delete button
+                            // Only covers center area to avoid blocking delete button
+                            Positioned(
+                              left: 20,
+                              right: 20,
+                              top: 20,
+                              bottom: 20,
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () => _replaceImage(index),
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12),
+                                      color: Colors.transparent,
+                                    ),
+                                    child: Center(
+                                      child: Opacity(
+                                        opacity: 0.3, // Subtle hint that image is tappable
+                                        child: Container(
+                                          padding: const EdgeInsets.all(4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.black54,
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: const Icon(
+                                            Icons.edit,
+                                            color: Colors.white,
+                                            size: 16,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // Delete button - placed last so it's on top and clickable
+                            Positioned(
+                              top: -8,
+                              right: -8,
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () => _deleteImage(index),
+                                  customBorder: const CircleBorder(),
+                                  child: Container(
+                                    width: 28,
+                                    height: 28,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      }),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
 
             // AI Suggestion UI
