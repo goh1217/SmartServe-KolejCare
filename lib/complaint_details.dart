@@ -17,11 +17,14 @@ class ComplaintDetailsPage extends StatefulWidget {
 
 class _ComplaintDetailsPageState extends State<ComplaintDetailsPage> {
   late Future<Map<String, dynamic>> _complaintDetailsFuture;
+  late String _selectedPriority;
+  bool _isUpdatingPriority = false;
 
   @override
   void initState() {
     super.initState();
     _complaintDetailsFuture = _fetchComplaintDetails();
+    _selectedPriority = widget.complaint.priority;
   }
 
   Future<Map<String, dynamic>> _fetchComplaintDetails() async {
@@ -231,7 +234,7 @@ class _ComplaintDetailsPageState extends State<ComplaintDetailsPage> {
                 _buildSectionTitle('Complaint Details'),
                 const SizedBox(height: 12),
                 _buildDetailRow('Category', widget.complaint.category),
-                _buildDetailRow('Priority', widget.complaint.priority),
+                _buildPriorityRow(status, data),
                 _buildDetailRow(
                   'Submitted',
                   DateFormat.yMMMd().add_jm().format(
@@ -791,6 +794,102 @@ class _ComplaintDetailsPageState extends State<ComplaintDetailsPage> {
           ),
           const SizedBox(height: 4),
           Text(value, style: TextStyle(fontSize: 13, color: Colors.grey[800])),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _updatePriority(String newPriority) async {
+    setState(() {
+      _isUpdatingPriority = true;
+    });
+    try {
+      await FirebaseFirestore.instance
+          .collection('complaint')
+          .doc(widget.complaint.id)
+          .update({'urgencyLevel': newPriority});
+
+      setState(() {
+        _selectedPriority = newPriority;
+        _complaintDetailsFuture = _fetchComplaintDetails();
+      });
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Priority updated to $newPriority'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update priority: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUpdatingPriority = false;
+        });
+      }
+    }
+  }
+
+  Widget _buildPriorityRow(String status, Map<String, dynamic> data) {
+    final choices = ['High', 'Medium', 'Minor'];
+    final dataPriority = data['urgencyLevel']?.toString() ?? widget.complaint.priority;
+
+    // If not pending, show a read-only detail row (do not allow editing)
+    if (status != 'Pending') {
+      return _buildDetailRow('Priority', dataPriority);
+    }
+
+    // For pending complaints, show editable dropdown (admin can change urgencyLevel)
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Priority',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey,
+            ),
+          ),
+          const SizedBox(height: 4),
+          SizedBox(
+            width: 200,
+            child: DropdownButtonFormField<String>(
+              value: _selectedPriority.isNotEmpty ? _selectedPriority : dataPriority,
+              items: choices
+                  .map((p) => DropdownMenuItem<String>(
+                        value: p,
+                        child: Text(p),
+                      ))
+                  .toList(),
+              onChanged: _isUpdatingPriority
+                  ? null
+                  : (val) {
+                      if (val != null && val != (dataPriority)) {
+                        _updatePriority(val);
+                      }
+                    },
+              decoration: InputDecoration(
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
