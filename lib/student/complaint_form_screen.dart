@@ -211,6 +211,8 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
         'studentID': user.uid,
         'isRead': false,
         'statusChangeCount': 1,
+        'lastStatusUpdate': FieldValue.serverTimestamp(),
+        'createdAt': FieldValue.serverTimestamp(),
       });
 
       List<String> cloudinaryUrls = [];
