@@ -703,6 +703,20 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
                       return aScheduled.compareTo(bScheduled);
                     }
 
+                    if (selectedTab == 3) {
+                      // For completed tab, sort by scheduled date (most recent first)
+                      final aScheduled = (a['scheduled'] as DateTime?) ?? DateTime.fromMillisecondsSinceEpoch(0);
+                      final bScheduled = (b['scheduled'] as DateTime?) ?? DateTime.fromMillisecondsSinceEpoch(0);
+                      return bScheduled.compareTo(aScheduled);
+                    }
+
+                    if (selectedTab == 4) {
+                      // For incomplete tab, sort by scheduled date (most recent first)
+                      final aScheduled = (a['scheduled'] as DateTime?) ?? DateTime.fromMillisecondsSinceEpoch(0);
+                      final bScheduled = (b['scheduled'] as DateTime?) ?? DateTime.fromMillisecondsSinceEpoch(0);
+                      return bScheduled.compareTo(aScheduled);
+                    }
+
                     // For other tabs, sort by scheduled date (earliest first)
                     final aScheduled = (a['scheduled'] as DateTime?) ?? DateTime.fromMillisecondsSinceEpoch(0);
                     final bScheduled = (b['scheduled'] as DateTime?) ?? DateTime.fromMillisecondsSinceEpoch(0);

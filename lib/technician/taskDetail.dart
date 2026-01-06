@@ -1918,7 +1918,6 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
         status = 'Pending';
         reasonCantCompleteProofList = uploadedUrls;
         currentReasonImageIndex = 0;
-        reasonCantCompleteText = '';
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
