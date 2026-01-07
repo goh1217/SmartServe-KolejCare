@@ -584,21 +584,34 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                               const SizedBox(width: 48),
                             // Image display
                             Expanded(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.network(
-                                  damagePictures[currentImageIndex],
-                                  width: 160,
-                                  height: 120,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Container(
-                                      width: 160,
-                                      height: 120,
-                                      color: Colors.grey.shade300,
-                                      child: const Icon(Icons.image, size: 50),
-                                    );
-                                  },
+                              child: GestureDetector(
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => FullScreenImageViewer(
+                                        imageUrl: damagePictures[currentImageIndex],
+                                        images: damagePictures,
+                                        initialIndex: currentImageIndex,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    damagePictures[currentImageIndex],
+                                    width: 160,
+                                    height: 120,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        width: 160,
+                                        height: 120,
+                                        color: Colors.grey.shade300,
+                                        child: const Icon(Icons.image, size: 50),
+                                      );
+                                    },
+                                  ),
                                 ),
                               ),
                             ),
@@ -677,21 +690,34 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                     ),
                     const SizedBox(height: 12),
                     if (proofImages.length == 1)
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.network(
-                          proofImages[0],
-                          width: double.infinity,
-                          height: 200,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              width: double.infinity,
-                              height: 200,
-                              color: Colors.grey.shade300,
-                              child: const Icon(Icons.image, size: 50),
-                            );
-                          },
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => FullScreenImageViewer(
+                                imageUrl: proofImages[0],
+                                images: proofImages,
+                                initialIndex: 0,
+                              ),
+                            ),
+                          );
+                        },
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            proofImages[0],
+                            width: double.infinity,
+                            height: 200,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                width: double.infinity,
+                                height: 200,
+                                color: Colors.grey.shade300,
+                                child: const Icon(Icons.image, size: 50),
+                              );
+                            },
+                          ),
                         ),
                       )
                     else
@@ -711,21 +737,34 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                               ),
                               // Image display
                               Expanded(
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.network(
-                                    proofImages[currentProofImageIndex],
-                                    width: double.infinity,
-                                    height: 200,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        width: double.infinity,
-                                        height: 200,
-                                        color: Colors.grey.shade300,
-                                        child: const Icon(Icons.image, size: 50),
-                                      );
-                                    },
+                                child: GestureDetector(
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => FullScreenImageViewer(
+                                          imageUrl: proofImages[currentProofImageIndex],
+                                          images: proofImages,
+                                          initialIndex: currentProofImageIndex,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.network(
+                                      proofImages[currentProofImageIndex],
+                                      width: double.infinity,
+                                      height: 200,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return Container(
+                                          width: double.infinity,
+                                          height: 200,
+                                          color: Colors.grey.shade300,
+                                          child: const Icon(Icons.image, size: 50),
+                                        );
+                                      },
+                                    ),
                                   ),
                                 ),
                               ),
@@ -807,21 +846,34 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                     ),
                     const SizedBox(height: 12),
                     if (reasonCantCompleteProofList.length == 1)
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.network(
-                          reasonCantCompleteProofList[0],
-                          width: double.infinity,
-                          height: 200,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              width: double.infinity,
-                              height: 200,
-                              color: Colors.grey.shade300,
-                              child: const Icon(Icons.image, size: 50),
-                            );
-                          },
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => FullScreenImageViewer(
+                                imageUrl: reasonCantCompleteProofList[0],
+                                images: reasonCantCompleteProofList,
+                                initialIndex: 0,
+                              ),
+                            ),
+                          );
+                        },
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            reasonCantCompleteProofList[0],
+                            width: double.infinity,
+                            height: 200,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                width: double.infinity,
+                                height: 200,
+                                color: Colors.grey.shade300,
+                                child: const Icon(Icons.image, size: 50),
+                              );
+                            },
+                          ),
                         ),
                       )
                     else
@@ -841,21 +893,34 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                               ),
                               // Image display
                               Expanded(
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.network(
-                                    reasonCantCompleteProofList[currentReasonImageIndex],
-                                    width: double.infinity,
-                                    height: 200,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        width: double.infinity,
-                                        height: 200,
-                                        color: Colors.grey.shade300,
-                                        child: const Icon(Icons.image, size: 50),
-                                      );
-                                    },
+                                child: GestureDetector(
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => FullScreenImageViewer(
+                                          imageUrl: reasonCantCompleteProofList[currentReasonImageIndex],
+                                          images: reasonCantCompleteProofList,
+                                          initialIndex: currentReasonImageIndex,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.network(
+                                      reasonCantCompleteProofList[currentReasonImageIndex],
+                                      width: double.infinity,
+                                      height: 200,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return Container(
+                                          width: double.infinity,
+                                          height: 200,
+                                          color: Colors.grey.shade300,
+                                          child: const Icon(Icons.image, size: 50),
+                                        );
+                                      },
+                                    ),
                                   ),
                                 ),
                               ),
@@ -2153,6 +2218,143 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
       default:
         return const Color(0xFF7D6E3A);
     }
+  }
+}
+
+// Full-screen image viewer with zoom capability
+class FullScreenImageViewer extends StatefulWidget {
+  final String imageUrl;
+  final List<String> images;
+  final int initialIndex;
+
+  const FullScreenImageViewer({
+    super.key,
+    required this.imageUrl,
+    required this.images,
+    this.initialIndex = 0,
+  });
+
+  @override
+  State<FullScreenImageViewer> createState() => _FullScreenImageViewerState();
+}
+
+class _FullScreenImageViewerState extends State<FullScreenImageViewer> {
+  late int currentIndex;
+  final TransformationController _transformationController = TransformationController();
+
+  @override
+  void initState() {
+    super.initState();
+    currentIndex = widget.initialIndex;
+  }
+
+  @override
+  void dispose() {
+    _transformationController.dispose();
+    super.dispose();
+  }
+
+  void _resetZoom() {
+    _transformationController.value = Matrix4.identity();
+  }
+
+  void _nextImage() {
+    if (currentIndex < widget.images.length - 1) {
+      setState(() {
+        currentIndex++;
+        _resetZoom();
+      });
+    }
+  }
+
+  void _previousImage() {
+    if (currentIndex > 0) {
+      setState(() {
+        currentIndex--;
+        _resetZoom();
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.close, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          '${currentIndex + 1} / ${widget.images.length}',
+          style: const TextStyle(color: Colors.white),
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: _resetZoom,
+            tooltip: 'Reset zoom',
+          ),
+        ],
+      ),
+      body: GestureDetector(
+        onDoubleTap: _resetZoom,
+        child: InteractiveViewer(
+          transformationController: _transformationController,
+          boundaryMargin: const EdgeInsets.all(80),
+          minScale: 1.0,
+          maxScale: 5.0,
+          child: Center(
+            child: Image.network(
+              widget.images[currentIndex],
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error, color: Colors.white, size: 50),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Failed to load image',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+      bottomNavigationBar: widget.images.length > 1
+          ? BottomAppBar(
+              color: Colors.black,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                    onPressed: currentIndex > 0 ? _previousImage : null,
+                    disabledColor: Colors.grey,
+                  ),
+                  Text(
+                    '${currentIndex + 1} / ${widget.images.length}',
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.arrow_forward_ios, color: Colors.white),
+                    onPressed: currentIndex < widget.images.length - 1 ? _nextImage : null,
+                    disabledColor: Colors.grey,
+                  ),
+                ],
+              ),
+            )
+          : null,
+    );
   }
 }
 
