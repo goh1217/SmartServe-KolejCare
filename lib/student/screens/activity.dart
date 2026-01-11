@@ -4,7 +4,6 @@ import 'activity/ongoingrepair.dart';
 import 'activity/completedrepair2.dart';
 import '../notification_page.dart';
 import 'activity/completed/rating.dart';
-import 'activity/completed/tips.dart';
 import 'activity/scheduledrepair.dart';
 import 'activity/rejectedrepair.dart';
 import 'activity/waitappro.dart';
@@ -39,6 +38,46 @@ class _ActivityScreenState extends State<ActivityScreen> {
     }
   }
   int _selectedIndex = 2; // default to activity tab
+  final Map<String, String> _staffNameCache = {};
+
+  // Resolve a staff name from a rejectedBy/reviewedBy value (path, doc ref, or uid)
+  Future<String> _getStaffName(dynamic rejectedBy) async {
+    try {
+      if (rejectedBy == null) return '';
+
+      // Normalize to a path-like string for caching and parsing
+      String path;
+      if (rejectedBy is DocumentReference) {
+        path = rejectedBy.path;
+      } else {
+        path = rejectedBy.toString();
+      }
+
+      if (path.isEmpty) return '';
+
+      // Cache hit
+      if (_staffNameCache.containsKey(path)) {
+        return _staffNameCache[path] ?? '';
+      }
+
+      // Extract possible staff id from path or raw uid
+      final parts = path.split('/').where((s) => s.isNotEmpty).toList();
+      final staffId = parts.isNotEmpty ? parts.last : path;
+      if (staffId.isEmpty) return '';
+
+      final doc = await FirebaseFirestore.instance.collection('staff').doc(staffId).get();
+      if (!doc.exists) return '';
+
+      final data = doc.data() as Map<String, dynamic>?;
+      final name = (data?['staffName'] ?? data?['name'] ?? data?['fullName'] ?? data?['displayName'] ?? data?['username'] ?? '').toString();
+      if (name.isEmpty) return '';
+
+      _staffNameCache[path] = name;
+      return name;
+    } catch (_) {
+      return '';
+    }
+  }
 
   // Resolve a technician name for display. Use the `assignedTo` path to
   // locate the technician document, extract the technician id from the path
@@ -360,12 +399,28 @@ class _ActivityScreenState extends State<ActivityScreen> {
                             );
                           }
 
+                          // Sort by date descending (newest first)
+                          userDocs.sort((a, b) {
+                            final dataA = a.data() as Map<String, dynamic>;
+                            final dataB = b.data() as Map<String, dynamic>;
+                            final dateA = dataA['assignedDate'] ?? dataA['scheduledDate'] ?? dataA['reportedDate'] ?? dataA['reportedOn'];
+                            final dateB = dataB['assignedDate'] ?? dataB['scheduledDate'] ?? dataB['reportedDate'] ?? dataB['reportedOn'];
+                            
+                            if (dateA == null && dateB == null) return 0;
+                            if (dateA == null) return 1;
+                            if (dateB == null) return -1;
+                            
+                            final dtA = dateA is Timestamp ? dateA.toDate() : (dateA is DateTime ? dateA : DateTime.tryParse(dateA.toString()) ?? DateTime.now());
+                            final dtB = dateB is Timestamp ? dateB.toDate() : (dateB is DateTime ? dateB : DateTime.tryParse(dateB.toString()) ?? DateTime.now());
+                            return dtB.compareTo(dtA);
+                          });
+
                           return Column(
                             mainAxisSize: MainAxisSize.min,
                             children: userDocs.map((d) {
                               final data = d.data() as Map<String, dynamic>;
                               // Title: leave blank when no field present
-                              final title = (data['inventoryDamage'] ?? data['damageCategory'] ?? data['complaintID'] ?? '').toString();
+                              final title = (data['inventoryDamageTitle'] ?? data['damageCategory'] ?? data['complaintID'] ?? '').toString();
 
                               final dateField = data['assignedDate'] ?? data['scheduledDate'] ?? data['reportedDate'] ?? data['reportedOn'];
                               final dateStr = formatTimestampFriendly(dateField);
@@ -476,7 +531,21 @@ class _ActivityScreenState extends State<ActivityScreen> {
                             );
                           }
 
-
+                          // Sort by date descending (newest first)
+                          userDocs.sort((a, b) {
+                            final dataA = a.data() as Map<String, dynamic>;
+                            final dataB = b.data() as Map<String, dynamic>;
+                            final dateA = dataA['scheduledDate'] ?? dataA['reportedDate'] ?? dataA['reportedOn'] ?? dataA['reportedAt'];
+                            final dateB = dataB['scheduledDate'] ?? dataB['reportedDate'] ?? dataB['reportedOn'] ?? dataB['reportedAt'];
+                            
+                            if (dateA == null && dateB == null) return 0;
+                            if (dateA == null) return 1;
+                            if (dateB == null) return -1;
+                            
+                            final dtA = dateA is Timestamp ? dateA.toDate() : (dateA is DateTime ? dateA : DateTime.tryParse(dateA.toString()) ?? DateTime.now());
+                            final dtB = dateB is Timestamp ? dateB.toDate() : (dateB is DateTime ? dateB : DateTime.tryParse(dateB.toString()) ?? DateTime.now());
+                            return dtB.compareTo(dtA);
+                          });
 
                           return Column(
                             mainAxisSize: MainAxisSize.min,
@@ -624,6 +693,22 @@ class _ActivityScreenState extends State<ActivityScreen> {
                             );
                           }
 
+                          // Sort by date descending (newest first)
+                          userDocs.sort((a, b) {
+                            final dataA = a.data() as Map<String, dynamic>;
+                            final dataB = b.data() as Map<String, dynamic>;
+                            final dateA = dataA['reportedDate'] ?? dataA['reportedOn'];
+                            final dateB = dataB['reportedDate'] ?? dataB['reportedOn'];
+                            
+                            if (dateA == null && dateB == null) return 0;
+                            if (dateA == null) return 1;
+                            if (dateB == null) return -1;
+                            
+                            final dtA = dateA is Timestamp ? dateA.toDate() : (dateA is DateTime ? dateA : DateTime.tryParse(dateA.toString()) ?? DateTime.now());
+                            final dtB = dateB is Timestamp ? dateB.toDate() : (dateB is DateTime ? dateB : DateTime.tryParse(dateB.toString()) ?? DateTime.now());
+                            return dtB.compareTo(dtA);
+                          });
+
                           return Column(
                             mainAxisSize: MainAxisSize.min,
                             children: userDocs.map((d) {
@@ -640,22 +725,30 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                   title: title,
                                   status: 'Rejected on',
                                   date: dateText,
-                                  onTap: () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => RejectedRepairScreen(
-                                        status: data['reportStatus'] ?? 'Rejected',
-                                        damageCategory: data['damageCategory'] ?? '',
-                                        damageLocation: data['damageLocation'] ?? '',
-                                        inventoryDamageTitle: data['inventoryDamageTitle'] ?? '',
-                                        inventoryDamage: data['inventoryDamage'] ?? '',
-                                        reportedOn: dateText,
-                                        reviewedOn: formatTimestampFriendly(data['reviewedOn']),
-                                        reviewedBy: (data['reviewedBy'] ?? '').toString(),
-                                        rejectionReason: (data['rejectionReason'] ?? '').toString(),
-                                      ),
-                                    ),
-                                  ),
+                                  onTap: () async {
+                                    final reviewerName = await _getStaffName(data['rejectedBy'] ?? data['reviewedBy']);
+                                    final reviewedByDisplay = reviewerName.isNotEmpty ? reviewerName : 'Staff';
+
+                                    // Navigate after resolving reviewer name so the detail screen shows a friendly label
+                                    if (context.mounted) {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => RejectedRepairScreen(
+                                            status: data['reportStatus'] ?? 'Rejected',
+                                            damageCategory: data['damageCategory'] ?? '',
+                                            damageLocation: data['damageLocation'] ?? '',
+                                            inventoryDamageTitle: data['inventoryDamageTitle'] ?? '',
+                                            inventoryDamage: data['inventoryDamage'] ?? '',
+                                            reportedOn: dateText,
+                                            reviewedOn: formatTimestampFriendly(data['reviewedOn']),
+                                            reviewedBy: reviewedByDisplay,
+                                            rejectionReason: (data['rejectionReason'] ?? '').toString(),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
                                 ),
                               );
                             }).toList(),
@@ -747,6 +840,22 @@ class _ActivityScreenState extends State<ActivityScreen> {
                               child: Center(child: Text('No pending complaints.')),
                             );
                           }
+
+                          // Sort by date descending (newest first)
+                          userDocs.sort((a, b) {
+                            final dataA = a.data() as Map<String, dynamic>;
+                            final dataB = b.data() as Map<String, dynamic>;
+                            final dateA = dataA['reportedDate'] ?? dataA['reportedOn'];
+                            final dateB = dataB['reportedDate'] ?? dataB['reportedOn'];
+                            
+                            if (dateA == null && dateB == null) return 0;
+                            if (dateA == null) return 1;
+                            if (dateB == null) return -1;
+                            
+                            final dtA = dateA is Timestamp ? dateA.toDate() : (dateA is DateTime ? dateA : DateTime.tryParse(dateA.toString()) ?? DateTime.now());
+                            final dtB = dateB is Timestamp ? dateB.toDate() : (dateB is DateTime ? dateB : DateTime.tryParse(dateB.toString()) ?? DateTime.now());
+                            return dtB.compareTo(dtA);
+                          });
 
                           return Column(
                             mainAxisSize: MainAxisSize.min,
@@ -867,6 +976,22 @@ class _ActivityScreenState extends State<ActivityScreen> {
                             );
                           }
 
+                          // Sort by date descending (newest first)
+                          userDocs.sort((a, b) {
+                            final dataA = a.data() as Map<String, dynamic>;
+                            final dataB = b.data() as Map<String, dynamic>;
+                            final dateA = dataA['completedDate'] ?? dataA['reportedDate'];
+                            final dateB = dataB['completedDate'] ?? dataB['reportedDate'];
+                            
+                            if (dateA == null && dateB == null) return 0;
+                            if (dateA == null) return 1;
+                            if (dateB == null) return -1;
+                            
+                            final dtA = dateA is Timestamp ? dateA.toDate() : (dateA is DateTime ? dateA : DateTime.tryParse(dateA.toString()) ?? DateTime.now());
+                            final dtB = dateB is Timestamp ? dateB.toDate() : (dateB is DateTime ? dateB : DateTime.tryParse(dateB.toString()) ?? DateTime.now());
+                            return dtB.compareTo(dtA);
+                          });
+
                           return Column(
                             mainAxisSize: MainAxisSize.min,
                             children: userDocs.map((d) {
@@ -930,10 +1055,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                                 ),
                                               ),
                                             ),
-                                    onTipsTap: () => Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (_) => const TipsPage()),
-                                    ),
                                   );
 
                                   return _buildActivityItem(context, item);
@@ -1162,13 +1283,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     label: const Text('Rated', style: TextStyle(color: Colors.grey)),
                     style: TextButton.styleFrom(padding: EdgeInsets.zero),
                   ),
-                const SizedBox(width: 16),
-                TextButton.icon(
-                  onPressed: item.onTipsTap,
-                  icon: const Icon(Icons.attach_money, size: 16),
-                  label: const Text('Tips'),
-                  style: TextButton.styleFrom(foregroundColor: const Color(0xFF5E4DB2), padding: EdgeInsets.zero),
-                ),
+                // Tips button removed as requested
               ]),
             ),
         ]),
@@ -1184,7 +1299,6 @@ class ActivityItem {
   final bool showActions;
   final VoidCallback? onTap;
   final VoidCallback? onRateTap;
-  final VoidCallback? onTipsTap;
 
   ActivityItem({
     required this.title,
@@ -1193,6 +1307,5 @@ class ActivityItem {
     this.showActions = false,
     this.onTap,
     this.onRateTap,
-    this.onTipsTap,
   });
 }

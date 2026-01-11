@@ -458,7 +458,7 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
                       _buildDetailItem('Inventory Damage', widget.inventoryDamage),
                       const Divider(height: 1),
                       _buildDetailItem(
-                          'Expected Duration',
+                          'Expected Duration (hours)',
                           estimatedDurationDisplay.isNotEmpty
                               ? estimatedDurationDisplay
                               : widget.expectedDuration),

@@ -37,7 +37,6 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   late TextEditingController _emailController;
   late TextEditingController _matricController;
   late TextEditingController _phoneController;
-  late TextEditingController _genderController;
   late TextEditingController _collegeController;
   late TextEditingController _blockController;
   late TextEditingController _roomController;
@@ -63,7 +62,6 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     _emailController = TextEditingController();
     _matricController = TextEditingController();
     _phoneController = TextEditingController();
-    _genderController = TextEditingController();
     _collegeController = TextEditingController();
     _blockController = TextEditingController();
     _roomController = TextEditingController();
@@ -153,7 +151,6 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     _emailController.text = _profileData['email'] ?? '';
     _matricController.text = _profileData['matricNo'] ?? '';
     _phoneController.text = _profileData['phoneNo'] ?? '';
-    _genderController.text = _profileData['gender'] ?? '';
     _collegeController.text = _profileData['residentCollege'] ?? '';
     _blockController.text = _profileData['block'] ?? '';
     _roomController.text = _profileData['roomNumber'] ?? '';
@@ -280,7 +277,6 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
         'email': _emailController.text,
         'matricNo': _matricController.text,
         'phoneNo': _phoneController.text,
-        'gender': _genderController.text,
         'residentCollege': _collegeController.text,
         'block': _blockController.text,
         'roomNumber': _roomController.text,
@@ -319,7 +315,6 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     _emailController.dispose();
     _matricController.dispose();
     _phoneController.dispose();
-    _genderController.dispose();
     _collegeController.dispose();
     _blockController.dispose();
     _roomController.dispose();
@@ -518,13 +513,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                           controller: _phoneController,
                           icon: Icons.phone_outlined,
                           keyboardType: TextInputType.phone,
-                        ),
-                        // Faculty field removed
-                        _buildProfileField(
-                          label: 'Gender',
-                          controller: _genderController,
-                          icon: Icons.people_outline,
-                        ),
+                        )
                       ],
                     ),
                   ),

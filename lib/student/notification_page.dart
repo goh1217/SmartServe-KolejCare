@@ -5,7 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 import 'complaint_detail_screen.dart';
 import 'screens/activity/ongoingrepair.dart';
-import 'screens/activity/completedrepair.dart';
+//import 'screens/activity/completedrepair.dart';
 import 'screens/activity/completedrepair2.dart';
 import 'screens/activity/scheduledrepair.dart';
 import 'screens/activity/waitappro.dart';

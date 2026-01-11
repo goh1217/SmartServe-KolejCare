@@ -54,22 +54,49 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     String botReply;
 
     // --- Hardcoded Logic (Existing) ---
-    if (userInput.toLowerCase().contains('complaint') ||
-        userInput.toLowerCase().contains('problem')) {
+    String input = userInput.toLowerCase();
+    if (input.contains('complaint') || input.contains('problem') || input.contains('damage')) {
       botReply =
-          "Here’s a step-by-step guide on how you can file a complaint regarding damages in your dormitory:\n"
-          "1. Navigate to your home page.\n"
-          "2. Find the purple '+' button at the bottom centre of your menu section.\n"
-          "3. You will be directed to a form. Fill in all the details and press ‘Submit Complaint’.\n\n"
-          "That’s all you need to do to file a file a complaint to your residential college office. 😊";
-    } else if (userInput.toLowerCase().contains('smartserve')) {
+          "To file a complaint about dormitory furniture or appliances (like bed frames, fans, or lamps):\n"
+          "1. Go to the Home page.\n"
+          "2. Tap the purple '+' button in the center of the menu.\n"
+          "3. Fill in the details. *Tip: Our AI will automatically suggest the urgency based on your description!*\n"
+          "4. Tap ‘Submit Complaint’. "; 
+    } 
+    else if (input.contains('track') || input.contains('status') || input.contains('progress')) {
       botReply =
-          "SmartServe is a platform for managing residential college facilities, maintenance reports, and student services all in one place.";
-    } else if (userInput.toLowerCase().contains('college')) {
+          "You can view real-time updates on your repair progress in the 'Complaints' section (third icon of the menu). "
+          "You'll be able to see if your request is pending, assigned, ongoing, rejected or completed. ";
+    } 
+    else if (input.contains('technician') || input.contains('arrival') || input.contains('who')) {
       botReply =
-          "You can contact your residential college office for room or facility issues. They’ll assist with repair scheduling and room management.";
-    } else if (userInput.toLowerCase().contains('faq')) {
-      botReply = "You can browse FAQs for help with account access, maintenance reporting, and general dorm inquiries.";
+          "For your safety and privacy, SmartServe allows you to see the assigned technician's details "
+          "and their estimated arrival time so you aren't surprised by visitors. ";
+    } 
+    else if (input.contains('schedule') || input.contains('reschedule') || input.contains('time')) {
+      botReply =
+          "SmartServe features a transparent scheduling system. If the assigned repair time doesn't work for you, "
+          "you can use the rescheduling feature within the app to manage repair visits. ";
+    } 
+    else if (input.contains('donate') || input.contains('donation') || input.contains('money') || input.contains('fund')) {
+      botReply =
+          "You can contribute to the college's welfare fund through our secure payment integration. "
+          "These voluntary donations support future repairs and facility upgrades! ";
+    } 
+    else if (input.contains('feedback') || input.contains('rate') || input.contains('rating')) {
+      botReply =
+          "Once a repair is finished, you can rate the service and provide feedback. "
+          "This helps the college measure satisfaction and ensure the quality of repairs. ";
+    }
+    else if (input.contains('location') || input.contains('gps')) {
+      botReply = 
+          "The app uses GPS technology to automatically detect your current dormitory location "
+          "when you file a report, making the process faster and more accurate. ";
+    }
+    else if (input.contains('smartserve') ) {
+      botReply =
+          "SmartServe is a centralized platform for students, staff and technicians "
+          "to manage facility maintenance and community engagement at UTM. ";
     }
     // --- Gemini API Logic (New) ---
     else {
