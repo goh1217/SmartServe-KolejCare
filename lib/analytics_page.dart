@@ -8,6 +8,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:flutter/services.dart';
+import 'view_rating.dart';
 
 class AnalyticsPage extends StatefulWidget {
   const AnalyticsPage({Key? key}) : super(key: key);
@@ -81,6 +82,11 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
               color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
         ),
         actions: [
+          IconButton(
+            tooltip: 'Ratings',
+            icon: const Icon(Icons.star, color: Colors.white),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ViewRatingPage())),
+          ),
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsPage())),

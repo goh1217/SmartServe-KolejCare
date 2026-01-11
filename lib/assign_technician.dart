@@ -591,9 +591,13 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
     });
 
     try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      final rejectedByPath = currentUser != null ? '/collection/staff/${currentUser.uid}' : '';
+
       await _firestore.collection('complaint').doc(widget.complaintId).update({
         'reportStatus': 'Rejected',
         'rejectionReason': reason,
+        'rejectedBy': rejectedByPath,
         'isRead': false,
         'lastStatusUpdate': FieldValue.serverTimestamp(),
         'lastStatusChangedAt': FieldValue.serverTimestamp(),
