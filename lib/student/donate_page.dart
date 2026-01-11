@@ -1151,22 +1151,6 @@ class PaymentReceiptPage extends StatelessWidget {
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () => _downloadReceipt(context),
-                      icon: const Icon(Icons.download),
-                      label: const Text('Download'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.deepPurple,
-                        side: const BorderSide(color: Colors.deepPurple),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: OutlinedButton.icon(
                       onPressed: () => _shareReceipt(context),
                       icon: const Icon(Icons.share),
                       label: const Text('Share'),
@@ -1216,99 +1200,7 @@ class PaymentReceiptPage extends StatelessWidget {
     );
   }
 
-  Future<void> _downloadReceipt(BuildContext context) async {
-    try {
-      final pdf = pw.Document();
 
-      pdf.addPage(
-        pw.Page(
-          pageFormat: PdfPageFormat.a4,
-          margin: const pw.EdgeInsets.all(24),
-          build: (context) => pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Center(
-                child: pw.Text(
-                  'DONATION RECEIPT',
-                  style: pw.TextStyle(
-                    fontSize: 24,
-                    fontWeight: pw.FontWeight.bold,
-                  ),
-                ),
-              ),
-              pw.SizedBox(height: 16),
-              pw.Divider(),
-              pw.SizedBox(height: 16),
-              _receiptPdfRow('Payment ID', receiptNo),
-              pw.SizedBox(height: 8),
-              _receiptPdfRow('Date', date),
-              pw.SizedBox(height: 8),
-              _receiptPdfRow('Time', time),
-              pw.SizedBox(height: 8),
-              _receiptPdfRow('Payment Method', paymentMethod),
-              pw.SizedBox(height: 16),
-              pw.Divider(),
-              pw.SizedBox(height: 16),
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Text(
-                    'Total Amount',
-                    style: pw.TextStyle(
-                      fontSize: 16,
-                      fontWeight: pw.FontWeight.bold,
-                    ),
-                  ),
-                  pw.Text(
-                    'RM ${amount.toStringAsFixed(2)}',
-                    style: pw.TextStyle(
-                      fontSize: 20,
-                      fontWeight: pw.FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              pw.SizedBox(height: 16),
-              pw.Divider(),
-              pw.SizedBox(height: 16),
-              pw.Center(
-                child: pw.Text(
-                  'Thank you for your donation!',
-                  style: const pw.TextStyle(fontSize: 12),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-
-      final bytes = await pdf.save();
-
-      if (kIsWeb) {
-        // For web: use layoutPdf to trigger download
-        await Printing.layoutPdf(
-          onLayout: (format) async => bytes,
-          name: 'donation_receipt_$receiptNo.pdf',
-        );
-      } else {
-        // For mobile: use sharePdf
-        await Printing.sharePdf(
-          bytes: bytes,
-          filename: 'donation_receipt_$receiptNo.pdf',
-        );
-      }
-
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Receipt downloaded successfully!')),
-      );
-    } catch (e) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to download: $e')));
-    }
-  }
 
   Future<void> _shareReceipt(BuildContext context) async {
     try {
@@ -1411,6 +1303,7 @@ class _ReceiptRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
@@ -1420,12 +1313,16 @@ class _ReceiptRow extends StatelessWidget {
             fontWeight: FontWeight.w500,
           ),
         ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14,
-            color: isHighlight ? Colors.deepPurple : Colors.black87,
-            fontWeight: isHighlight ? FontWeight.bold : FontWeight.w600,
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            style: TextStyle(
+              fontSize: 14,
+              color: isHighlight ? Colors.deepPurple : Colors.black87,
+              fontWeight: isHighlight ? FontWeight.bold : FontWeight.w600,
+            ),
           ),
         ),
       ],
@@ -1437,11 +1334,16 @@ class _ReceiptRow extends StatelessWidget {
 pw.Widget _receiptPdfRow(String label, String value) {
   return pw.Row(
     mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+    crossAxisAlignment: pw.CrossAxisAlignment.start,
     children: [
       pw.Text(label, style: const pw.TextStyle(fontSize: 12)),
-      pw.Text(
-        value,
-        style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
+      pw.SizedBox(width: 12),
+      pw.Expanded(
+        child: pw.Text(
+          value,
+          textAlign: pw.TextAlign.end,
+          style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
+        ),
       ),
     ],
   );
