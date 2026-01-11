@@ -980,8 +980,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
                           userDocs.sort((a, b) {
                             final dataA = a.data() as Map<String, dynamic>;
                             final dataB = b.data() as Map<String, dynamic>;
-                            final dateA = dataA['completedDate'] ?? dataA['reportedDate'];
-                            final dateB = dataB['completedDate'] ?? dataB['reportedDate'];
+                            final dateA = dataA['lastStatusUpdate'] ?? dataA['completedDate'] ?? dataA['reportedDate'];
+                            final dateB = dataB['lastStatusUpdate'] ?? dataB['completedDate'] ?? dataB['reportedDate'];
                             
                             if (dateA == null && dateB == null) return 0;
                             if (dateA == null) return 1;
@@ -999,7 +999,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                               final title = (data['inventoryDamageTitle'] ?? data['damageCategory'] ?? 'No title').toString();
 
                               String dateText = 'No date';
-                              final completedTs = data['completedDate'] ?? data['reportedDate'];
+                              final completedTs = data['lastStatusUpdate'] ?? data['completedDate'] ?? data['reportedDate'];
                               try {
                                 dateText = formatTimestamp(completedTs);
                               } catch (_) {}
