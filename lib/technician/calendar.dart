@@ -17,6 +17,7 @@ class _CalendarPageState extends State<CalendarPage> {
   DateTime selectedDate = DateTime.now();
   double timeSlotHeight = 120.0;
   final ScrollController _scrollController = ScrollController();
+  final ScrollController _dateScrollController = ScrollController();
   String? technicianDocId;
 
   @override
@@ -28,7 +29,33 @@ class _CalendarPageState extends State<CalendarPage> {
       if (_scrollController.hasClients) {
         _scrollController.jumpTo(8 * timeSlotHeight);
       }
+      
+      // Auto-scroll to current date in the date list
+      if (_dateScrollController.hasClients) {
+        _scrollToCurrentDate();
+      }
     });
+  }
+
+  Future<void> _scrollToCurrentDate() async {
+    // Calculate scroll offset to show current date on screen
+    // Each day card width is approximately 70 (width) + 10 (padding) = 80
+    final dayIndex = selectedDate.day - 1; // 0-indexed
+    final offsetPerDay = 80.0; // Approximate width per day card
+    final targetOffset = dayIndex * offsetPerDay;
+    
+    try {
+      await _dateScrollController.animateTo(
+        targetOffset,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    } catch (e) {
+      // If animation fails, just jump to position
+      if (_dateScrollController.hasClients) {
+        _dateScrollController.jumpTo(targetOffset);
+      }
+    }
   }
 
   // Fetch the technician's document ID from the technician collection
@@ -60,6 +87,7 @@ class _CalendarPageState extends State<CalendarPage> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _dateScrollController.dispose();
     super.dispose();
   }
 
@@ -245,6 +273,7 @@ class _CalendarPageState extends State<CalendarPage> {
       child: SizedBox(
         height: 90,
         child: ListView.builder(
+          controller: _dateScrollController,
           scrollDirection: Axis.horizontal,
           itemCount: monthDays.length,
           itemBuilder: (context, i) {

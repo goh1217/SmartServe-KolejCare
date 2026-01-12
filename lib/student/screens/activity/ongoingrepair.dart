@@ -20,6 +20,8 @@ class _OngoingRepairScreenState extends State<OngoingRepairScreen> {
   String technicianName = '';
   String technicianImage = 'https://via.placeholder.com/150';
   String technicianRole = 'Technician';
+  List<String> damagePicList = [];
+  int currentDamagePhotoIndex = 0;
   
   // Cache for ETA calculations to avoid repeated API calls
   final Map<String, int> _etaCache = {};
@@ -243,6 +245,16 @@ class _OngoingRepairScreenState extends State<OngoingRepairScreen> {
                     } catch (_) {
                       reportedText = '';
                     }
+                    
+                    // Extract damage photos from data
+                    List<String> damagePics = [];
+                    if (data['damagePic'] != null && data['damagePic'] is List) {
+                      damagePics = List<String>.from(data['damagePic'] as List);
+                      // Limit to max 3 pictures
+                      if (damagePics.length > 3) {
+                        damagePics = damagePics.sublist(0, 3);
+                      }
+                    }
 
                     return SingleChildScrollView(
                       child: Column(
@@ -309,6 +321,125 @@ class _OngoingRepairScreenState extends State<OngoingRepairScreen> {
                           const Divider(height: 1),
                           _buildDetailItem('Issue Description', issue),
                           const Divider(height: 1),
+                          if (damagePics.isNotEmpty) ...[
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Damage Photo${damagePics.length > 1 ? 's' : ''}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[600],
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  if (damagePics.length == 1)
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Image.network(
+                                        damagePics[0],
+                                        width: double.infinity,
+                                        height: 250,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return Container(
+                                            width: double.infinity,
+                                            height: 250,
+                                            color: Colors.grey.shade300,
+                                            child: const Icon(Icons.image, size: 50),
+                                          );
+                                        },
+                                        loadingBuilder: (context, child, loadingProgress) {
+                                          if (loadingProgress == null) return child;
+                                          return Center(
+                                            child: CircularProgressIndicator(
+                                              value: loadingProgress.expectedTotalBytes != null
+                                                  ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                                  : null,
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    )
+                                  else
+                                    Column(
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            // Left arrow button
+                                            IconButton(
+                                              icon: const Icon(Icons.arrow_back_ios, color: Colors.grey),
+                                              onPressed: () {
+                                                setState(() {
+                                                  currentDamagePhotoIndex = (currentDamagePhotoIndex - 1 + damagePics.length) % damagePics.length;
+                                                });
+                                              },
+                                            ),
+                                            // Image display
+                                            Expanded(
+                                              child: ClipRRect(
+                                                borderRadius: BorderRadius.circular(12),
+                                                child: Image.network(
+                                                  damagePics[currentDamagePhotoIndex],
+                                                  width: double.infinity,
+                                                  height: 250,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (context, error, stackTrace) {
+                                                    return Container(
+                                                      width: double.infinity,
+                                                      height: 250,
+                                                      color: Colors.grey.shade300,
+                                                      child: const Icon(Icons.image, size: 50),
+                                                    );
+                                                  },
+                                                  loadingBuilder: (context, child, loadingProgress) {
+                                                    if (loadingProgress == null) return child;
+                                                    return Center(
+                                                      child: CircularProgressIndicator(
+                                                        value: loadingProgress.expectedTotalBytes != null
+                                                            ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                                            : null,
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
+                                              ),
+                                            ),
+                                            // Right arrow button
+                                            IconButton(
+                                              icon: const Icon(Icons.arrow_forward_ios, color: Colors.grey),
+                                              onPressed: () {
+                                                setState(() {
+                                                  currentDamagePhotoIndex = (currentDamagePhotoIndex + 1) % damagePics.length;
+                                                });
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                        // Image counter
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 8),
+                                          child: Text(
+                                            '${currentDamagePhotoIndex + 1} / ${damagePics.length}',
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                ],
+                              ),
+                            ),
+                            const Divider(height: 1),
+                          ],
                           _buildDetailItem('Reported On', reportedText, isLast: false),
                           const Divider(height: 1),
                           // View Technician Location Button
