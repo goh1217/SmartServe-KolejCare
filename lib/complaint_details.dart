@@ -241,6 +241,15 @@ class _ComplaintDetailsPageState extends State<ComplaintDetailsPage> {
                     widget.complaint.submitted,
                   ),
                 ),
+                if (widget.complaint.suggestedDate != null) ...[
+                  const SizedBox(height: 12),
+                  _buildDetailRow(
+                    'Suggested Reschedule Date',
+                    DateFormat.yMMMd().format(
+                      widget.complaint.suggestedDate!,
+                    ),
+                  ),
+                ],
                 _buildDetailRow(
                   'Damage Location',
                   data['damageLocation']?.toString() ?? 'N/A',

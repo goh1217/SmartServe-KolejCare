@@ -21,6 +21,7 @@ class Complaint {
   final String? reasonCantComplete;
   final String? reasonCantCompleteProof;
   final int cantCompleteCount;
+  final DateTime? suggestedDate; // For rescheduling
 
   Complaint({
     required this.id,
@@ -36,6 +37,7 @@ class Complaint {
     required this.reasonCantComplete,
     required this.reasonCantCompleteProof,
     required this.cantCompleteCount,
+    this.suggestedDate,
   });
 
   // This is now an async static method to fetch related data
@@ -114,6 +116,7 @@ class Complaint {
       cantCompleteCount: (data['cantCompleteCount'] is int)
           ? data['cantCompleteCount'] as int
           : int.tryParse((data['cantCompleteCount'] ?? '').toString()) ?? 0,
+      suggestedDate: (data['suggestedDate'] as Timestamp?)?.toDate(),
     );
   }
 }
@@ -437,6 +440,7 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
                         fontWeight: FontWeight.bold,
                         color: Colors.black87)),
               ),
+              // Previously attempted tag
               if (complaint.status == 'Pending' && hasCantCompleteInfo) ...[
                 const SizedBox(width: 8),
                 Container(
@@ -453,6 +457,28 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
                       Text(
                         'Previously attempted${complaint.cantCompleteCount > 0 ? ' (${complaint.cantCompleteCount})' : ''}',
                         style: const TextStyle(fontSize: 12, color: Colors.redAccent, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              // Rescheduled tag
+              if (complaint.suggestedDate != null) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.amber[50],
+                    border: Border.all(color: Colors.amber),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.calendar_today, size: 14, color: Colors.amber),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Rescheduled',
+                        style: TextStyle(fontSize: 12, color: Colors.amber[800], fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
