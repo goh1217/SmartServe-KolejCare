@@ -1315,9 +1315,10 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
+                  Expanded(
+                    child: Row(
+                      children: [
+                        CircleAvatar(
                         radius: 24,
                         backgroundColor: Colors.teal,
                         backgroundImage: studentPhotoUrl.isNotEmpty ? NetworkImage(studentPhotoUrl) : null,
@@ -1336,13 +1337,18 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
                               color: Colors.grey[600],
                             ),
                           ),
-                          Text(
-                            isLoadingStudent
-                                ? 'Loading...'
-                                : (studentName.isNotEmpty ? studentName : 'Guest'),
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                          SizedBox(
+                            width: MediaQuery.of(context).size.width * 0.45,
+                            child: Text(
+                              isLoadingStudent
+                                  ? 'Loading...'
+                                  : (studentName.isNotEmpty ? studentName : 'Guest'),
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           if (!isLoadingStudent && matricNo.isNotEmpty) ...[
@@ -1359,10 +1365,14 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
                       ),
                     ],
                   ),
+                  ),
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       _buildBellIcon(),
                       IconButton(
+                        padding: const EdgeInsets.all(8),
+                        constraints: const BoxConstraints(),
                         icon: const Icon(Icons.logout),
                         onPressed: () async {
                           try {
