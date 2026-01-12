@@ -9,6 +9,7 @@ import 'screens/activity/ongoingrepair.dart';
 import 'screens/activity/completedrepair2.dart';
 import 'screens/activity/scheduledrepair.dart';
 import 'screens/activity/waitappro.dart';
+import 'screens/activity/rejectedrepair.dart';
 
 class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key});
@@ -304,6 +305,9 @@ class _NotificationPageState extends State<NotificationPage> {
               expectedDuration: items[i].expectedDuration,
               reportedOn: items[i].reportedOn,
               statusChangeCount: items[i].statusChangeCount,
+              reviewedOn: items[i].reviewedOn,
+              reviewedBy: items[i].reviewedBy,
+              rejectionReason: items[i].rejectionReason,
             );
           }
         }
@@ -351,6 +355,14 @@ class _NotificationPageState extends State<NotificationPage> {
     final reportedOn = (data['reportedDate'] != null) 
         ? DateTime.fromMillisecondsSinceEpoch((data['reportedDate'] as Timestamp).millisecondsSinceEpoch).toString()
         : '';
+    
+    // Extract rejection-related fields
+    final reviewedOnRaw = data['reviewedOn'] ?? data['reviewedDate'] ?? '';
+    final reviewedOn = (reviewedOnRaw is Timestamp)
+        ? DateTime.fromMillisecondsSinceEpoch(reviewedOnRaw.millisecondsSinceEpoch).toString()
+        : reviewedOnRaw.toString();
+    final reviewedBy = (data['reviewedBy'] ?? data['rejectedBy'] ?? '').toString();
+    final rejectionReason = (data['rejectionReason'] ?? data['reason_for_rejection'] ?? '').toString();
     
     int? createdMs;
     final createdVal = data['createdAt'] ?? data['timestamp'] ?? data['created'];
@@ -407,6 +419,9 @@ class _NotificationPageState extends State<NotificationPage> {
       expectedDuration: expectedDuration,
       reportedOn: reportedOn,
       statusChangeCount: (data['statusChangeCount'] as int?) ?? 0,
+      reviewedOn: reviewedOn,
+      reviewedBy: reviewedBy,
+      rejectionReason: rejectionReason,
     );
   }
 
@@ -475,6 +490,9 @@ class _NotificationPageState extends State<NotificationPage> {
               expectedDuration: n.expectedDuration,
               reportedOn: n.reportedOn,
               statusChangeCount: 0,
+              reviewedOn: n.reviewedOn,
+              reviewedBy: n.reviewedBy,
+              rejectionReason: n.rejectionReason,
             );
           }
           return n;
@@ -752,6 +770,19 @@ class _NotificationPageState extends State<NotificationPage> {
                                       inventoryDamageTitle: n.inventory,
                                       reportedOn: '',
                                     );
+                                  } else if (n.status == 'rejected') {
+                                    targetScreen = RejectedRepairScreen(
+                                      reportId: n.id,
+                                      status: 'Rejected',
+                                      damageCategory: n.category,
+                                      damageLocation: n.damageLocation,
+                                      inventoryDamage: n.inventory,
+                                      inventoryDamageTitle: n.inventory,
+                                      reportedOn: n.reportedOn,
+                                      reviewedOn: n.reviewedOn,
+                                      reviewedBy: n.reviewedBy,
+                                      rejectionReason: n.rejectionReason,
+                                    );
                                   } else {
                                     targetScreen = ComplaintDetailScreen(complaintID: n.id);
                                   }
@@ -841,6 +872,9 @@ class _ComplaintNotification {
   final String expectedDuration;
   final String reportedOn;
   final int statusChangeCount;
+  final String reviewedOn;
+  final String reviewedBy;
+  final String rejectionReason;
 
   _ComplaintNotification({
     required this.id,
@@ -859,6 +893,9 @@ class _ComplaintNotification {
     this.expectedDuration = '',
     this.reportedOn = '',
     this.statusChangeCount = 0,
+    this.reviewedOn = '',
+    this.reviewedBy = '',
+    this.rejectionReason = '',
   });
 }
 

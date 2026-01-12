@@ -46,12 +46,92 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
   String loadedInventoryDamage = '';
   String loadedInventoryDamageTitle = '';
   String loadedReportedOn = '';
+  String technicianName = '';
+  bool isLoadingTechnicianName = true;
+  List<String> damagePicList = [];
+  int currentDamagePhotoIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _loadScheduleDateTimeSlots();
+    _fetchTechnicianName();
     currentStatus = widget.status; // initialize with original status
+  }
+
+  Future<void> _fetchTechnicianName() async {
+    try {
+      if (widget.assignedTechnician.isEmpty) {
+        setState(() {
+          technicianName = 'Unknown';
+          isLoadingTechnicianName = false;
+        });
+        return;
+      }
+
+      String technicianId = widget.assignedTechnician;
+
+      // If assignedTechnician is a document reference path like "/collection/technician/docId", extract the docId
+      if (widget.assignedTechnician.contains('/collection/technician/')) {
+        technicianId = widget.assignedTechnician.split('/').last;
+        print('Extracted technician ID from path: $technicianId');
+      }
+
+      // Fetch technician document directly by ID from technician collection
+      final docSnapshot = await FirebaseFirestore.instance
+          .collection('technician')
+          .doc(technicianId)
+          .get();
+
+      if (docSnapshot.exists) {
+        setState(() {
+          technicianName = docSnapshot.data()?['technicianName'] ?? widget.assignedTechnician;
+          isLoadingTechnicianName = false;
+        });
+        return;
+      }
+
+      // If not found in technician collection, try staff collection as fallback
+      final staffDocSnapshot = await FirebaseFirestore.instance
+          .collection('staff')
+          .doc(technicianId)
+          .get();
+
+      if (staffDocSnapshot.exists) {
+        setState(() {
+          technicianName = staffDocSnapshot.data()?['staffName'] ?? widget.assignedTechnician;
+          isLoadingTechnicianName = false;
+        });
+        return;
+      }
+
+      // If still not found, try by staffName
+      var querySnapshot = await FirebaseFirestore.instance
+          .collection('staff')
+          .where('staffName', isEqualTo: widget.assignedTechnician)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        setState(() {
+          technicianName = querySnapshot.docs.first.data()['staffName'] ?? widget.assignedTechnician;
+          isLoadingTechnicianName = false;
+        });
+        return;
+      }
+
+      // If still not found, assume assignedTechnician is already the name
+      setState(() {
+        technicianName = widget.assignedTechnician;
+        isLoadingTechnicianName = false;
+      });
+    } catch (e) {
+      print('Error fetching technician name: $e');
+      setState(() {
+        technicianName = widget.assignedTechnician;
+        isLoadingTechnicianName = false;
+      });
+    }
   }
 
   Future<void> _loadScheduleDateTimeSlots() async {
@@ -70,6 +150,16 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
             estimatedDurationDisplay =
                 data['estimatedDurationJobDone']?.toString() ??
                     widget.expectedDuration;
+            
+            // Load damagePic as a list (max 3)
+            if (data['damagePic'] != null && data['damagePic'] is List) {
+              damagePicList = List<String>.from(data['damagePic'] as List);
+              // Limit to max 3 pictures
+              if (damagePicList.length > 3) {
+                damagePicList = damagePicList.sublist(0, 3);
+              }
+              currentDamagePhotoIndex = 0;
+            }
           });
         }
       }
@@ -447,7 +537,7 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
                       const Divider(height: 1),
                       _buildScheduledDateTimeItem(),
                       const Divider(height: 1),
-                      _buildDetailItem('Assigned Technician', widget.assignedTechnician),
+                      _buildDetailItem('Assigned Technician', isLoadingTechnicianName ? 'Loading...' : technicianName),
                       const Divider(height: 1),
                       _buildDetailItem('Damage Category', widget.damageCategory),
                       const Divider(height: 1),
@@ -464,6 +554,125 @@ class _ScheduledRepairScreenState extends State<ScheduledRepairScreen> {
                               : widget.expectedDuration),
                       const Divider(height: 1),
                       _buildDetailItem('Reported On', widget.reportedOn),
+                      if (damagePicList.isNotEmpty) ...[
+                        const Divider(height: 1),
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Damage Photo${damagePicList.length > 1 ? 's' : ''}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              if (damagePicList.length == 1)
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    damagePicList[0],
+                                    width: double.infinity,
+                                    height: 250,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        width: double.infinity,
+                                        height: 250,
+                                        color: Colors.grey.shade300,
+                                        child: const Icon(Icons.image, size: 50),
+                                      );
+                                    },
+                                    loadingBuilder: (context, child, loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return Center(
+                                        child: CircularProgressIndicator(
+                                          value: loadingProgress.expectedTotalBytes != null
+                                              ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                              : null,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                )
+                              else
+                                Column(
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        // Left arrow button
+                                        IconButton(
+                                          icon: const Icon(Icons.arrow_back_ios, color: Colors.grey),
+                                          onPressed: () {
+                                            setState(() {
+                                              currentDamagePhotoIndex = (currentDamagePhotoIndex - 1 + damagePicList.length) % damagePicList.length;
+                                            });
+                                          },
+                                        ),
+                                        // Image display
+                                        Expanded(
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(12),
+                                            child: Image.network(
+                                              damagePicList[currentDamagePhotoIndex],
+                                              width: double.infinity,
+                                              height: 250,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (context, error, stackTrace) {
+                                                return Container(
+                                                  width: double.infinity,
+                                                  height: 250,
+                                                  color: Colors.grey.shade300,
+                                                  child: const Icon(Icons.image, size: 50),
+                                                );
+                                              },
+                                              loadingBuilder: (context, child, loadingProgress) {
+                                                if (loadingProgress == null) return child;
+                                                return Center(
+                                                  child: CircularProgressIndicator(
+                                                    value: loadingProgress.expectedTotalBytes != null
+                                                        ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                                        : null,
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                        // Right arrow button
+                                        IconButton(
+                                          icon: const Icon(Icons.arrow_forward_ios, color: Colors.grey),
+                                          onPressed: () {
+                                            setState(() {
+                                              currentDamagePhotoIndex = (currentDamagePhotoIndex + 1) % damagePicList.length;
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                    // Image counter
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 8),
+                                      child: Text(
+                                        '${currentDamagePhotoIndex + 1} / ${damagePicList.length}',
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),

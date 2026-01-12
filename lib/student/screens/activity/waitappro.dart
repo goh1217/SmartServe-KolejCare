@@ -30,6 +30,8 @@ class _WaitingApprovalScreenState extends State<WaitingApprovalScreen> {
   String? cantCompleteReason;
   List<String> cantCompleteProofList = [];
   int currentProofIndex = 0;
+  List<String> damagePicList = [];
+  int currentDamagePhotoIndex = 0;
   String loadedReportStatus = '';
   String loadedDamageCategory = '';
   String loadedDamageLocation = '';
@@ -70,6 +72,16 @@ class _WaitingApprovalScreenState extends State<WaitingApprovalScreen> {
               cantCompleteProofList = [data['reasonCantCompleteProof'] as String];
             }
             currentProofIndex = 0;
+          }
+          
+          // Handle damagePic as a list (max 3)
+          if (data['damagePic'] != null && data['damagePic'] is List) {
+            damagePicList = List<String>.from(data['damagePic'] as List);
+            // Limit to max 3 pictures
+            if (damagePicList.length > 3) {
+              damagePicList = damagePicList.sublist(0, 3);
+            }
+            currentDamagePhotoIndex = 0;
           }
           
           // Format reported date
@@ -140,9 +152,124 @@ class _WaitingApprovalScreenState extends State<WaitingApprovalScreen> {
                 _buildDetailItem('Inventory Damage', loadedInventoryDamage.isNotEmpty ? loadedInventoryDamage : widget.inventoryDamage),
                 const Divider(height: 1),
                 _buildDetailItem('Reported On', loadedReportedOn.isNotEmpty ? loadedReportedOn : widget.reportedOn, isLast: false),
-                if (cantCompleteReason != null && cantCompleteReason!.isNotEmpty) ...[
+                if (damagePicList.isNotEmpty) ...[
                   const Divider(height: 1),
-                  _buildDetailItem('Reason for Incomplete Task', cantCompleteReason!, isLast: false),
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Damage Photo${damagePicList.length > 1 ? 's' : ''}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        if (damagePicList.length == 1)
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(
+                              damagePicList[0],
+                              width: double.infinity,
+                              height: 250,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: double.infinity,
+                                  height: 250,
+                                  color: Colors.grey.shade300,
+                                  child: const Icon(Icons.image, size: 50),
+                                );
+                              },
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Center(
+                                  child: CircularProgressIndicator(
+                                    value: loadingProgress.expectedTotalBytes != null
+                                        ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                        : null,
+                                  ),
+                                );
+                              },
+                            ),
+                          )
+                        else
+                          Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  // Left arrow button
+                                  IconButton(
+                                    icon: const Icon(Icons.arrow_back_ios, color: Colors.grey),
+                                    onPressed: () {
+                                      setState(() {
+                                        currentDamagePhotoIndex = (currentDamagePhotoIndex - 1 + damagePicList.length) % damagePicList.length;
+                                      });
+                                    },
+                                  ),
+                                  // Image display
+                                  Expanded(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Image.network(
+                                        damagePicList[currentDamagePhotoIndex],
+                                        width: double.infinity,
+                                        height: 250,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return Container(
+                                            width: double.infinity,
+                                            height: 250,
+                                            color: Colors.grey.shade300,
+                                            child: const Icon(Icons.image, size: 50),
+                                          );
+                                        },
+                                        loadingBuilder: (context, child, loadingProgress) {
+                                          if (loadingProgress == null) return child;
+                                          return Center(
+                                            child: CircularProgressIndicator(
+                                              value: loadingProgress.expectedTotalBytes != null
+                                                  ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                                  : null,
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  // Right arrow button
+                                  IconButton(
+                                    icon: const Icon(Icons.arrow_forward_ios, color: Colors.grey),
+                                    onPressed: () {
+                                      setState(() {
+                                        currentDamagePhotoIndex = (currentDamagePhotoIndex + 1) % damagePicList.length;
+                                      });
+                                    },
+                                  ),
+                                ],
+                              ),
+                              // Image counter
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Text(
+                                  '${currentDamagePhotoIndex + 1} / ${damagePicList.length}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ),
                 ],
                 if (cantCompleteProofList.isNotEmpty) ...[
                   const Divider(height: 1),
@@ -152,7 +279,7 @@ class _WaitingApprovalScreenState extends State<WaitingApprovalScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Proof Photo${cantCompleteProofList.length > 1 ? 's' : ''}',
+                          'Can\'t Complete Proof Photo${cantCompleteProofList.length > 1 ? 's' : ''}',
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey[600],
@@ -160,6 +287,25 @@ class _WaitingApprovalScreenState extends State<WaitingApprovalScreen> {
                           ),
                         ),
                         const SizedBox(height: 8),
+                        if (cantCompleteReason != null && cantCompleteReason!.isNotEmpty) ...[
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.orange.shade200),
+                            ),
+                            child: Text(
+                              cantCompleteReason!,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.orange.shade700,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
                         if (cantCompleteProofList.length == 1)
                           ClipRRect(
                             borderRadius: BorderRadius.circular(12),

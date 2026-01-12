@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class RejectedRepairScreen extends StatelessWidget {
+class RejectedRepairScreen extends StatefulWidget {
   final String? reportId; // Made optional with ?
   final String status;
   final String damageCategory;
@@ -25,6 +26,95 @@ class RejectedRepairScreen extends StatelessWidget {
     required this.reviewedBy,
     required this.rejectionReason,
   });
+
+  @override
+  State<RejectedRepairScreen> createState() => _RejectedRepairScreenState();
+}
+
+class _RejectedRepairScreenState extends State<RejectedRepairScreen> {
+  String adminName = '';
+  bool isLoadingAdminName = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAdminName();
+  }
+
+  Future<void> _fetchAdminName() async {
+    try {
+      if (widget.reviewedBy.isEmpty) {
+        setState(() {
+          adminName = 'Unknown';
+          isLoadingAdminName = false;
+        });
+        return;
+      }
+
+      String staffId = widget.reviewedBy;
+
+      // If reviewedBy is a document reference path like "/collection/staff/docId", extract the docId
+      if (widget.reviewedBy.contains('/collection/staff/')) {
+        staffId = widget.reviewedBy.split('/').last;
+        print('Extracted staff ID from path: $staffId');
+      }
+
+      // Fetch staff document directly by ID
+      final docSnapshot = await FirebaseFirestore.instance
+          .collection('staff')
+          .doc(staffId)
+          .get();
+
+      if (docSnapshot.exists) {
+        setState(() {
+          adminName = docSnapshot.data()?['staffName'] ?? widget.reviewedBy;
+          isLoadingAdminName = false;
+        });
+        return;
+      }
+
+      // If not found by ID, try to query by staffName
+      var querySnapshot = await FirebaseFirestore.instance
+          .collection('staff')
+          .where('staffName', isEqualTo: widget.reviewedBy)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        setState(() {
+          adminName = querySnapshot.docs.first.data()['staffName'] ?? widget.reviewedBy;
+          isLoadingAdminName = false;
+        });
+        return;
+      }
+
+      // If still not found, try by staffId
+      querySnapshot = await FirebaseFirestore.instance
+          .collection('staff')
+          .where('staffId', isEqualTo: widget.reviewedBy)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        setState(() {
+          adminName = querySnapshot.docs.first.data()['staffName'] ?? widget.reviewedBy;
+          isLoadingAdminName = false;
+        });
+      } else {
+        // If still not found, assume reviewedBy is already the name
+        setState(() {
+          adminName = widget.reviewedBy;
+          isLoadingAdminName = false;
+        });
+      }
+    } catch (e) {
+      print('Error fetching admin name: $e');
+      setState(() {
+        adminName = widget.reviewedBy;
+        isLoadingAdminName = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -68,23 +158,23 @@ class RejectedRepairScreen extends StatelessWidget {
                     children: [
                       // _buildDetailItem('Report ID', reportId ?? 'N/A', isFirst: true),
                       // const Divider(height: 1),
-                      _buildDetailItem('Report Status', status),
+                      _buildDetailItem('Report Status', widget.status),
                       const Divider(height: 1),
-                      _buildDetailItem('Damage Category', damageCategory),
+                      _buildDetailItem('Damage Category', widget.damageCategory),
                       const Divider(height: 1),
-                      _buildDetailItem('Damage Location', damageLocation),
+                      _buildDetailItem('Damage Location', widget.damageLocation),
                       const Divider(height: 1),
-                      _buildDetailItem('Damage Title', inventoryDamageTitle),
+                      _buildDetailItem('Damage Title', widget.inventoryDamageTitle),
                       const Divider(height: 1),
-                      _buildDetailItem('Inventory Damage', inventoryDamage),
+                      _buildDetailItem('Inventory Damage', widget.inventoryDamage),
                       const Divider(height: 1),
-                      _buildDetailItem('Reported On', reportedOn),
+                      _buildDetailItem('Reported On', widget.reportedOn),
                       const Divider(height: 1),
-                      _buildDetailItem('Reviewed On', reviewedOn),
+                      _buildDetailItem('Reviewed On', widget.reviewedOn),
                       const Divider(height: 1),
-                      _buildDetailItem('Reviewed By', reviewedBy),
+                      _buildDetailItem('Reviewed By', isLoadingAdminName ? 'Loading...' : adminName),
                       const Divider(height: 1),
-                      _buildDetailItem('Reason for Rejection', rejectionReason, isLast: true),
+                      _buildDetailItem('Reason for Rejection', widget.rejectionReason, isLast: true),
                     ],
                   ),
                 ),
