@@ -16,6 +16,7 @@ class ChatbotScreen extends StatefulWidget {
 class _ChatbotScreenState extends State<ChatbotScreen> {
   final TextEditingController _controller = TextEditingController();
   late final String _geminiApiKey = dotenv.env['API_KEY'] ?? '';
+  bool _showQuickActions = true; // Track quick actions visibility
 
   final List<Map<String, dynamic>> _messages = [];
   bool _isTyping = false;
@@ -270,7 +271,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             ),
           ),
 
-          if (_messages.isEmpty) _buildQuickReplies(),
+          // Quick actions - Always visible but collapsible
+          if (_messages.isNotEmpty) 
+            _buildCompactQuickActions(),
+
+          if (_messages.isEmpty) 
+            _buildQuickReplies(),
 
           Container(
             margin: const EdgeInsets.all(16),
@@ -401,9 +407,40 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   Widget _buildQuickReplies() {
     final List<Map<String, dynamic>> quickReplies = [
-      {"icon": Icons.info_outline, "label": "What is SmartServe?"},
-      {"icon": Icons.home_work_outlined, "label": "College Info"},
-      {"icon": Icons.help_outline, "label": "FAQs"},
+      {
+        "icon": Icons.info_outline,
+        "label": "What is SmartServe?",
+        "response": "SmartServe is a centralized platform for students, staff and technicians "
+            "to manage facility maintenance and community engagement at UTM. It helps you report issues, "
+            "track repairs, and stay connected with college services!"
+      },
+      {
+        "icon": Icons.report_problem_outlined,
+        "label": "How to file a complaint?",
+        "response": "To file a complaint about dormitory furniture or appliances (like bed frames, fans, or lamps):\n"
+            "1. Go to the Home page.\n"
+            "2. Tap the purple '+' button in the center of the menu.\n"
+            "3. Fill in the details. *Tip: Our AI will automatically suggest the urgency based on your description!*\n"
+            "4. Tap 'Submit Complaint'."
+      },
+      {
+        "icon": Icons.track_changes_outlined,
+        "label": "Track my complaint",
+        "response": "You can view real-time updates on your repair progress in the 'Complaints' section (third icon of the menu). "
+            "You'll be able to see if your request is pending, assigned, ongoing, rejected or completed."
+      },
+      {
+        "icon": Icons.engineering_outlined,
+        "label": "Technician info",
+        "response": "For your safety and privacy, SmartServe allows you to see the assigned technician's details "
+            "and their estimated arrival time so you aren't surprised by visitors."
+      },
+      {
+        "icon": Icons.star_outline,
+        "label": "Rate service",
+        "response": "Once a repair is finished, you can rate the service and provide feedback. "
+            "This helps the college measure satisfaction and ensure the quality of repairs."
+      },
     ];
 
     return Padding(
@@ -428,7 +465,25 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             runSpacing: 10,
             children: quickReplies.map((item) {
               return GestureDetector(
-                onTap: () => _sendMessage(item["label"]),
+                onTap: () {
+                  // Send the question as user message
+                  setState(() {
+                    _messages.add({
+                      'text': item["label"],
+                      'isUser': true,
+                    });
+                  });
+                  
+                  // Immediately show the paired response
+                  Future.delayed(const Duration(milliseconds: 300), () {
+                    setState(() {
+                      _messages.add({
+                        'text': item["response"],
+                        'isUser': false,
+                      });
+                    });
+                  });
+                },
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
@@ -468,6 +523,167 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 ),
               );
             }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactQuickActions() {
+    final List<Map<String, dynamic>> quickReplies = [
+      {
+        "icon": Icons.info_outline,
+        "label": "What is SmartServe?",
+        "response": "SmartServe is a centralized platform for students, staff and technicians "
+            "to manage facility maintenance and community engagement at UTM. It helps you report issues, "
+            "track repairs, and stay connected with college services!"
+      },
+      {
+        "icon": Icons.report_problem_outlined,
+        "label": "How to file a complaint?",
+        "response": "To file a complaint about dormitory furniture or appliances (like bed frames, fans, or lamps):\n"
+            "1. Go to the Home page.\n"
+            "2. Tap the purple '+' button in the center of the menu.\n"
+            "3. Fill in the details. *Tip: Our AI will automatically suggest the urgency based on your description!*\n"
+            "4. Tap 'Submit Complaint'."
+      },
+      {
+        "icon": Icons.track_changes_outlined,
+        "label": "Track my complaint",
+        "response": "You can view real-time updates on your repair progress in the 'Complaints' section (third icon of the menu). "
+            "You'll be able to see if your request is pending, assigned, ongoing, rejected or completed."
+      },
+      {
+        "icon": Icons.engineering_outlined,
+        "label": "Technician info",
+        "response": "For your safety and privacy, SmartServe allows you to see the assigned technician's details "
+            "and their estimated arrival time so you aren't surprised by visitors."
+      },
+      {
+        "icon": Icons.star_outline,
+        "label": "Rate service",
+        "response": "Once a repair is finished, you can rate the service and provide feedback. "
+            "This helps the college measure satisfaction and ensure the quality of repairs."
+      },
+    ];
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9F7FF),
+        border: Border(
+          top: BorderSide(
+            color: const Color(0xFF5E4DB2).withOpacity(0.1),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _showQuickActions = !_showQuickActions;
+              });
+            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Suggestions",
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF5E4DB2),
+                  ),
+                ),
+                Icon(
+                  _showQuickActions ? Icons.expand_less : Icons.expand_more,
+                  color: const Color(0xFF5E4DB2),
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            child: _showQuickActions
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: SizedBox(
+                      height: 85,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: quickReplies.length,
+                        itemBuilder: (context, index) {
+                          final item = quickReplies[index];
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _messages.add({
+                                  'text': item["label"],
+                                  'isUser': true,
+                                });
+                              });
+
+                              Future.delayed(const Duration(milliseconds: 300), () {
+                                setState(() {
+                                  _messages.add({
+                                    'text': item["response"],
+                                    'isUser': false,
+                                  });
+                                });
+                              });
+                            },
+                            child: Container(
+                              width: 110,
+                              margin: const EdgeInsets.only(right: 8),
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFFEAE5FF), Color(0xFFF0EBFF)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: const Color(0xFF5E4DB2).withOpacity(0.2),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    item["icon"] as IconData,
+                                    color: const Color(0xFF5E4DB2),
+                                    size: 20,
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    item["label"] as String,
+                                    textAlign: TextAlign.center,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF2D2D2D),
+                                      height: 1.2,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  )
+                : const SizedBox.shrink(),
           ),
         ],
       ),
