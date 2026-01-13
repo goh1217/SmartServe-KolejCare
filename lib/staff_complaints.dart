@@ -430,60 +430,22 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
         child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Title row with responsive tags
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Text(complaint.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87)),
               ),
-              // Previously attempted tag
-              if (complaint.status == 'Pending' && hasCantCompleteInfo) ...[
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.red[50],
-                    border: Border.all(color: Colors.redAccent),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.flag, size: 14, color: Colors.redAccent),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Previously attempted${complaint.cantCompleteCount > 0 ? ' (${complaint.cantCompleteCount})' : ''}',
-                        style: const TextStyle(fontSize: 12, color: Colors.redAccent, fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-              // Rescheduled tag
-              if (complaint.suggestedDate != null) ...[
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.amber[50],
-                    border: Border.all(color: Colors.amber),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.calendar_today, size: 14, color: Colors.amber),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Rescheduled',
-                        style: TextStyle(fontSize: 12, color: Colors.amber[800], fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+              const SizedBox(width: 8),
+              // Status badge (always visible, right-aligned)
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -498,6 +460,59 @@ class _StaffComplaintsPageState extends State<StaffComplaintsPage> {
               ),
             ],
           ),
+          // Dynamic tags row with wrapping
+          if (complaint.status == 'Pending' && hasCantCompleteInfo || complaint.suggestedDate != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: [
+                  // Previously attempted tag
+                  if (complaint.status == 'Pending' && hasCantCompleteInfo)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.red[50],
+                        border: Border.all(color: Colors.redAccent),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.flag, size: 14, color: Colors.redAccent),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Prev. attempted${complaint.cantCompleteCount > 0 ? ' (${complaint.cantCompleteCount})' : ''}',
+                            style: const TextStyle(fontSize: 12, color: Colors.redAccent, fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ),
+                  // Rescheduled tag
+                  if (complaint.suggestedDate != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.amber[50],
+                        border: Border.all(color: Colors.amber),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.calendar_today, size: 14, color: Colors.amber),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Rescheduled',
+                            style: TextStyle(fontSize: 12, color: Colors.amber[800], fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
           const SizedBox(height: 8),
           RichText(
             text: TextSpan(
