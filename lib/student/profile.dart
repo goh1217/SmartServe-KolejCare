@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_fonts/google_fonts.dart';
+import '../widgets/location_picker_widget.dart';
 
 class ProfilePage extends StatefulWidget {
   final String userId;
@@ -45,9 +46,6 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   
   // Location picker state
   GeoPoint? _selectedLivingAddress;
-  List<Map<String, dynamic>> _addressSuggestions = [];
-  bool _isSearchingAddress = false;
-  bool _isLoadingAddressSuggestions = false;
 
   @override
   void initState() {
@@ -212,57 +210,11 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     }
   }
 
-  /// Search for addresses using OpenStreetMap Nominatim API
-  Future<void> _searchAddresses(String query) async {
-    if (query.isEmpty) {
-      setState(() {
-        _addressSuggestions = [];
-        _isSearchingAddress = false;
-      });
-      return;
-    }
-
-    setState(() => _isLoadingAddressSuggestions = true);
-
-    try {
-      final response = await http.get(
-        Uri.parse(
-          'https://nominatim.openstreetmap.org/search?q=$query&format=json&limit=5',
-        ),
-        headers: {'User-Agent': 'SmartServe-Flutter-App'},
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        setState(() {
-          _addressSuggestions = data
-              .map((item) => {
-                    'name': item['display_name'] ?? '',
-                    'lat': double.tryParse(item['lat'].toString()) ?? 0.0,
-                    'lng': double.tryParse(item['lon'].toString()) ?? 0.0,
-                  })
-              .toList();
-          _isSearchingAddress = true;
-        });
-      }
-    } catch (e) {
-      if (kDebugMode) print('Address search error: $e');
-      setState(() {
-        _addressSuggestions = [];
-        _isSearchingAddress = true;
-      });
-    } finally {
-      setState(() => _isLoadingAddressSuggestions = false);
-    }
-  }
-
   /// Select an address and set the GeoPoint
-  void _selectAddress(Map<String, dynamic> suggestion) {
+  void _selectAddress(LocationPickerResult result) {
     setState(() {
-      _selectedLivingAddress = GeoPoint(suggestion['lat'], suggestion['lng']);
-      _addressSearchController.text = suggestion['name'];
-      _addressSuggestions = [];
-      _isSearchingAddress = false;
+      _selectedLivingAddress = GeoPoint(result.latitude, result.longitude);
+      _addressSearchController.text = result.address;
     });
   }
 
@@ -549,7 +501,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                           controller: _wingController,
                           icon: Icons.location_on_outlined,
                         ),
-                        // Address Search Field
+                        // Living Address Section
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -561,8 +513,54 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                                 color: Colors.black87,
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            if (!_isEditing)
+                            const SizedBox(height: 12),
+                            // Display current address on top
+                            if (_selectedLivingAddress != null)
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Colors.green.withOpacity(0.3),
+                                  ),
+                                ),
+                                padding: const EdgeInsets.all(12),
+                                margin: const EdgeInsets.only(bottom: 12),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.check_circle,
+                                      color: Colors.green,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Address selected',
+                                            style: TextStyle(
+                                              color: Colors.green[700],
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Lat: ${_selectedLivingAddress!.latitude.toStringAsFixed(4)}, Lng: ${_selectedLivingAddress!.longitude.toStringAsFixed(4)}',
+                                            style: TextStyle(
+                                              color: Colors.green[700],
+                                              fontSize: 11,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            else if (!_isEditing)
                               Container(
                                 decoration: BoxDecoration(
                                   color: Colors.grey[100],
@@ -578,9 +576,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
-                                        _selectedLivingAddress != null
-                                            ? 'Lat: ${_selectedLivingAddress!.latitude.toStringAsFixed(4)}, Lng: ${_selectedLivingAddress!.longitude.toStringAsFixed(4)}'
-                                            : 'No address set',
+                                        'No address set',
                                         style: TextStyle(
                                           color: Colors.grey[600],
                                           fontSize: 14,
@@ -589,90 +585,16 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                                     ),
                                   ],
                                 ),
-                              )
-                            else
-                              Stack(
-                                children: [
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey[100],
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: TextField(
-                                      controller: _addressSearchController,
-                                      onChanged: _searchAddresses,
-                                      decoration: InputDecoration(
-                                        prefixIcon: Icon(Icons.location_on, color: Colors.grey[600]),
-                                        hintText: 'Search for address...',
-                                        hintStyle: TextStyle(color: Colors.grey[500]),
-                                        border: InputBorder.none,
-                                        contentPadding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 12,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  if (_isLoadingAddressSuggestions)
-                                    Positioned(
-                                      right: 16,
-                                      top: 12,
-                                      child: SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.grey[600]!),
-                                        ),
-                                      ),
-                                    ),
-                                ],
                               ),
-                            const SizedBox(height: 8),
-                            if (_isSearchingAddress && _addressSuggestions.isNotEmpty)
-                              Container(
-                                constraints: const BoxConstraints(maxHeight: 200),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  border: Border.all(color: Colors.grey[300]!),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: ListView.builder(
-                                  shrinkWrap: true,
-                                  itemCount: _addressSuggestions.length,
-                                  itemBuilder: (context, index) {
-                                    final suggestion = _addressSuggestions[index];
-                                    return ListTile(
-                                      leading: const Icon(Icons.location_on, size: 18, color: Colors.grey),
-                                      title: Text(
-                                        suggestion['name'],
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(fontSize: 12),
-                                      ),
-                                      onTap: () => _selectAddress(suggestion),
-                                    );
-                                  },
-                                ),
-                              ),
-                            if (_selectedLivingAddress != null)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 8),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.check_circle, size: 16, color: Colors.green),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        'Address selected: Lat ${_selectedLivingAddress!.latitude.toStringAsFixed(4)}, Lng ${_selectedLivingAddress!.longitude.toStringAsFixed(4)}',
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.green,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                            // Address search bar when editing
+                            if (_isEditing)
+                              LocationPickerWidget(
+                                locationMode: 'address',
+                                addressController: _addressSearchController,
+                                initialAddress: null,
+                                editableAddress: true,
+                                descriptionController: null,
+                                onLocationSelected: _selectAddress,
                               ),
                           ],
                         ),
