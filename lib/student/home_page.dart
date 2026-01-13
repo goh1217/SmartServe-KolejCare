@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:owtest/auth_gate.dart';
 import 'package:owtest/student/complaint_form_screen.dart';
 import 'services/weatherService.dart';
@@ -12,6 +13,7 @@ import 'donate_page.dart';
 import 'screens/activity.dart';
 import 'profile.dart';
 import 'chatbot_screen.dart';
+import 'widgets/technician_eta_popup.dart';
 
 // Simple model to hold complaint summary information for UI
 class ComplaintSummary {
@@ -66,10 +68,15 @@ class _HomePageState extends State<HomePage> {
   List<ComplaintSummary> complaintSummaries = [];
   StreamSubscription<QuerySnapshot>? _complaintSub;
   String? _studentDocId;
+  
+  // Technician ETA Popup
+  String? _ongoingComplaintId; // ID of the current ongoing complaint to show popup
+  Set<String> _closedPopupComplaintIds = <String>{}; // Track which popups user has closed
 
   @override
   void initState() {
     super.initState();
+    _loadClosedPopups();
     _loadWeather();
     _startComplaintListener();
     fetchStudentData();
@@ -495,6 +502,29 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
     );
   }
 
+  // Load closed popup complaint IDs from SharedPreferences
+  Future<void> _loadClosedPopups() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final closedIds = prefs.getStringList('closed_popup_complaints') ?? [];
+      setState(() {
+        _closedPopupComplaintIds = closedIds.toSet();
+      });
+    } catch (e) {
+      if (kDebugMode) print('Error loading closed popups: $e');
+    }
+  }
+
+  // Save closed popup complaint IDs to SharedPreferences
+  Future<void> _saveClosedPopups() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList('closed_popup_complaints', _closedPopupComplaintIds.toList());
+    } catch (e) {
+      if (kDebugMode) print('Error saving closed popups: $e');
+    }
+  }
+
   Future<void> _loadComplaintProgress() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -876,9 +906,24 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
               complaintStatusDescription = '';
               complaintRawStatus = '';
               complaintDamageCategory = '';
+              _ongoingComplaintId = null; // No ongoing complaint
             });
           } else {
             final primary = filteredSummaries.first;
+            // Check if there's an ongoing complaint for the popup
+            // Only show popup if user hasn't manually closed it
+            final ongoingComplaint = filteredSummaries.firstWhere(
+              (c) => c.rawStatus == 'ongoing' && !_closedPopupComplaintIds.contains(c.id),
+              orElse: () => ComplaintSummary(
+                id: '',
+                rawStatus: '',
+                progress: 0,
+                displayText: '',
+                description: '',
+                category: '',
+              ),
+            );
+            
             if (mounted) setState(() {
               complaintSummaries = filteredSummaries;
               complaintProgress = primary.progress;
@@ -886,6 +931,8 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
               complaintRawStatus = primary.rawStatus;
               complaintStatusDescription = primary.description;
               complaintDamageCategory = primary.category;
+              // Update popup state - show if there's an ongoing complaint that hasn't been closed by user
+              _ongoingComplaintId = ongoingComplaint.id.isNotEmpty ? ongoingComplaint.id : null;
             });
           }
         } catch (e) {
@@ -1402,6 +1449,20 @@ Widget _buildStatusBarFor(BuildContext context, ComplaintSummary c, VoidCallback
               ),
             ),
             const SizedBox(height: 12),
+            // Technician ETA Popup - only show if there's an ongoing complaint
+            if (_ongoingComplaintId != null && _ongoingComplaintId!.isNotEmpty)
+              TechnicianETAPopup(
+                complaintId: _ongoingComplaintId!,
+                onClose: () {
+                  // Track that user closed this popup - don't show it again for this complaint
+                  setState(() {
+                    _closedPopupComplaintIds.add(_ongoingComplaintId!);
+                    _ongoingComplaintId = null;
+                  });
+                  // Persist to SharedPreferences so it stays closed across navigation
+                  _saveClosedPopups();
+                },
+              ),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 20),

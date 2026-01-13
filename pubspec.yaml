@@ -38,6 +38,7 @@ dependencies:
   geolocator: ^14.0.2
   google_maps_flutter: ^2.8.0
   image: ^4.5.4 # Used for resizing photos to 224x224
+  shared_preferences: ^2.2.3
 
 dev_dependencies:
   flutter_test:
