@@ -680,38 +680,30 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      body: Column(
-        children: [
-          _buildComplaintDetailsCard(),
-          const SizedBox(height: 12),
-          Expanded(
-            child: StreamBuilder<List<Map<String, dynamic>>>(
-              stream: getAvailableTechniciansStream(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting &&
-                    recommendedTechnicianData == null) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: Color(0xFF7C3AED)),
-                  );
-                }
+      body: StreamBuilder<List<Map<String, dynamic>>>(
+        stream: getAvailableTechniciansStream(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting &&
+              recommendedTechnicianData == null) {
+            return const Center(
+              child: CircularProgressIndicator(color: Color(0xFF7C3AED)),
+            );
+          }
 
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
 
-                final technicians = snapshot.data ?? [];
+          final technicians = snapshot.data ?? [];
 
-                if (technicians.isEmpty) {
-                  return _buildNoTechniciansFound();
-                }
+          if (technicians.isEmpty) {
+            return _buildNoTechniciansFound();
+          }
 
-                return isManualSelection
-                    ? _buildManualSelectionView(technicians)
-                    : _buildRecommendationView(technicians);
-              },
-            ),
-          ),
-        ],
+          return isManualSelection
+              ? _buildManualSelectionView(technicians)
+              : _buildRecommendationView(technicians);
+        },
       ),
     );
   }
@@ -728,6 +720,9 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const SizedBox(height: 16),
+          _buildComplaintDetailsCard(),
+          const SizedBox(height: 16),
           const Text(
             'Suggested Technician',
             style: TextStyle(
@@ -760,6 +755,10 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  child: _buildComplaintDetailsCard(),
+                ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
@@ -1512,7 +1511,6 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
 
   Widget _buildComplaintDetailsCard() {
     return Container(
-      margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -1536,7 +1534,7 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
           _buildDetailRow('Title', widget.complaint.title),
           _buildDetailRow('Category', widget.complaint.category),
           _buildDetailRow('Priority', widget.complaint.priority),
-          _buildDetailRow('Student ID', widget.complaint.studentId),
+          _buildDetailRow('Student', widget.complaint.studentName),
           _buildDetailRow('Room', widget.complaint.room),
         ],
       ),

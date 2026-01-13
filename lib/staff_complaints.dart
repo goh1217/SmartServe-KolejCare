@@ -90,7 +90,7 @@ class Complaint {
 
     return Complaint(
       id: doc.id,
-      title: data['inventoryDamage'] ?? 'No Title',
+      title: data['inventoryDamageTitle'] ?? 'No Title',
       studentId: studentId, // Keep the ID for internal use
       studentName: studentName, // Display this in the UI
       room: room, // Use the constructed room

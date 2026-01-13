@@ -198,6 +198,21 @@ class _ComplaintDetailsPageState extends State<ComplaintDetailsPage> {
                             ),
                           ),
                           const SizedBox(height: 4),
+                          if (data['inventoryDamageTitle'] != null &&
+                              (data['inventoryDamageTitle'] as String).isNotEmpty)
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Inventory: ${data['inventoryDamageTitle']}',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[700],
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                              ],
+                            ),
                           Text(
                             'Room: ${widget.complaint.room}',
                             style: TextStyle(
