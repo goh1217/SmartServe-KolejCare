@@ -159,7 +159,8 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
 
   /// When user selects a prediction, get the place details (coordinates)
   Future<void> _selectPrediction(PlacePrediction prediction) async {
-    widget.addressController.text = prediction.fullDescription;
+    final selectedAddress = prediction.fullDescription;
+    widget.addressController.text = selectedAddress;
     _selectedPlaceId = prediction.placeId;
 
     setState(() {
@@ -181,7 +182,7 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
         
         widget.onLocationSelected(
           LocationPickerResult(
-            address: placeDetails.formattedAddress,
+            address: selectedAddress,
             latitude: placeDetails.latitude,
             longitude: placeDetails.longitude,
           ),
