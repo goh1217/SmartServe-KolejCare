@@ -169,6 +169,7 @@ class _OngoingRepairScreenState extends State<OngoingRepairScreen> {
                     final issue = (data['inventoryDamage'] ?? data['description'] ?? data['damageDesc'] ?? '').toString();
                     final reportStatus = (data['reportStatus'] ?? 'Ongoing').toString();
                     final String assignedToRaw = (data['assignedTo'] ?? '').toString();
+                    final arrivedAt = data['arrivedAt'];
                     
                     // Calculate ETA using Google Directions API with real technician location
                     Future<int> calculateETA() async {
@@ -277,40 +278,67 @@ class _OngoingRepairScreenState extends State<OngoingRepairScreen> {
                                   ),
                                 ),
                                 const SizedBox(width: 8),
-                                FutureBuilder<int>(
-                                  future: calculateETA(),
-                                  builder: (context, etaSnap) {
-                                    final eta = etaSnap.data ?? 30;
-                                    final arrivalTime = DateTime.now().add(Duration(minutes: eta));
-                                    final arrivalText = DateFormat('hh:mm a').format(arrivalTime);
-                                    return Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: Colors.orange.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons.schedule,
-                                            size: 14,
-                                            color: Colors.orange[700],
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            'Arrive at $arrivalText',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.orange[700],
-                                              fontWeight: FontWeight.w500,
+                                arrivedAt != null && reportStatus.toLowerCase() == 'ongoing'
+                                    ? Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.check_circle,
+                                              size: 14,
+                                              color: Colors.green[700],
                                             ),
-                                          ),
-                                        ],
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              'Arrived at ${_formatArrivedAtTime(arrivedAt)}',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                color: Colors.green[700],
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    : FutureBuilder<int>(
+                                        future: calculateETA(),
+                                        builder: (context, etaSnap) {
+                                          final eta = etaSnap.data ?? 30;
+                                          final arrivalTime = DateTime.now().add(Duration(minutes: eta));
+                                          final arrivalText = DateFormat('hh:mm a').format(arrivalTime);
+                                          return Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: Colors.orange.withOpacity(0.1),
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  Icons.schedule,
+                                                  size: 14,
+                                                  color: Colors.orange[700],
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  'Arrive at $arrivalText',
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    color: Colors.orange[700],
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
                                       ),
-                                    );
-                                  },
-                                ),
                               ],
                             ),
                           ),
@@ -542,5 +570,23 @@ class _OngoingRepairScreenState extends State<OngoingRepairScreen> {
         ],
       ),
     );
+  }
+
+  String _formatArrivedAtTime(dynamic arrivedAt) {
+    try {
+      if (arrivedAt is Timestamp) {
+        return DateFormat('hh:mm a').format(arrivedAt.toDate().toLocal());
+      } else if (arrivedAt is String) {
+        final parsed = DateTime.tryParse(arrivedAt);
+        if (parsed != null) {
+          return DateFormat('hh:mm a').format(parsed.toLocal());
+        }
+      } else if (arrivedAt is DateTime) {
+        return DateFormat('hh:mm a').format(arrivedAt.toLocal());
+      }
+    } catch (e) {
+      print('Error formatting arrivedAt time: $e');
+    }
+    return 'Unknown';
   }
 }

@@ -70,6 +70,37 @@ class _ETACardWidgetState extends State<ETACardWidget> {
       }
 
       final data = complaintDoc.data() as Map<String, dynamic>;
+      
+      // Check if technician has arrived
+      final arrivedAt = data['arrivedAt'];
+      final reportStatus = (data['reportStatus'] ?? 'Ongoing').toString();
+      
+      if (arrivedAt != null && reportStatus.toLowerCase() == 'ongoing') {
+        // Technician has arrived, display arrival time
+        String arrivedText = 'Arrived at --:-- --';
+        try {
+          if (arrivedAt is Timestamp) {
+            arrivedText = 'Arrived at ${DateFormat('hh:mm a').format(arrivedAt.toDate().toLocal())}';
+          } else if (arrivedAt is String) {
+            final parsed = DateTime.tryParse(arrivedAt);
+            if (parsed != null) {
+              arrivedText = 'Arrived at ${DateFormat('hh:mm a').format(parsed.toLocal())}';
+            }
+          } else if (arrivedAt is DateTime) {
+            arrivedText = 'Arrived at ${DateFormat('hh:mm a').format(arrivedAt.toLocal())}';
+          }
+        } catch (e) {
+          print('Error formatting arrivedAt: $e');
+        }
+        
+        if (mounted) {
+          setState(() {
+            _etaText = arrivedText;
+            _isLoading = false;
+          });
+        }
+        return;
+      }
 
       // Get technician's current location
       final techId = widget.assignedToRaw.split('/').last;
@@ -137,16 +168,23 @@ class _ETACardWidgetState extends State<ETACardWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final isArrived = _etaText.startsWith('Arrived at');
+    final bgColor = isArrived ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1);
+    final borderColor = isArrived ? Colors.green.withOpacity(0.3) : Colors.orange.withOpacity(0.3);
+    final iconColor = isArrived ? Colors.green[700] : Colors.orange[700];
+    final textColor = isArrived ? Colors.green[700] : Colors.orange[700];
+    final iconData = isArrived ? Icons.check_circle : Icons.schedule;
+    
     return Container(
       decoration: BoxDecoration(
-        color: Colors.green.withOpacity(0.1),
+        color: bgColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green.withOpacity(0.3)),
+        border: Border.all(color: borderColor!),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          Icon(Icons.schedule, size: 18, color: Colors.green[700]),
+          Icon(iconData, size: 18, color: iconColor),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -154,7 +192,7 @@ class _ETACardWidgetState extends State<ETACardWidget> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: Colors.green[700],
+                color: textColor,
               ),
             ),
           ),
@@ -164,7 +202,7 @@ class _ETACardWidgetState extends State<ETACardWidget> {
               height: 16,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.green[700]!),
+                valueColor: AlwaysStoppedAnimation<Color>(textColor!),
               ),
             ),
         ],

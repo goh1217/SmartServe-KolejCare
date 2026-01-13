@@ -1974,6 +1974,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
         'isRead': false,
         'statusChangeCount': FieldValue.increment(1),
         'cantCompleteCount': FieldValue.increment(1),
+        'arrivedAt': FieldValue.delete(),
       });
 
       // Send notification to student
