@@ -1,0 +1,5703 @@
+{
+  "college": {
+    "lWn4NL4Dyee06yZWUyMF": {
+      "collegeID": "KTDI",
+      "collegeName": "Kolej Tun Dr Ismail"
+    }
+  },
+  "complaint": {
+    "0ib6XkuVDLthHMmyztn6": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Electrical",
+      "inventoryDamage": "test1229_1",
+      "roomEntryConsent": false,
+      "urgencyLevelAI": "Minor",
+      "damageLocation": "KTF, H25, 211",
+      "inventoryDamageTitle": "lqtest1229_1",
+      "reportedDate": {
+        "_seconds": 1767018284,
+        "_nanoseconds": 9000000
+      },
+      "complaintID": "0ib6XkuVDLthHMmyztn6",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767018289/lwffy8pcr1g4sbq7rdmw.jpg"
+      ],
+      "urgencyLevel": "High",
+      "assignedDate": {
+        "_seconds": 1767673607,
+        "_nanoseconds": 807000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767673607,
+        "_nanoseconds": 807000000
+      },
+      "reportStatus": "Approved",
+      "assignmentNotificationRead": false,
+      "lastStatusUpdate": {
+        "_seconds": 1767673607,
+        "_nanoseconds": 807000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1768469400,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1768471200,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 1,
+      "reviewedBy": "/collection/staff/2FSWNmjuNpSy9Sn6o0Kead5soQi2",
+      "assignedTo": "/collection/technician/z1JIPmrW0Ed7jTXC4XCY",
+      "lastStatusChangedAt": {
+        "_seconds": 1767673608,
+        "_nanoseconds": 378000000
+      },
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "0yR1PLakekaSumHc2oPJ": {
+      "damageCategory": "Plumbing",
+      "damageLocation": "KTF, H25, 211",
+      "feedbackRating": 0,
+      "inventoryDamage": "test1223_5",
+      "inventoryDamageTitle": "lqtest1223_5",
+      "rejectionReason": "",
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "roomEntryConsent": true,
+      "scheduledDate": null,
+      "technicianTip": 0,
+      "urgencyLevel": "Medium",
+      "urgencyLevelAI": null,
+      "isArchived": false,
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "reportedDate": {
+        "_seconds": 1766459850,
+        "_nanoseconds": 592000000
+      },
+      "complaintID": "0yR1PLakekaSumHc2oPJ",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1766459851/npqey90j1zp93ruovbyw.jpg"
+      ],
+      "assignedDate": {
+        "_seconds": 1767675539,
+        "_nanoseconds": 918000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767675539,
+        "_nanoseconds": 918000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1767675539,
+        "_nanoseconds": 918000000
+      },
+      "reportStatus": "Approved",
+      "assignmentNotificationRead": false,
+      "lastStatusUpdate": {
+        "_seconds": 1767675539,
+        "_nanoseconds": 918000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1769592600,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1769594400,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 1,
+      "reviewedBy": "/collection/staff/2FSWNmjuNpSy9Sn6o0Kead5soQi2",
+      "assignedTo": "/collection/technician/44xcS7ikYVVn3fci9bGH",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "273Tf4SBvO5GehT2Vlq9": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "TestLatest",
+      "isArchived": false,
+      "technicianTip": 0,
+      "urgencyLevel": "High",
+      "damagePic": null,
+      "inventoryDamageTitle": "TestLatest",
+      "damageCategory": "Plumbing",
+      "feedbackRating": 0,
+      "roomEntryConsent": true,
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1764748610,
+        "_nanoseconds": 957000000
+      },
+      "complaintID": "273Tf4SBvO5GehT2Vlq9",
+      "scheduledDate": {
+        "_seconds": 1765411200,
+        "_nanoseconds": 0
+      },
+      "status": "Pending",
+      "assignedDate": {
+        "_seconds": 1766389373,
+        "_nanoseconds": 439000000
+      },
+      "reviewedOn": {
+        "_seconds": 1766389373,
+        "_nanoseconds": 439000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1766389373,
+        "_nanoseconds": 439000000
+      },
+      "assignmentNotificationRead": false,
+      "lastStatusUpdate": {
+        "_seconds": 1766389373,
+        "_nanoseconds": 439000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1766563200,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1766565000,
+          "_nanoseconds": 0
+        }
+      ],
+      "reviewedBy": "/collection/staff/2FSWNmjuNpSy9Sn6o0Kead5soQi2",
+      "estimatedDurationJobDone": 1,
+      "assignedTo": "/collection/technician/44xcS7ikYVVn3fci9bGH",
+      "urgencyLevelAI": "",
+      "urgencyConfidence": 0,
+      "statusChangeCount": 0,
+      "isRead": true,
+      "reportStatus": "Rejected"
+    },
+    "2MLLzDyli8P6JOXrUy7o": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "lqtest0109_1 test if damageLocation is null",
+      "reportStatus": "Pending",
+      "urgencyLevel": "High",
+      "damageLocation": "",
+      "inventoryDamageTitle": "lqtest0109_1",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Electrical",
+      "roomEntryConsent": false,
+      "repairLocation": {
+        "_latitude": 1.5621398,
+        "_longitude": 103.6286283
+      },
+      "urgencyLevelAI": "High",
+      "reportedDate": {
+        "_seconds": 1767947288,
+        "_nanoseconds": 679000000
+      },
+      "complaintID": "2MLLzDyli8P6JOXrUy7o",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767947295/drnxzefcnhfqcdvu1gjc.jpg"
+      ],
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "2WvoSxdK2WK4kgyte9of": {
+      "reportBy": "/collection/student/2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "inventoryDamage": "9/1",
+      "isRead": false,
+      "urgencyLevel": "High",
+      "damageLocation": "MA1 \n2nd floor left toilet",
+      "inventoryDamageTitle": "9/1",
+      "studentID": "2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "damageCategory": "Plumbing",
+      "roomEntryConsent": true,
+      "repairLocation": {
+        "_latitude": 1.5659768,
+        "_longitude": 103.6333213
+      },
+      "urgencyLevelAI": "High",
+      "createdAt": {
+        "_seconds": 1767951067,
+        "_nanoseconds": 104000000
+      },
+      "reportedDate": {
+        "_seconds": 1767951067,
+        "_nanoseconds": 104000000
+      },
+      "complaintID": "2WvoSxdK2WK4kgyte9of",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767951069/lzdyvjm2ktiwerojjnwn.jpg",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767951069/il93tbb81hwvtrusppsq.jpg"
+      ],
+      "assignedDate": {
+        "_seconds": 1767951132,
+        "_nanoseconds": 928000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767951132,
+        "_nanoseconds": 928000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1767951132,
+        "_nanoseconds": 928000000
+      },
+      "assignmentNotificationRead": false,
+      "lastStatusUpdate": {
+        "_seconds": 1767951132,
+        "_nanoseconds": 928000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1768003200,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1768005000,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1768006800,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1768008600,
+          "_nanoseconds": 0
+        }
+      ],
+      "reviewedBy": "/collection/staff/JA0BrWLkaCeucu8V3IJGJGmnw2I3",
+      "estimatedDurationJobDone": 2,
+      "assignedTo": "/collection/technician/3JKwJEvy0EmPNq8fh6LL",
+      "taskStartedAt": {
+        "_seconds": 1767951435,
+        "_nanoseconds": 561593000
+      },
+      "reportStatus": "Ongoing",
+      "statusChangeCount": 3
+    },
+    "2v9FJydusnwM68VHa1Vs": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "not functioning",
+      "urgencyLevel": "High",
+      "damageLocation": "KTF, H25, 211",
+      "inventoryDamageTitle": "socketproblemagain",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Electrical",
+      "roomEntryConsent": false,
+      "repairLocation": {
+        "_latitude": 1.5585223,
+        "_longitude": 103.6399138
+      },
+      "urgencyLevelAI": null,
+      "createdAt": {
+        "_seconds": 1768118550,
+        "_nanoseconds": 187000000
+      },
+      "reportedDate": {
+        "_seconds": 1768118550,
+        "_nanoseconds": 187000000
+      },
+      "complaintID": "2v9FJydusnwM68VHa1Vs",
+      "damagePic": [],
+      "rejectedBy": "/collection/staff/FaIGBxLYJpW18zDx4oGv6ZOf33V2",
+      "rejectionReason": "fedsfd",
+      "assignedDate": {
+        "_seconds": 1768121602,
+        "_nanoseconds": 466000000
+      },
+      "reviewedOn": {
+        "_seconds": 1768121602,
+        "_nanoseconds": 466000000
+      },
+      "assignmentNotificationRead": false,
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1769587200,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1769590800,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1769599800,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1769603400,
+          "_nanoseconds": 0
+        }
+      ],
+      "reviewedBy": "/collection/staff/FaIGBxLYJpW18zDx4oGv6ZOf33V2",
+      "estimatedDurationJobDone": 2,
+      "assignedTo": "/collection/technician/u97440kePBwq3fbArGBE",
+      "taskStartedAt": {
+        "_seconds": 1768122876,
+        "_nanoseconds": 633253000
+      },
+      "arrivedAt": {
+        "_seconds": 1768122925,
+        "_nanoseconds": 961000000
+      },
+      "proofPic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1768123428/xl2cs0mqaogkwb5zf4ca.jpg"
+      ],
+      "reportStatus": "Completed",
+      "lastStatusUpdate": {
+        "_seconds": 1768123431,
+        "_nanoseconds": 740000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1768123432,
+        "_nanoseconds": 62000000
+      },
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "5BZEiaWabQi0iCgKPn2l": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "test0107_2",
+      "urgencyLevel": "High",
+      "damageLocation": "Side entrance",
+      "inventoryDamageTitle": "lqtest0107_2",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Electrical",
+      "roomEntryConsent": false,
+      "repairLocation": {
+        "_latitude": 1.5598143,
+        "_longitude": 103.6315391
+      },
+      "urgencyLevelAI": "High",
+      "reportedDate": {
+        "_seconds": 1767767725,
+        "_nanoseconds": 288000000
+      },
+      "complaintID": "5BZEiaWabQi0iCgKPn2l",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767767745/jsgabatjjp2lpwrc1g9q.jpg"
+      ],
+      "assignedDate": {
+        "_seconds": 1767768558,
+        "_nanoseconds": 441000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767768558,
+        "_nanoseconds": 441000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1767768558,
+        "_nanoseconds": 441000000
+      },
+      "assignmentNotificationRead": false,
+      "reportStatus": "Approved",
+      "lastStatusUpdate": {
+        "_seconds": 1767768558,
+        "_nanoseconds": 441000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1769590800,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1769592600,
+          "_nanoseconds": 0
+        }
+      ],
+      "reviewedBy": "/collection/staff/2FSWNmjuNpSy9Sn6o0Kead5soQi2",
+      "estimatedDurationJobDone": 1,
+      "assignedTo": "/collection/technician/z1JIPmrW0Ed7jTXC4XCY",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "5KWyogn0ZvwI7etWxjrs": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "bed isn't in good condition kq",
+      "isArchived": false,
+      "technicianTip": 0,
+      "scheduledDate": null,
+      "urgencyLevel": "Medium",
+      "damagePic": null,
+      "damageCategory": "Electrical",
+      "feedbackRating": 0,
+      "roomEntryConsent": true,
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1764650358,
+        "_nanoseconds": 161000000
+      },
+      "complaintID": "5KWyogn0ZvwI7etWxjrs",
+      "assignedDate": {
+        "_seconds": 1764650477,
+        "_nanoseconds": 339000000
+      },
+      "reviewedOn": {
+        "_seconds": 1764650477,
+        "_nanoseconds": 339000000
+      },
+      "assignedTechnicianNo": "TN0003",
+      "assignedTechnicianId": "z1JIPmrW0Ed7jTXC4XCY",
+      "lastStatusUpdate": {
+        "_seconds": 1764650477,
+        "_nanoseconds": 339000000
+      },
+      "assignedTechnicianName": "PANG LEE CHUN",
+      "reviewedBy": "/collection/staff/FaIGBxLYJpW18zDx4oGv6ZOf33V2",
+      "assignedTo": "/collection/technician/z1JIPmrW0Ed7jTXC4XCY",
+      "reportStatus": "Ongoing",
+      "isRead": true,
+      "statusChangeCount": 0
+    },
+    "8ri1bSO9rdFjQLO4qpIN": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "test0107_2",
+      "urgencyLevel": "High",
+      "damageLocation": "Back door",
+      "inventoryDamageTitle": "lqtest0107_2",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Plumbing",
+      "roomEntryConsent": false,
+      "repairLocation": {
+        "_latitude": 1.5610406,
+        "_longitude": 103.6300028
+      },
+      "urgencyLevelAI": "High",
+      "reportedDate": {
+        "_seconds": 1767768752,
+        "_nanoseconds": 665000000
+      },
+      "complaintID": "8ri1bSO9rdFjQLO4qpIN",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767768760/zjfok0hmq2rgmhm5xivq.jpg"
+      ],
+      "assignedDate": {
+        "_seconds": 1767768813,
+        "_nanoseconds": 937000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767768813,
+        "_nanoseconds": 937000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1767768813,
+        "_nanoseconds": 937000000
+      },
+      "assignmentNotificationRead": false,
+      "reportStatus": "Approved",
+      "lastStatusUpdate": {
+        "_seconds": 1767768813,
+        "_nanoseconds": 937000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1769074200,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1769076000,
+          "_nanoseconds": 0
+        }
+      ],
+      "reviewedBy": "/collection/staff/2FSWNmjuNpSy9Sn6o0Kead5soQi2",
+      "estimatedDurationJobDone": 1,
+      "assignedTo": "/collection/technician/2NPQBWXURezEmsWX0KjL",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "9EQGUOHQb7kEHPviS05H": {
+      "reportBy": "/collection/student/jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "inventoryDamage": "2312 ready for rejected",
+      "isArchived": false,
+      "technicianTip": 0,
+      "scheduledDate": null,
+      "reviewedBy": "/collection/staff",
+      "urgencyLevel": "Medium",
+      "damageLocation": "KDOJ, XC1, 404",
+      "assignedTo": "/collection/technician",
+      "damagePic": null,
+      "inventoryDamageTitle": "2312 ready for rejected",
+      "studentID": "jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "damageCategory": "Plumbing",
+      "feedbackRating": 0,
+      "roomEntryConsent": true,
+      "reportedDate": {
+        "_seconds": 1766502357,
+        "_nanoseconds": 891000000
+      },
+      "complaintID": "9EQGUOHQb7kEHPviS05H",
+      "reviewedOn": {
+        "_seconds": 1766502434,
+        "_nanoseconds": 227000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1766502434,
+        "_nanoseconds": 227000000
+      },
+      "reportStatus": "Rejected",
+      "lastStatusUpdate": {
+        "_seconds": 1766502434,
+        "_nanoseconds": 227000000
+      },
+      "rejectionReason": "test only",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "9avfQG6nKMJYs2TXo4kz": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "test1230_2",
+      "reportStatus": "Pending",
+      "urgencyLevel": "High",
+      "damageLocation": "KTF, H25, 211",
+      "inventoryDamageTitle": "lqtest1230_2",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Electrical",
+      "roomEntryConsent": true,
+      "repairLocation": null,
+      "urgencyLevelAI": "High",
+      "reportedDate": {
+        "_seconds": 1767070293,
+        "_nanoseconds": 99000000
+      },
+      "complaintID": "9avfQG6nKMJYs2TXo4kz",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767070295/hpvjqtqvfqrxfqyo8yeq.jpg",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767070296/kcpi9lnxanqh9sggb4wh.jpg"
+      ],
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "9qFeC7vUUseFjsFglfxT": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "test1222_2",
+      "urgencyConfidence": 0,
+      "isArchived": false,
+      "technicianTip": 0,
+      "reportStatus": "Pending",
+      "scheduledDate": null,
+      "reviewedBy": "/collection/staff",
+      "urgencyLevel": "Medium",
+      "damageLocation": "KTF, H25, 211",
+      "assignedTo": "/collection/technician",
+      "damagePic": null,
+      "inventoryDamageTitle": "lqtest1222_2",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Electrical",
+      "feedbackRating": 0,
+      "roomEntryConsent": false,
+      "rejectionReason": "",
+      "urgencyLevelAI": null,
+      "reportedDate": {
+        "_seconds": 1766426163,
+        "_nanoseconds": 422000000
+      },
+      "lastStatusUpdate": {
+        "_seconds": 1766426163,
+        "_nanoseconds": 422000000
+      },
+      "complaintID": "9qFeC7vUUseFjsFglfxT",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "AWpDd5jjxHB8pF1g2aik": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "test0107_1",
+      "urgencyLevel": "High",
+      "damageLocation": "Lobby entrance",
+      "inventoryDamageTitle": "lqtest0107_1",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Electrical",
+      "roomEntryConsent": false,
+      "repairLocation": {
+        "_latitude": 1.5598143,
+        "_longitude": 103.6315391
+      },
+      "urgencyLevelAI": "High",
+      "reportedDate": {
+        "_seconds": 1767767646,
+        "_nanoseconds": 538000000
+      },
+      "complaintID": "AWpDd5jjxHB8pF1g2aik",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767767657/kvhucb6wfstdvkl8lcc8.jpg"
+      ],
+      "assignedDate": {
+        "_seconds": 1767767787,
+        "_nanoseconds": 961000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767767787,
+        "_nanoseconds": 961000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1767767787,
+        "_nanoseconds": 961000000
+      },
+      "assignmentNotificationRead": false,
+      "reportStatus": "Approved",
+      "lastStatusUpdate": {
+        "_seconds": 1767767787,
+        "_nanoseconds": 961000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1767862800,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1767864600,
+          "_nanoseconds": 0
+        }
+      ],
+      "reviewedBy": "/collection/staff/2FSWNmjuNpSy9Sn6o0Kead5soQi2",
+      "estimatedDurationJobDone": 1,
+      "assignedTo": "/collection/technician/dtjASToxGLQ0vGqpQz5d",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "B4Z5ZLwwBQaqRytFtLuS": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "test0111_1",
+      "reportStatus": "Pending",
+      "urgencyLevel": "High",
+      "damageLocation": "Study Room H01",
+      "inventoryDamageTitle": "lqtest0111_1",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Electrical",
+      "roomEntryConsent": false,
+      "repairLocation": {
+        "_latitude": 1.5598143,
+        "_longitude": 103.6315391
+      },
+      "urgencyLevelAI": "High",
+      "createdAt": {
+        "_seconds": 1768120333,
+        "_nanoseconds": 233000000
+      },
+      "reportedDate": {
+        "_seconds": 1768120333,
+        "_nanoseconds": 233000000
+      },
+      "lastStatusUpdate": {
+        "_seconds": 1768120333,
+        "_nanoseconds": 233000000
+      },
+      "complaintID": "B4Z5ZLwwBQaqRytFtLuS",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1768120338/hgmatb2l7jxfiq3cdtuf.jpg",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1768120335/zf80qrzh4ieybccaqqrg.jpg",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1768120336/e5qkygvs9rm11it8ml5x.jpg"
+      ],
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "BVkFlC1TaZt9l8kR1kCb": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "Ceiling cracked and water drips into the room when it rains, causing the carpet to get wet and causing the sockets to be dangerous to use",
+      "reportStatus": "Pending",
+      "urgencyLevel": "High",
+      "damageLocation": "Study Room H01",
+      "inventoryDamageTitle": "Ceiling Crack and Water Dripping",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Furniture",
+      "roomEntryConsent": false,
+      "repairLocation": {
+        "_latitude": 1.5598143,
+        "_longitude": 103.6315391
+      },
+      "urgencyLevelAI": "High",
+      "createdAt": {
+        "_seconds": 1768120605,
+        "_nanoseconds": 596000000
+      },
+      "reportedDate": {
+        "_seconds": 1768120605,
+        "_nanoseconds": 596000000
+      },
+      "lastStatusUpdate": {
+        "_seconds": 1768120605,
+        "_nanoseconds": 596000000
+      },
+      "complaintID": "BVkFlC1TaZt9l8kR1kCb",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1768120607/h40cmvcf2iafcqj18eps.jpg",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1768120607/ktrvdenaff1w3qq8g0gh.jpg",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1768120609/mm3zu1esbpqd0qmlikir.jpg"
+      ],
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "BWvdBYotC3NdsuxzVW7N": {
+      "reportBy": "/collection/student/jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "inventoryDamage": "test 1912 desc",
+      "isArchived": false,
+      "technicianTip": 0,
+      "scheduledDate": null,
+      "urgencyLevel": "High",
+      "damageLocation": "KDOJ, XC1, 404",
+      "inventoryDamageTitle": "test 1912",
+      "studentID": "jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "damageCategory": "Plumbing",
+      "feedbackRating": 0,
+      "roomEntryConsent": true,
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1766135953,
+        "_nanoseconds": 167000000
+      },
+      "complaintID": "BWvdBYotC3NdsuxzVW7N",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1766135958/s7hc00zx8wkko6g670sp.jpg"
+      ],
+      "reviewedBy": "/collection/staff/JA0BrWLkaCeucu8V3IJGJGmnw2I3",
+      "estimatedDurationJobDone": 2,
+      "assignedTo": "/collection/technician/3JKwJEvy0EmPNq8fh6LL",
+      "reasonCantCompleteProof": "https://res.cloudinary.com/deaju8keu/image/upload/v1766137974/qbhygef5txrpd23rawpp.jpg",
+      "reasonCantComplete": "too much work",
+      "assignedDate": {
+        "_seconds": 1766138464,
+        "_nanoseconds": 680000000
+      },
+      "reviewedOn": {
+        "_seconds": 1766138464,
+        "_nanoseconds": 680000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1766142000,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1766145600,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1766147400,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1766149200,
+          "_nanoseconds": 0
+        }
+      ],
+      "proofPic": "https://res.cloudinary.com/deaju8keu/image/upload/v1766151325/kjqjbqxom0a1zadc8icd.jpg",
+      "reportStatus": "Completed",
+      "lastStatusUpdate": {
+        "_seconds": 1766151326,
+        "_nanoseconds": 520000000
+      },
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "BZWGxqOxSB1v09LIxVSV": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "test1230_3",
+      "reportStatus": "Pending",
+      "urgencyLevel": "Minor",
+      "damageLocation": "Entrance",
+      "inventoryDamageTitle": "lqtest1230_3",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Electrical",
+      "roomEntryConsent": false,
+      "repairLocation": {
+        "_latitude": 1.5598143,
+        "_longitude": 103.6315391
+      },
+      "urgencyLevelAI": "Minor",
+      "reportedDate": {
+        "_seconds": 1767028299,
+        "_nanoseconds": 759000000
+      },
+      "complaintID": "BZWGxqOxSB1v09LIxVSV",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767028300/mwvuhikfqe9au0zx513x.jpg"
+      ],
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "BjftiCnq3Fa22PjtY2Ze": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "333",
+      "isArchived": false,
+      "technicianTip": 0,
+      "reportStatus": "Pending",
+      "scheduledDate": null,
+      "reviewedBy": "/collection/staff",
+      "urgencyLevel": "Medium",
+      "damageLocation": "KTF, H25, 211",
+      "assignedTo": "/collection/technician",
+      "damagePic": null,
+      "inventoryDamageTitle": "LQtest333",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Other",
+      "feedbackRating": 0,
+      "roomEntryConsent": false,
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1765352561,
+        "_nanoseconds": 662000000
+      },
+      "complaintID": "BjftiCnq3Fa22PjtY2Ze",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "DE944xpz3exvc4S68sRD": {
+      "reportBy": "/collection/student/2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "inventoryDamage": "owww",
+      "reportStatus": "Pending",
+      "urgencyLevel": "Minor",
+      "damageLocation": "KDOJ, XC1, 324",
+      "inventoryDamageTitle": "OWWWW",
+      "studentID": "2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "damageCategory": "Electrical",
+      "roomEntryConsent": true,
+      "repairLocation": {
+        "_latitude": 1.5762494,
+        "_longitude": 103.6211409
+      },
+      "urgencyLevelAI": "Minor",
+      "reportedDate": {
+        "_seconds": 1767069583,
+        "_nanoseconds": 970000000
+      },
+      "complaintID": "DE944xpz3exvc4S68sRD",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767069588/uud82jzko5kvengz9xip.jpg"
+      ],
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "DNm2mpAWp3itYlOkxE89": {
+      "reportBy": "/collection/student/2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "inventoryDamage": "hh",
+      "isRead": false,
+      "urgencyLevel": "High",
+      "damageLocation": "KDOJ, XC1, 324",
+      "inventoryDamageTitle": "hh",
+      "studentID": "2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "damageCategory": "Plumbing",
+      "roomEntryConsent": true,
+      "repairLocation": {
+        "_latitude": 1.5762494,
+        "_longitude": 103.6211409
+      },
+      "urgencyLevelAI": "High",
+      "reportedDate": {
+        "_seconds": 1767671637,
+        "_nanoseconds": 187000000
+      },
+      "complaintID": "DNm2mpAWp3itYlOkxE89",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767671640/gvq8mycvcfhsybu9s23q.jpg"
+      ],
+      "assignedDate": {
+        "_seconds": 1767671662,
+        "_nanoseconds": 940000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767671662,
+        "_nanoseconds": 940000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1767671662,
+        "_nanoseconds": 940000000
+      },
+      "assignmentNotificationRead": false,
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1767672000,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1767673800,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1767675600,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1767677400,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 2,
+      "reviewedBy": "/collection/staff/JA0BrWLkaCeucu8V3IJGJGmnw2I3",
+      "assignedTo": "/collection/technician/3JKwJEvy0EmPNq8fh6LL",
+      "taskStartedAt": {
+        "_seconds": 1767671706,
+        "_nanoseconds": 504597000
+      },
+      "arrivedAt": {
+        "_seconds": 1767671757,
+        "_nanoseconds": 253000000
+      },
+      "reasonCantCompleteProof": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767671767/r5nk7nhhfkeqf5b7vth3.jpg"
+      ],
+      "cantCompleteCount": 1,
+      "statusChangeCount": 5,
+      "reportStatus": "Pending",
+      "lastStatusUpdate": {
+        "_seconds": 1767671768,
+        "_nanoseconds": 781000000
+      },
+      "reasonCantComplete": "dh"
+    },
+    "EXX2RTkkhp5E1zrOt5LI": {
+      "reportBy": "/collection/student/jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "inventoryDamage": "1220 11/1",
+      "isRead": false,
+      "urgencyLevel": "High",
+      "damageLocation": "",
+      "inventoryDamageTitle": "1220 11/1",
+      "studentID": "jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "damageCategory": "Plumbing",
+      "roomEntryConsent": true,
+      "repairLocation": {
+        "_latitude": 1.5659768,
+        "_longitude": 103.6333213
+      },
+      "urgencyLevelAI": "High",
+      "createdAt": {
+        "_seconds": 1768062075,
+        "_nanoseconds": 198000000
+      },
+      "reportedDate": {
+        "_seconds": 1768062075,
+        "_nanoseconds": 198000000
+      },
+      "complaintID": "EXX2RTkkhp5E1zrOt5LI",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1768062078/iejyjtmeaeouvei3d8bk.jpg"
+      ],
+      "assignedDate": {
+        "_seconds": 1768062147,
+        "_nanoseconds": 226000000
+      },
+      "reviewedOn": {
+        "_seconds": 1768062147,
+        "_nanoseconds": 226000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1768062147,
+        "_nanoseconds": 226000000
+      },
+      "assignmentNotificationRead": false,
+      "lastStatusUpdate": {
+        "_seconds": 1768062147,
+        "_nanoseconds": 226000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1768348800,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1768350600,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1768352400,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1768354200,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 2,
+      "reviewedBy": "/collection/staff/JA0BrWLkaCeucu8V3IJGJGmnw2I3",
+      "assignedTo": "/collection/technician/3JKwJEvy0EmPNq8fh6LL",
+      "reportStatus": "Ongoing",
+      "taskStartedAt": {
+        "_seconds": 1768062220,
+        "_nanoseconds": 773883000
+      },
+      "statusChangeCount": 4
+    },
+    "FJbS9LaLhpncD0fTRf0a": {
+      "reportBy": "/collection/student/2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "inventoryDamage": "ow",
+      "reportStatus": "Pending",
+      "urgencyLevel": "Medium",
+      "damageLocation": "KDOJ, XC1, 324",
+      "inventoryDamageTitle": "ow",
+      "studentID": "2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "damageCategory": "Electrical",
+      "roomEntryConsent": true,
+      "repairLocation": {
+        "_latitude": 1.5762494,
+        "_longitude": 103.6211409
+      },
+      "urgencyLevelAI": null,
+      "reportedDate": {
+        "_seconds": 1767065421,
+        "_nanoseconds": 787000000
+      },
+      "complaintID": "FJbS9LaLhpncD0fTRf0a",
+      "damagePic": [],
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "G6kFQKUpx4k4XKom2Ub2": {
+      "reportBy": "/collection/student/2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "inventoryDamage": "sh",
+      "urgencyLevel": "High",
+      "damageLocation": "",
+      "inventoryDamageTitle": "sh",
+      "studentID": "2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "damageCategory": "Plumbing",
+      "roomEntryConsent": true,
+      "repairLocation": {
+        "_latitude": 1.5641737,
+        "_longitude": 103.6380185
+      },
+      "urgencyLevelAI": "High",
+      "reportedDate": {
+        "_seconds": 1767661703,
+        "_nanoseconds": 725000000
+      },
+      "complaintID": "G6kFQKUpx4k4XKom2Ub2",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767661706/sdbykdwfb0ysjvonmeib.jpg"
+      ],
+      "assignedDate": {
+        "_seconds": 1767661744,
+        "_nanoseconds": 200000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767661744,
+        "_nanoseconds": 200000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1767661744,
+        "_nanoseconds": 200000000
+      },
+      "assignmentNotificationRead": false,
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1767744000,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1767745800,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1767747600,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1767749400,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 2,
+      "reviewedBy": "/collection/staff/JA0BrWLkaCeucu8V3IJGJGmnw2I3",
+      "assignedTo": "/collection/technician/3JKwJEvy0EmPNq8fh6LL",
+      "taskStartedAt": {
+        "_seconds": 1767661786,
+        "_nanoseconds": 303730000
+      },
+      "arrivedAt": {
+        "_seconds": 1767662062,
+        "_nanoseconds": 284000000
+      },
+      "proofPic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767662070/q3pdcjnnzy5w9nbwl1ty.jpg"
+      ],
+      "reportStatus": "Completed",
+      "lastStatusUpdate": {
+        "_seconds": 1767662071,
+        "_nanoseconds": 932000000
+      },
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "GD4WMsPsxi9M1vjbxQUD": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "test0107_3",
+      "urgencyLevel": "High",
+      "damageLocation": "",
+      "inventoryDamageTitle": "lqtest0107_3",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Plumbing",
+      "roomEntryConsent": false,
+      "repairLocation": {
+        "_latitude": 40.851715,
+        "_longitude": 14.270743
+      },
+      "urgencyLevelAI": "High",
+      "reportedDate": {
+        "_seconds": 1767769906,
+        "_nanoseconds": 710000000
+      },
+      "complaintID": "GD4WMsPsxi9M1vjbxQUD",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767769912/x4niky1fu9l54qhh2kca.jpg"
+      ],
+      "reportStatus": "Approved",
+      "assignmentNotificationRead": false,
+      "estimatedDurationJobDone": 1,
+      "reviewedBy": "/collection/staff/2FSWNmjuNpSy9Sn6o0Kead5soQi2",
+      "assignedDate": {
+        "_seconds": 1767770272,
+        "_nanoseconds": 840000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767770272,
+        "_nanoseconds": 840000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1767770272,
+        "_nanoseconds": 840000000
+      },
+      "lastStatusUpdate": {
+        "_seconds": 1767770272,
+        "_nanoseconds": 840000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1768899600,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1768901400,
+          "_nanoseconds": 0
+        }
+      ],
+      "assignedTo": "/collection/technician/2NPQBWXURezEmsWX0KjL",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "GWTKwUg0FClqo1StoiUH": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "kanyixiakeqin",
+      "isArchived": false,
+      "technicianTip": 0,
+      "urgencyLevel": "High",
+      "damageLocation": "H01 Lobby",
+      "damagePic": null,
+      "inventoryDamageTitle": "KEQINKANGUOLAI",
+      "damageCategory": "Plumbing",
+      "feedbackRating": 0,
+      "roomEntryConsent": true,
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1765255618,
+        "_nanoseconds": 92000000
+      },
+      "complaintID": "GWTKwUg0FClqo1StoiUH",
+      "assignedDate": {
+        "_seconds": 1765722234,
+        "_nanoseconds": 596000000
+      },
+      "reviewedOn": {
+        "_seconds": 1765722234,
+        "_nanoseconds": 596000000
+      },
+      "scheduledDate": {
+        "_seconds": 1765756800,
+        "_nanoseconds": 0
+      },
+      "estimatedDurationJobDone": 1,
+      "reviewedBy": "/collection/staff/FaIGBxLYJpW18zDx4oGv6ZOf33V2",
+      "assignedTo": "/collection/technician/2NPQBWXURezEmsWX0KjL",
+      "arrivedAt": {
+        "_seconds": 1768035608,
+        "_nanoseconds": 943000000
+      },
+      "proofPic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1768117841/aliyta40cn3l4axhunr2.jpg"
+      ],
+      "reportStatus": "Completed",
+      "lastStatusUpdate": {
+        "_seconds": 1768117842,
+        "_nanoseconds": 328000000
+      },
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "Glko4Dm1g21PPW5kgE8J": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "9/12testtesttes",
+      "technicianTip": 0,
+      "scheduledDate": null,
+      "urgencyLevel": "Medium",
+      "damageLocation": "KTF, H25, 211",
+      "damagePic": null,
+      "inventoryDamageTitle": "testtesttest9/12",
+      "damageCategory": "Electrical",
+      "feedbackRating": 0,
+      "roomEntryConsent": false,
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1765246141,
+        "_nanoseconds": 46000000
+      },
+      "complaintID": "Glko4Dm1g21PPW5kgE8J",
+      "assignedDate": {
+        "_seconds": 1765857242,
+        "_nanoseconds": 639000000
+      },
+      "reviewedOn": {
+        "_seconds": 1765857242,
+        "_nanoseconds": 639000000
+      },
+      "isRead": false,
+      "lastStatusUpdate": {
+        "_seconds": 1765857242,
+        "_nanoseconds": 639000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1766044800,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1766046600,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 1,
+      "reviewedBy": "/collection/staff/2FSWNmjuNpSy9Sn6o0Kead5soQi2",
+      "assignedTo": "/collection/technician/dtjASToxGLQ0vGqpQz5d",
+      "reportStatus": "Cancelled",
+      "isArchived": true,
+      "archivedAt": {
+        "_seconds": 1765857460,
+        "_nanoseconds": 450000000
+      }
+    },
+    "HLn6efZgVqIeqWALWFy7": {
+      "reportBy": "/collection/student/jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "inventoryDamage": "1012 923 final test",
+      "isArchived": false,
+      "technicianTip": 0,
+      "urgencyLevel": "High",
+      "damageLocation": "KDOJ, XC1, null",
+      "damagePic": null,
+      "inventoryDamageTitle": "1012 923 final test",
+      "studentID": "jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "damageCategory": "Plumbing",
+      "feedbackRating": 0,
+      "roomEntryConsent": true,
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1765373031,
+        "_nanoseconds": 380000000
+      },
+      "complaintID": "HLn6efZgVqIeqWALWFy7",
+      "assignedDate": {
+        "_seconds": 1765373069,
+        "_nanoseconds": 935000000
+      },
+      "reviewedOn": {
+        "_seconds": 1765373069,
+        "_nanoseconds": 935000000
+      },
+      "scheduledDate": {
+        "_seconds": 1765414800,
+        "_nanoseconds": 0
+      },
+      "lastStatusUpdate": {
+        "_seconds": 1765373069,
+        "_nanoseconds": 935000000
+      },
+      "estimatedDurationJobDone": 1,
+      "reviewedBy": "/collection/staff/ees78VjOOeg7jZQlNwi3S9i0iE32",
+      "suggestedDate": {
+        "_seconds": 1765296000,
+        "_nanoseconds": 0
+      },
+      "reportStatus": "Pending",
+      "assignedTo": null,
+      "isRead": true
+    },
+    "IYAAYKu1Iv0vanccI7it": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "fdafad",
+      "isArchived": false,
+      "technicianTip": 0,
+      "urgencyLevel": "Medium",
+      "damagePic": null,
+      "inventoryDamageTitle": "TEsttesteste",
+      "damageCategory": "Plumbing",
+      "feedbackRating": 0,
+      "roomEntryConsent": false,
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1764744396,
+        "_nanoseconds": 847000000
+      },
+      "complaintID": "IYAAYKu1Iv0vanccI7it",
+      "assignedTechnicianNo": "TN0002",
+      "assignedTechnicianId": "44xcS7ikYVVn3fci9bGH",
+      "assignedTechnicianName": "technician test ow",
+      "scheduledDate": {
+        "_seconds": 1765497600,
+        "_nanoseconds": 0
+      },
+      "assignedDate": {
+        "_seconds": 1766389438,
+        "_nanoseconds": 272000000
+      },
+      "reviewedOn": {
+        "_seconds": 1766389438,
+        "_nanoseconds": 272000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1766389438,
+        "_nanoseconds": 272000000
+      },
+      "reportStatus": "Approved",
+      "assignmentNotificationRead": false,
+      "lastStatusUpdate": {
+        "_seconds": 1766389438,
+        "_nanoseconds": 272000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1767168000,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1767169800,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 1,
+      "reviewedBy": "/collection/staff/2FSWNmjuNpSy9Sn6o0Kead5soQi2",
+      "assignedTo": "/collection/technician/44xcS7ikYVVn3fci9bGH",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "JD4VDnkcnmOFOB0rpjO5": {
+      "reportBy": "/collection/student/jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "inventoryDamage": "1012 533 goh",
+      "isArchived": false,
+      "technicianTip": 0,
+      "urgencyLevel": "High",
+      "damageLocation": "KDOJ, XC1, null",
+      "damagePic": null,
+      "inventoryDamageTitle": "1012 533 goh",
+      "studentID": "jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "damageCategory": "Plumbing",
+      "feedbackRating": 0,
+      "roomEntryConsent": true,
+      "reportedDate": {
+        "_seconds": 1765359202,
+        "_nanoseconds": 246000000
+      },
+      "complaintID": "JD4VDnkcnmOFOB0rpjO5",
+      "assignedDate": {
+        "_seconds": 1765359252,
+        "_nanoseconds": 469000000
+      },
+      "estimatedDurationJobDone": 1,
+      "scheduledDate": {
+        "_seconds": 1765324800,
+        "_nanoseconds": 0
+      },
+      "reviewedBy": null,
+      "assignedTo": null,
+      "reviewedOn": {
+        "_seconds": 1767947560,
+        "_nanoseconds": 458000000
+      },
+      "statusChangeCount": 1,
+      "lastStatusChangedAt": {
+        "_seconds": 1767947560,
+        "_nanoseconds": 458000000
+      },
+      "isRead": false,
+      "reportStatus": "Rejected",
+      "lastStatusUpdate": {
+        "_seconds": 1767947560,
+        "_nanoseconds": 458000000
+      },
+      "rejectionReason": "test"
+    },
+    "KAvfzwUXD3aCqQfeMV9A": {
+      "assignedTo": "/collection/technician",
+      "damageCategory": "Furniture",
+      "damageLocation": "Lobby H10",
+      "feedbackRating": 0,
+      "inventoryDamage": "test1223_7",
+      "inventoryDamageTitle": "lqtest1223_7",
+      "rejectionReason": "",
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "reportStatus": "Pending",
+      "reviewedBy": "/collection/staff",
+      "roomEntryConsent": false,
+      "scheduledDate": null,
+      "technicianTip": 0,
+      "urgencyLevel": "Medium",
+      "urgencyLevelAI": null,
+      "isArchived": false,
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "reportedDate": {
+        "_seconds": 1766461023,
+        "_nanoseconds": 779000000
+      },
+      "lastStatusUpdate": {
+        "_seconds": 1766461023,
+        "_nanoseconds": 779000000
+      },
+      "complaintID": "KAvfzwUXD3aCqQfeMV9A",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1766461025/zv5euc5askpbza6xzu24.jpg"
+      ],
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "KOhWjXD6SkG6FkFS8bc3": {
+      "reportBy": "/collection/student/jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "inventoryDamage": "ss",
+      "isArchived": false,
+      "technicianTip": 0,
+      "reportStatus": "Pending",
+      "scheduledDate": null,
+      "reviewedBy": "/collection/staff",
+      "urgencyLevel": "High",
+      "damageLocation": "KDOJ, XC1, 404",
+      "assignedTo": "/collection/technician",
+      "damagePic": null,
+      "inventoryDamageTitle": "dd",
+      "studentID": "jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "damageCategory": "Plumbing",
+      "feedbackRating": 0,
+      "roomEntryConsent": true,
+      "repairLocation": {
+        "_latitude": 2.9264,
+        "_longitude": 101.6964
+      },
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1766625961,
+        "_nanoseconds": 312000000
+      },
+      "lastStatusUpdate": {
+        "_seconds": 1766625961,
+        "_nanoseconds": 312000000
+      },
+      "complaintID": "KOhWjXD6SkG6FkFS8bc3",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "LSdkkRG0zhhFeh6ZlB4R": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "power outlet isn't working",
+      "urgencyLevel": "Medium",
+      "damageLocation": "KTF, H25, 211",
+      "inventoryDamageTitle": "socket problem 11/1",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Electrical",
+      "roomEntryConsent": false,
+      "repairLocation": {
+        "_latitude": 1.5585223,
+        "_longitude": 103.6399138
+      },
+      "urgencyLevelAI": null,
+      "createdAt": {
+        "_seconds": 1768115628,
+        "_nanoseconds": 20000000
+      },
+      "reportedDate": {
+        "_seconds": 1768115628,
+        "_nanoseconds": 20000000
+      },
+      "complaintID": "LSdkkRG0zhhFeh6ZlB4R",
+      "damagePic": [],
+      "assignedDate": {
+        "_seconds": 1768117986,
+        "_nanoseconds": 588000000
+      },
+      "reviewedOn": {
+        "_seconds": 1768117986,
+        "_nanoseconds": 588000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1768117986,
+        "_nanoseconds": 588000000
+      },
+      "assignmentNotificationRead": false,
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1768204800,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1768228200,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 1,
+      "reviewedBy": "/collection/staff/FaIGBxLYJpW18zDx4oGv6ZOf33V2",
+      "assignedTo": "/collection/technician/u97440kePBwq3fbArGBE",
+      "taskStartedAt": {
+        "_seconds": 1768118026,
+        "_nanoseconds": 415857000
+      },
+      "arrivedAt": {
+        "_seconds": 1768118033,
+        "_nanoseconds": 860000000
+      },
+      "proofPic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1768118040/gw3uiuog27fooe8twpvv.jpg"
+      ],
+      "reportStatus": "Completed",
+      "lastStatusUpdate": {
+        "_seconds": 1768118040,
+        "_nanoseconds": 999000000
+      },
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "O3q2AZX8lNaUjwJizhXr": {
+      "reportBy": "/collection/student/jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "inventoryDamage": "shsg",
+      "isArchived": false,
+      "technicianTip": 0,
+      "reportStatus": "Pending",
+      "scheduledDate": null,
+      "reviewedBy": "/collection/staff",
+      "urgencyLevel": "High",
+      "damageLocation": "KDOJ XC1",
+      "assignedTo": "/collection/technician",
+      "damagePic": null,
+      "inventoryDamageTitle": "shhd",
+      "studentID": "jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "damageCategory": "Plumbing",
+      "feedbackRating": 0,
+      "roomEntryConsent": true,
+      "repairLocation": {
+        "_latitude": 1.5760539,
+        "_longitude": 103.6212182
+      },
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1766559285,
+        "_nanoseconds": 405000000
+      },
+      "lastStatusUpdate": {
+        "_seconds": 1766559285,
+        "_nanoseconds": 405000000
+      },
+      "complaintID": "O3q2AZX8lNaUjwJizhXr",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "Ot75Zmp1FKoptajX8wnl": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "ppp",
+      "reportStatus": "Pending",
+      "urgencyLevel": "Minor",
+      "damageLocation": "KTF, H25, 211",
+      "inventoryDamageTitle": "Plumbing",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Plumbing",
+      "roomEntryConsent": true,
+      "repairLocation": null,
+      "urgencyLevelAI": null,
+      "createdAt": {
+        "_seconds": 1767673430,
+        "_nanoseconds": 366000000
+      },
+      "reportedDate": {
+        "_seconds": 1767673430,
+        "_nanoseconds": 366000000
+      },
+      "lastStatusUpdate": {
+        "_seconds": 1767673430,
+        "_nanoseconds": 366000000
+      },
+      "complaintID": "Ot75Zmp1FKoptajX8wnl",
+      "damagePic": [],
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "PSZJKCBrbawoa2UfHfa3": {
+      "inventoryDamage": "test2kq",
+      "technicianTip": 0,
+      "scheduledDate": null,
+      "urgencyLevel": "Medium",
+      "damagePic": null,
+      "damageCategory": "Furniture",
+      "feedbackRating": 0,
+      "roomEntryConsent": true,
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1764339777,
+        "_nanoseconds": 393000000
+      },
+      "complaintID": "PSZJKCBrbawoa2UfHfa3",
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "assignedTechnicianNo": "TN0005",
+      "assignedTechnicianId": "b1NOTIA9R2asTptjCJST",
+      "assignedTechnicianName": "ss",
+      "reviewedBy": "/collection/staff/FaIGBxLYJpW18zDx4oGv6ZOf33V2",
+      "assignedDate": {
+        "_seconds": 1764640017,
+        "_nanoseconds": 642000000
+      },
+      "reviewedOn": {
+        "_seconds": 1764640017,
+        "_nanoseconds": 642000000
+      },
+      "lastStatusUpdate": {
+        "_seconds": 1764640017,
+        "_nanoseconds": 642000000
+      },
+      "assignedTo": "/collection/technician/b1NOTIA9R2asTptjCJST",
+      "reportStatus": "Cancelled",
+      "isRead": true,
+      "isArchived": true,
+      "archivedAt": {
+        "_seconds": 1765347341,
+        "_nanoseconds": 333000000
+      }
+    },
+    "QYXIBJiH5tnur4Gb8pte": {
+      "reportBy": "/collection/student/2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "inventoryDamage": "gh",
+      "urgencyLevel": "High",
+      "damageLocation": "KDOJ, XC1, 324",
+      "inventoryDamageTitle": "gh",
+      "studentID": "2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "damageCategory": "Plumbing",
+      "roomEntryConsent": true,
+      "repairLocation": {
+        "_latitude": 1.5762494,
+        "_longitude": 103.6211409
+      },
+      "urgencyLevelAI": "High",
+      "reportedDate": {
+        "_seconds": 1767670507,
+        "_nanoseconds": 950000000
+      },
+      "complaintID": "QYXIBJiH5tnur4Gb8pte",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767670510/faktswtnql7y0dgiim0f.jpg"
+      ],
+      "assignedDate": {
+        "_seconds": 1767670540,
+        "_nanoseconds": 299000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767670540,
+        "_nanoseconds": 299000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1767670540,
+        "_nanoseconds": 299000000
+      },
+      "assignmentNotificationRead": false,
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1767673800,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1767675600,
+          "_nanoseconds": 0
+        }
+      ],
+      "reviewedBy": "/collection/staff/JA0BrWLkaCeucu8V3IJGJGmnw2I3",
+      "estimatedDurationJobDone": 1,
+      "assignedTo": "/collection/technician/3JKwJEvy0EmPNq8fh6LL",
+      "taskStartedAt": {
+        "_seconds": 1767670557,
+        "_nanoseconds": 984415000
+      },
+      "arrivedAt": {
+        "_seconds": 1767767274,
+        "_nanoseconds": 50000000
+      },
+      "reasonCantCompleteProof": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767767285/uoozlbwrqhmwzdgqgpdr.jpg",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767767287/mohm45zlyrflopnmnhbl.jpg",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767767291/hwebhllyw0csaxb6eurg.png"
+      ],
+      "cantCompleteCount": 1,
+      "statusChangeCount": 2,
+      "isRead": false,
+      "reportStatus": "Pending",
+      "lastStatusUpdate": {
+        "_seconds": 1767767292,
+        "_nanoseconds": 626000000
+      },
+      "reasonCantComplete": "dh"
+    },
+    "QZjGs9ICrbtsXG6j8vUi": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "socket damage",
+      "damageLocation": "KTF, H25, 211",
+      "inventoryDamageTitle": "socket damage",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Electrical",
+      "roomEntryConsent": true,
+      "repairLocation": null,
+      "urgencyLevelAI": "High",
+      "createdAt": {
+        "_seconds": 1767674680,
+        "_nanoseconds": 651000000
+      },
+      "reportedDate": {
+        "_seconds": 1767674680,
+        "_nanoseconds": 651000000
+      },
+      "complaintID": "QZjGs9ICrbtsXG6j8vUi",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767674691/qe8a3qhojuczxohriwxf.jpg"
+      ],
+      "urgencyLevel": "Medium",
+      "assignedDate": {
+        "_seconds": 1767674753,
+        "_nanoseconds": 633000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767674753,
+        "_nanoseconds": 633000000
+      },
+      "reportStatus": "Approved",
+      "assignmentNotificationRead": false,
+      "lastStatusUpdate": {
+        "_seconds": 1767674753,
+        "_nanoseconds": 633000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1768987800,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1768989600,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 1,
+      "reviewedBy": "/collection/staff/2FSWNmjuNpSy9Sn6o0Kead5soQi2",
+      "assignedTo": "/collection/technician/dtjASToxGLQ0vGqpQz5d",
+      "lastStatusChangedAt": {
+        "_seconds": 1767674753,
+        "_nanoseconds": 832000000
+      },
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "QkwQ4IuA5rigvQ78iLgw": {
+      "reportBy": "/collection/student/jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "inventoryDamage": "dhh",
+      "isArchived": false,
+      "technicianTip": 0,
+      "scheduledDate": null,
+      "urgencyLevel": "High",
+      "damageLocation": "KDOJ, XC1, 404",
+      "damagePic": null,
+      "inventoryDamageTitle": "hdh",
+      "studentID": "jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "damageCategory": "Plumbing",
+      "feedbackRating": 0,
+      "roomEntryConsent": true,
+      "repairLocation": {
+        "_latitude": 1.5760539,
+        "_longitude": 103.6212182
+      },
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1766561594,
+        "_nanoseconds": 150000000
+      },
+      "complaintID": "QkwQ4IuA5rigvQ78iLgw",
+      "assignedDate": {
+        "_seconds": 1766561615,
+        "_nanoseconds": 616000000
+      },
+      "reviewedOn": {
+        "_seconds": 1766561615,
+        "_nanoseconds": 616000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1766561615,
+        "_nanoseconds": 616000000
+      },
+      "assignmentNotificationRead": false,
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1766565000,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1766566800,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 1,
+      "reviewedBy": "/collection/staff/JA0BrWLkaCeucu8V3IJGJGmnw2I3",
+      "assignedTo": "/collection/technician/3JKwJEvy0EmPNq8fh6LL",
+      "taskStartedAt": {
+        "_seconds": 1766561628,
+        "_nanoseconds": 980708000
+      },
+      "arrivedAt": {
+        "_seconds": 1767661818,
+        "_nanoseconds": 348000000
+      },
+      "statusChangeCount": 2,
+      "isRead": false,
+      "proofPic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767661940/w9kkyvmeeehmv0sralgg.jpg"
+      ],
+      "reportStatus": "Completed",
+      "lastStatusUpdate": {
+        "_seconds": 1767661941,
+        "_nanoseconds": 643000000
+      }
+    },
+    "RNf64QDDMfoOcwk4SHHm": {
+      "assignedTo": "/collection/technician",
+      "damageCategory": "Electrical",
+      "damageLocation": "Lobby H01",
+      "feedbackRating": 0,
+      "inventoryDamage": "test1223_1",
+      "inventoryDamageTitle": "lqtest1223_1",
+      "rejectionReason": "",
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "reportStatus": "Pending",
+      "reviewedBy": "/collection/staff",
+      "roomEntryConsent": true,
+      "scheduledDate": null,
+      "technicianTip": 0,
+      "isArchived": false,
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "reportedDate": {
+        "_seconds": 1766457096,
+        "_nanoseconds": 7000000
+      },
+      "lastStatusUpdate": {
+        "_seconds": 1766457096,
+        "_nanoseconds": 7000000
+      },
+      "complaintID": "RNf64QDDMfoOcwk4SHHm",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1766457097/zlpasuicotbbmrujluhj.webp"
+      ],
+      "urgencyConfidence": 1,
+      "urgencyLevel": "Unknown",
+      "urgencyLevelAI": "Unknown",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "RcEIzd8XLAU6qppqbqVv": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "test0105_6",
+      "urgencyLevel": "Minor",
+      "damageLocation": "KTF, H25, 211",
+      "inventoryDamageTitle": "lqtest0105_6",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Electrical",
+      "roomEntryConsent": true,
+      "repairLocation": null,
+      "urgencyLevelAI": "Minor",
+      "reportedDate": {
+        "_seconds": 1767648423,
+        "_nanoseconds": 851000000
+      },
+      "complaintID": "RcEIzd8XLAU6qppqbqVv",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767648425/zx5sxkfmv71locsxnfd4.jpg"
+      ],
+      "assignmentNotificationRead": false,
+      "reportStatus": "Approved",
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1769506200,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1769508000,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 1,
+      "reviewedBy": "/collection/staff/2FSWNmjuNpSy9Sn6o0Kead5soQi2",
+      "assignedDate": {
+        "_seconds": 1767671275,
+        "_nanoseconds": 729000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767671275,
+        "_nanoseconds": 729000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1767671275,
+        "_nanoseconds": 729000000
+      },
+      "lastStatusUpdate": {
+        "_seconds": 1767671275,
+        "_nanoseconds": 729000000
+      },
+      "assignedTo": "/collection/technician/z1JIPmrW0Ed7jTXC4XCY",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "RjCKd6SeIvuU5U9WdeVf": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "newnew",
+      "reportStatus": "Pending",
+      "urgencyLevel": "Medium",
+      "damageLocation": "KTF, H25, 211",
+      "inventoryDamageTitle": "newnew",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Electrical",
+      "roomEntryConsent": true,
+      "repairLocation": null,
+      "urgencyLevelAI": null,
+      "reportedDate": {
+        "_seconds": 1767672452,
+        "_nanoseconds": 842000000
+      },
+      "complaintID": "RjCKd6SeIvuU5U9WdeVf",
+      "damagePic": [],
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "RvAsJAVSIj1Xa8P5romd": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "test0105_1",
+      "damageLocation": "",
+      "inventoryDamageTitle": "lqtest0105_1",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Electrical",
+      "roomEntryConsent": false,
+      "repairLocation": {
+        "_latitude": 1.5610406,
+        "_longitude": 103.6300028
+      },
+      "urgencyLevelAI": "Minor",
+      "reportedDate": {
+        "_seconds": 1767645635,
+        "_nanoseconds": 777000000
+      },
+      "complaintID": "RvAsJAVSIj1Xa8P5romd",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767645637/cc5wikcezcrzohzuad82.jpg"
+      ],
+      "urgencyLevel": "High",
+      "assignedDate": {
+        "_seconds": 1767673203,
+        "_nanoseconds": 113000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767673203,
+        "_nanoseconds": 113000000
+      },
+      "reportStatus": "Approved",
+      "assignmentNotificationRead": false,
+      "lastStatusUpdate": {
+        "_seconds": 1767673203,
+        "_nanoseconds": 113000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1769677200,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1769679000,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 1,
+      "reviewedBy": "/collection/staff/2FSWNmjuNpSy9Sn6o0Kead5soQi2",
+      "assignedTo": "/collection/technician/dtjASToxGLQ0vGqpQz5d",
+      "lastStatusChangedAt": {
+        "_seconds": 1767673203,
+        "_nanoseconds": 619000000
+      },
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "RvY04wNvbNuQYpLmRker": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "test0105_2",
+      "damageLocation": "KTF, H25, 211",
+      "inventoryDamageTitle": "lqtest0105_2",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Plumbing",
+      "roomEntryConsent": true,
+      "repairLocation": null,
+      "urgencyLevelAI": "Minor",
+      "reportedDate": {
+        "_seconds": 1767645790,
+        "_nanoseconds": 240000000
+      },
+      "complaintID": "RvY04wNvbNuQYpLmRker",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767645791/blenm8ex5s5aojcifl4l.jpg"
+      ],
+      "urgencyLevel": "High",
+      "assignedDate": {
+        "_seconds": 1767672798,
+        "_nanoseconds": 995000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767672798,
+        "_nanoseconds": 995000000
+      },
+      "reportStatus": "Approved",
+      "assignmentNotificationRead": false,
+      "lastStatusUpdate": {
+        "_seconds": 1767672798,
+        "_nanoseconds": 995000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1767778200,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1767780000,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 1,
+      "reviewedBy": "/collection/staff/2FSWNmjuNpSy9Sn6o0Kead5soQi2",
+      "assignedTo": "/collection/technician/44xcS7ikYVVn3fci9bGH",
+      "lastStatusChangedAt": {
+        "_seconds": 1767672799,
+        "_nanoseconds": 546000000
+      },
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "RyPhnZ7ifNGTCP1tVY6w": {
+      "assignedTo": "/collection/technician",
+      "damageCategory": "Electrical",
+      "damageLocation": "KTF, H25, 211",
+      "feedbackRating": 0,
+      "inventoryDamage": "test1222_1",
+      "inventoryDamageTitle": "lqtest1222_1",
+      "rejectionReason": "",
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "reportStatus": "Pending",
+      "reviewedBy": "/collection/staff",
+      "roomEntryConsent": false,
+      "scheduledDate": null,
+      "technicianTip": 0,
+      "urgencyLevel": "Medium",
+      "urgencyLevelAI": null,
+      "urgencyConfidence": 0,
+      "isArchived": false,
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "reportedDate": {
+        "_seconds": 1766421274,
+        "_nanoseconds": 555000000
+      },
+      "lastStatusUpdate": {
+        "_seconds": 1766421274,
+        "_nanoseconds": 555000000
+      },
+      "complaintID": "RyPhnZ7ifNGTCP1tVY6w",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1766421276/aayektkthb5e3lbrnnxg.webp"
+      ],
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "S1Cm9Ip4wYWxadXLLtS7": {
+      "damageCategory": "Plumbing",
+      "damageLocation": "Lobby H25",
+      "feedbackRating": 0,
+      "inventoryDamage": "test1223_3",
+      "inventoryDamageTitle": "lqtest1223_3",
+      "rejectionReason": "",
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "roomEntryConsent": false,
+      "scheduledDate": null,
+      "technicianTip": 0,
+      "urgencyLevel": "High",
+      "isArchived": false,
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "reportedDate": {
+        "_seconds": 1766458888,
+        "_nanoseconds": 781000000
+      },
+      "complaintID": "S1Cm9Ip4wYWxadXLLtS7",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1766458889/sro6zsivlyeaxdendwuf.jpg"
+      ],
+      "assignedDate": {
+        "_seconds": 1767673989,
+        "_nanoseconds": 589000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767673989,
+        "_nanoseconds": 589000000
+      },
+      "reportStatus": "Approved",
+      "assignmentNotificationRead": false,
+      "lastStatusUpdate": {
+        "_seconds": 1767673989,
+        "_nanoseconds": 589000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1768291200,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1768293000,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1768296600,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1768298400,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 2,
+      "reviewedBy": "/collection/staff/2FSWNmjuNpSy9Sn6o0Kead5soQi2",
+      "assignedTo": "/collection/technician/44xcS7ikYVVn3fci9bGH",
+      "lastStatusChangedAt": {
+        "_seconds": 1767673990,
+        "_nanoseconds": 335000000
+      },
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "SLftF6M4rTPsFS1U1SJX": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "socket broken 2",
+      "isArchived": false,
+      "technicianTip": 0,
+      "scheduledDate": null,
+      "urgencyLevel": "Medium",
+      "damageLocation": "H25, 211, KTF",
+      "damagePic": null,
+      "inventoryDamageTitle": "Socket broken",
+      "damageCategory": "Electrical",
+      "feedbackRating": 0,
+      "roomEntryConsent": true,
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1764748619,
+        "_nanoseconds": 980000000
+      },
+      "complaintID": "SLftF6M4rTPsFS1U1SJX",
+      "assignedDate": {
+        "_seconds": 1766389363,
+        "_nanoseconds": 169000000
+      },
+      "reviewedOn": {
+        "_seconds": 1766389363,
+        "_nanoseconds": 169000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1766389363,
+        "_nanoseconds": 169000000
+      },
+      "reportStatus": "Approved",
+      "assignmentNotificationRead": false,
+      "lastStatusUpdate": {
+        "_seconds": 1766389363,
+        "_nanoseconds": 169000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1766395800,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1766397600,
+          "_nanoseconds": 0
+        }
+      ],
+      "reviewedBy": "/collection/staff/2FSWNmjuNpSy9Sn6o0Kead5soQi2",
+      "estimatedDurationJobDone": 1,
+      "assignedTo": "/collection/technician/dtjASToxGLQ0vGqpQz5d",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "SoyOh8TVzgGbb4h0vV9d": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "testk1",
+      "isArchived": false,
+      "technicianTip": 0,
+      "urgencyLevel": "Medium",
+      "damagePic": null,
+      "inventoryDamageTitle": "testkq",
+      "damageCategory": "Electrical",
+      "feedbackRating": 0,
+      "roomEntryConsent": false,
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1764662945,
+        "_nanoseconds": 656000000
+      },
+      "complaintID": "SoyOh8TVzgGbb4h0vV9d",
+      "assignedTechnicianNo": "TN0001",
+      "assignedTechnicianId": "dtjASToxGLQ0vGqpQz5d",
+      "assignedTechnicianName": "Ali bin Ahmad",
+      "scheduledDate": {
+        "_seconds": 1765411200,
+        "_nanoseconds": 0
+      },
+      "assignedDate": {
+        "_seconds": 1766389444,
+        "_nanoseconds": 726000000
+      },
+      "reviewedOn": {
+        "_seconds": 1766389444,
+        "_nanoseconds": 726000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1766389444,
+        "_nanoseconds": 726000000
+      },
+      "reportStatus": "Approved",
+      "assignmentNotificationRead": false,
+      "lastStatusUpdate": {
+        "_seconds": 1766389444,
+        "_nanoseconds": 726000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1766568600,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1766570400,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 1,
+      "reviewedBy": "/collection/staff/2FSWNmjuNpSy9Sn6o0Kead5soQi2",
+      "assignedTo": "/collection/technician/z1JIPmrW0Ed7jTXC4XCY",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "UDk4xBeS5hfTBQcnNsNM": {
+      "reportBy": "/collection/student/jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "inventoryDamage": "2312 ready for cancelled",
+      "technicianTip": 0,
+      "scheduledDate": null,
+      "urgencyLevel": "Medium",
+      "damageLocation": "KDOJ, XC1, 404",
+      "damagePic": null,
+      "inventoryDamageTitle": "2312 ready for cancelled",
+      "studentID": "jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "damageCategory": "Plumbing",
+      "feedbackRating": 0,
+      "roomEntryConsent": true,
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1766502378,
+        "_nanoseconds": 678000000
+      },
+      "complaintID": "UDk4xBeS5hfTBQcnNsNM",
+      "assignedDate": {
+        "_seconds": 1766502446,
+        "_nanoseconds": 126000000
+      },
+      "reviewedOn": {
+        "_seconds": 1766502446,
+        "_nanoseconds": 126000000
+      },
+      "assignmentNotificationRead": false,
+      "lastStatusUpdate": {
+        "_seconds": 1766502446,
+        "_nanoseconds": 126000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1766653200,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1766655000,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 1,
+      "reviewedBy": "/collection/staff/JA0BrWLkaCeucu8V3IJGJGmnw2I3",
+      "statusChangeCount": 0,
+      "reportStatus": "Cancelled",
+      "assignedTo": null,
+      "archivedAt": {
+        "_seconds": 1766502512,
+        "_nanoseconds": 259000000
+      },
+      "isArchived": true,
+      "lastStatusChangedAt": {
+        "_seconds": 1766502512,
+        "_nanoseconds": 307000000
+      },
+      "isRead": false
+    },
+    "UoWrY8Fz44o6IapwPpHM": {
+      "reportBy": "/collection/student/jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "inventoryDamage": "ff",
+      "isArchived": false,
+      "technicianTip": 0,
+      "damageLocationType": "room",
+      "scheduledDate": null,
+      "urgencyLevel": "High",
+      "damageLocation": "KDOJ, XC1, 404",
+      "damageLocationDescription": "",
+      "inventoryDamageTitle": "ff",
+      "studentID": "jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "damageCategory": "Plumbing",
+      "feedbackRating": 0,
+      "roomEntryConsent": true,
+      "repairLocation": {
+        "_latitude": 1.5760539,
+        "_longitude": 103.6212182
+      },
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1766726558,
+        "_nanoseconds": 1000000
+      },
+      "complaintID": "UoWrY8Fz44o6IapwPpHM",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1766726560/e4ulf051h2pqlfallpa3.jpg"
+      ],
+      "assignedDate": {
+        "_seconds": 1766726657,
+        "_nanoseconds": 564000000
+      },
+      "reviewedOn": {
+        "_seconds": 1766726657,
+        "_nanoseconds": 564000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1766726657,
+        "_nanoseconds": 564000000
+      },
+      "assignmentNotificationRead": false,
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1766730600,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1766732400,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1766736000,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1766737800,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 2,
+      "reviewedBy": "/collection/staff/JA0BrWLkaCeucu8V3IJGJGmnw2I3",
+      "assignedTo": "/collection/technician/3JKwJEvy0EmPNq8fh6LL",
+      "taskStartedAt": {
+        "_seconds": 1766726728,
+        "_nanoseconds": 796442000
+      },
+      "arrivedAt": {
+        "_seconds": 1766726844,
+        "_nanoseconds": 796000000
+      },
+      "reasonCantCompleteProof": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1766726858/xwfop2linhe2z72utsk9.jpg"
+      ],
+      "cantCompleteCount": 1,
+      "reportStatus": "Pending",
+      "lastStatusUpdate": {
+        "_seconds": 1766726859,
+        "_nanoseconds": 589000000
+      },
+      "reasonCantComplete": "dd",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "V309qEA7hzM45g6jTFCW": {
+      "reportBy": "/collection/student/jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "inventoryDamage": "trest 2",
+      "isArchived": false,
+      "technicianTip": 0,
+      "scheduledDate": null,
+      "urgencyLevel": "High",
+      "damageLocation": "KDOJ, XC1, 404",
+      "damagePic": null,
+      "inventoryDamageTitle": "test 2",
+      "studentID": "jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "damageCategory": "Plumbing",
+      "feedbackRating": 0,
+      "roomEntryConsent": true,
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1766154945,
+        "_nanoseconds": 992000000
+      },
+      "complaintID": "V309qEA7hzM45g6jTFCW",
+      "assignedDate": {
+        "_seconds": 1766154975,
+        "_nanoseconds": 11000000
+      },
+      "reviewedOn": {
+        "_seconds": 1766154975,
+        "_nanoseconds": 11000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1766154975,
+        "_nanoseconds": 11000000
+      },
+      "assignmentNotificationRead": false,
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1766188800,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1766190600,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1766194200,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1766196000,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 2,
+      "reviewedBy": "/collection/staff/JA0BrWLkaCeucu8V3IJGJGmnw2I3",
+      "assignedTo": "/collection/technician/3JKwJEvy0EmPNq8fh6LL",
+      "reasonCantCompleteProof": "https://res.cloudinary.com/deaju8keu/image/upload/v1766155090/ndsxve1jmycfv5mau6xu.jpg",
+      "reportStatus": "Pending",
+      "lastStatusUpdate": {
+        "_seconds": 1766155091,
+        "_nanoseconds": 971000000
+      },
+      "reasonCantComplete": "canr",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "WWe5HMJnt4PnD6l2ETO4": {
+      "damageCategory": "Plumbing",
+      "damageLocation": "KTF, H25, 211",
+      "feedbackRating": 0,
+      "inventoryDamage": "test1223_7",
+      "inventoryDamageTitle": "lqtest1223_7",
+      "rejectionReason": "",
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "roomEntryConsent": false,
+      "scheduledDate": null,
+      "technicianTip": 0,
+      "urgencyLevel": "Medium",
+      "urgencyLevelAI": null,
+      "isArchived": false,
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "reportedDate": {
+        "_seconds": 1766460738,
+        "_nanoseconds": 902000000
+      },
+      "complaintID": "WWe5HMJnt4PnD6l2ETO4",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1766460740/or6mj5caicisd2fsiaip.jpg"
+      ],
+      "assignedDate": {
+        "_seconds": 1767674232,
+        "_nanoseconds": 212000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767674232,
+        "_nanoseconds": 212000000
+      },
+      "assignmentNotificationRead": false,
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1768987800,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1768989600,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 1,
+      "reviewedBy": "/collection/staff/2FSWNmjuNpSy9Sn6o0Kead5soQi2",
+      "assignedTo": "/collection/technician/2NPQBWXURezEmsWX0KjL",
+      "lastStatusChangedAt": {
+        "_seconds": 1767674232,
+        "_nanoseconds": 636000000
+      },
+      "taskStartedAt": {
+        "_seconds": 1768035758,
+        "_nanoseconds": 982514000
+      },
+      "arrivedAt": {
+        "_seconds": 1768035788,
+        "_nanoseconds": 823000000
+      },
+      "proofPic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1768036519/nchlbpewlt9vxuwfueyt.jpg"
+      ],
+      "reportStatus": "Completed",
+      "lastStatusUpdate": {
+        "_seconds": 1768036520,
+        "_nanoseconds": 272000000
+      },
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "XYXbldxDFazrO4SvTelz": {
+      "assignedTo": "/collection/technician",
+      "damageCategory": "Furniture",
+      "damagePic": null,
+      "feedbackRating": 0,
+      "inventoryDamage": "aaaaa",
+      "rejectionReason": "",
+      "reviewedBy": "/collection/staff",
+      "roomEntryConsent": true,
+      "scheduledDate": null,
+      "technicianTip": 0,
+      "urgencyLevel": "Medium",
+      "reportedDate": {
+        "_seconds": 1764384817,
+        "_nanoseconds": 31000000
+      },
+      "complaintID": "XYXbldxDFazrO4SvTelz",
+      "reportBy": "/collection/student/KANKN1Hxc5PynmDFVSVAncGTOw23",
+      "isRead": true,
+      "archivedAt": {
+        "_seconds": 1764385109,
+        "_nanoseconds": 794000000
+      },
+      "isArchived": false,
+      "reportStatus": "Approved"
+    },
+    "YkLReuk23XXSHXMD5Zqr": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "test1230_4",
+      "urgencyLevel": "High",
+      "damageLocation": "KTF, H25, 211",
+      "inventoryDamageTitle": "lqtest1230_4",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Plumbing",
+      "roomEntryConsent": true,
+      "repairLocation": null,
+      "urgencyLevelAI": "High",
+      "reportedDate": {
+        "_seconds": 1767028335,
+        "_nanoseconds": 462000000
+      },
+      "complaintID": "YkLReuk23XXSHXMD5Zqr",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767028337/wostpqkteijkxypbqx08.jpg",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767028340/tq1irpc5j84yjtnc4vwq.jpg"
+      ],
+      "reviewedOn": {
+        "_seconds": 1768123165,
+        "_nanoseconds": 570000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1768123165,
+        "_nanoseconds": 570000000
+      },
+      "reportStatus": "Rejected",
+      "lastStatusUpdate": {
+        "_seconds": 1768123165,
+        "_nanoseconds": 570000000
+      },
+      "rejectionReason": "Minor cases",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "YtyALoqAvjdl0wcjAGg0": {
+      "assignedTo": "/collection/technician",
+      "damageCategory": "Plumbing",
+      "damageLocation": "KTF, H25, 211",
+      "feedbackRating": 0,
+      "inventoryDamage": "test1223_2",
+      "inventoryDamageTitle": "lqtest1223_2",
+      "rejectionReason": "",
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "reportStatus": "Pending",
+      "reviewedBy": "/collection/staff",
+      "roomEntryConsent": true,
+      "scheduledDate": null,
+      "technicianTip": 0,
+      "urgencyLevel": "Medium",
+      "isArchived": false,
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "reportedDate": {
+        "_seconds": 1766458776,
+        "_nanoseconds": 252000000
+      },
+      "lastStatusUpdate": {
+        "_seconds": 1766458776,
+        "_nanoseconds": 252000000
+      },
+      "complaintID": "YtyALoqAvjdl0wcjAGg0",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1766458777/hq6zqwaevvenwcqqsssa.jpg",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1766458778/aebvwrnwxpaoj7dsh1vp.webp",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1766458779/z5hiwj5cp7mywq5yualb.jpg"
+      ],
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "YubScaaQvK2Z275yxdv6": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "8/12 goh",
+      "technicianTip": 0,
+      "urgencyLevel": "High",
+      "damagePic": null,
+      "inventoryDamageTitle": "9/12 goh",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Electrical",
+      "feedbackRating": 0,
+      "roomEntryConsent": true,
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1765251100,
+        "_nanoseconds": 264000000
+      },
+      "complaintID": "YubScaaQvK2Z275yxdv6",
+      "scheduledDate": {
+        "_seconds": 1766707200,
+        "_nanoseconds": 0
+      },
+      "assignedDate": {
+        "_seconds": 1765857258,
+        "_nanoseconds": 437000000
+      },
+      "reviewedOn": {
+        "_seconds": 1765857258,
+        "_nanoseconds": 437000000
+      },
+      "isRead": false,
+      "lastStatusUpdate": {
+        "_seconds": 1765857258,
+        "_nanoseconds": 437000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1766914200,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1766916000,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 1,
+      "reviewedBy": "/collection/staff/2FSWNmjuNpSy9Sn6o0Kead5soQi2",
+      "reportStatus": "Cancelled",
+      "assignedTo": null,
+      "archivedAt": {
+        "_seconds": 1765858105,
+        "_nanoseconds": 584000000
+      },
+      "isArchived": true
+    },
+    "ZxltI4acuEXAAsfMIbX1": {
+      "reportBy": "/collection/student/2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "inventoryDamage": "sg",
+      "isRead": false,
+      "urgencyLevel": "High",
+      "damageLocation": "ktho second floor toilet",
+      "inventoryDamageTitle": "sh",
+      "studentID": "2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "damageCategory": "Plumbing",
+      "roomEntryConsent": true,
+      "repairLocation": {
+        "_latitude": 1.563685,
+        "_longitude": 103.632524
+      },
+      "urgencyLevelAI": "High",
+      "createdAt": {
+        "_seconds": 1767766913,
+        "_nanoseconds": 374000000
+      },
+      "reportedDate": {
+        "_seconds": 1767766913,
+        "_nanoseconds": 374000000
+      },
+      "complaintID": "ZxltI4acuEXAAsfMIbX1",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767766921/hmeiymt6lpwttia1vwk2.jpg",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767766920/ho9m594stl01mcs2glh0.jpg",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767766927/nh5alxqqn5kotzdgxwvo.jpg"
+      ],
+      "assignedDate": {
+        "_seconds": 1767767026,
+        "_nanoseconds": 644000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767767026,
+        "_nanoseconds": 644000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1767767026,
+        "_nanoseconds": 644000000
+      },
+      "assignmentNotificationRead": false,
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1767830400,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1767832200,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1767835800,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1767837600,
+          "_nanoseconds": 0
+        }
+      ],
+      "reviewedBy": "/collection/staff/JA0BrWLkaCeucu8V3IJGJGmnw2I3",
+      "estimatedDurationJobDone": 2,
+      "assignedTo": "/collection/technician/3JKwJEvy0EmPNq8fh6LL",
+      "taskStartedAt": {
+        "_seconds": 1767767219,
+        "_nanoseconds": 515774000
+      },
+      "arrivedAt": {
+        "_seconds": 1767767221,
+        "_nanoseconds": 849000000
+      },
+      "reasonCantCompleteProof": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767767238/pcgi3yr3gfooqvlmmhcx.jpg",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767767242/mmjqgc81djpjmh8g6plu.png",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767767248/kecjkoamrex4ahsbg7vg.png"
+      ],
+      "cantCompleteCount": 1,
+      "statusChangeCount": 5,
+      "reportStatus": "Pending",
+      "lastStatusUpdate": {
+        "_seconds": 1767767249,
+        "_nanoseconds": 48000000
+      },
+      "reasonCantComplete": "too much"
+    },
+    "aCKH299O22geNGj9dXHO": {
+      "reportBy": "/collection/student/2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "inventoryDamage": "hj",
+      "urgencyLevel": "High",
+      "damageLocation": "KDOJ, XC1, 324",
+      "inventoryDamageTitle": "hj",
+      "studentID": "2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "damageCategory": "Plumbing",
+      "roomEntryConsent": true,
+      "repairLocation": {
+        "_latitude": 1.5762494,
+        "_longitude": 103.6211409
+      },
+      "urgencyLevelAI": "High",
+      "reportedDate": {
+        "_seconds": 1767660908,
+        "_nanoseconds": 172000000
+      },
+      "assignedDate": {
+        "_seconds": 1767661659,
+        "_nanoseconds": 811000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767661659,
+        "_nanoseconds": 811000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1767661659,
+        "_nanoseconds": 811000000
+      },
+      "assignmentNotificationRead": false,
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1767663000,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1767664800,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1767668400,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1767670200,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 2,
+      "reviewedBy": "/collection/staff/JA0BrWLkaCeucu8V3IJGJGmnw2I3",
+      "assignedTo": "/collection/technician/3JKwJEvy0EmPNq8fh6LL",
+      "taskStartedAt": {
+        "_seconds": 1767661779,
+        "_nanoseconds": 3796000
+      },
+      "arrivedAt": {
+        "_seconds": 1767661915,
+        "_nanoseconds": 790000000
+      },
+      "reasonCantCompleteProof": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767661923/yayvqq2zahmx8nmnujeb.jpg"
+      ],
+      "cantCompleteCount": 1,
+      "reportStatus": "Pending",
+      "lastStatusUpdate": {
+        "_seconds": 1767661924,
+        "_nanoseconds": 785000000
+      },
+      "reasonCantComplete": "hs",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "eW4AgWFosHeypkEFJpXh": {
+      "reportBy": "/collection/student/jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "inventoryDamage": "shhd",
+      "isArchived": false,
+      "technicianTip": 0,
+      "reportStatus": "Pending",
+      "scheduledDate": null,
+      "reviewedBy": "/collection/staff",
+      "urgencyLevel": "High",
+      "damageLocation": "KDOJ, XC1, 404",
+      "assignedTo": "/collection/technician",
+      "damagePic": null,
+      "inventoryDamageTitle": "shdh",
+      "studentID": "jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "damageCategory": "Plumbing",
+      "feedbackRating": 0,
+      "roomEntryConsent": true,
+      "repairLocation": {
+        "_latitude": 0,
+        "_longitude": 0
+      },
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1766559220,
+        "_nanoseconds": 103000000
+      },
+      "lastStatusUpdate": {
+        "_seconds": 1766559220,
+        "_nanoseconds": 103000000
+      },
+      "complaintID": "eW4AgWFosHeypkEFJpXh",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "ffAa9GqS7g7cR09Aj5qx": {
+      "reportBy": "/collection/student/jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "inventoryDamage": "goh 318",
+      "isArchived": false,
+      "technicianTip": 0,
+      "scheduledDate": null,
+      "urgencyLevel": "High",
+      "damageLocation": "KDOJ, XC1, null",
+      "damagePic": null,
+      "inventoryDamageTitle": "goh 318",
+      "studentID": "jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "damageCategory": "Plumbing",
+      "feedbackRating": 0,
+      "roomEntryConsent": true,
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1765351093,
+        "_nanoseconds": 987000000
+      },
+      "complaintID": "ffAa9GqS7g7cR09Aj5qx",
+      "assignedDate": {
+        "_seconds": 1767947494,
+        "_nanoseconds": 623000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767947494,
+        "_nanoseconds": 623000000
+      },
+      "statusChangeCount": 1,
+      "lastStatusChangedAt": {
+        "_seconds": 1767947494,
+        "_nanoseconds": 623000000
+      },
+      "isRead": false,
+      "reportStatus": "Approved",
+      "assignmentNotificationRead": false,
+      "lastStatusUpdate": {
+        "_seconds": 1767947494,
+        "_nanoseconds": 623000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1768464000,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1768465800,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1768467600,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1768469400,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 2,
+      "reviewedBy": "/collection/staff/JA0BrWLkaCeucu8V3IJGJGmnw2I3",
+      "assignedTo": "/collection/technician/2NPQBWXURezEmsWX0KjL"
+    },
+    "gE3yg8FdvOkLYNP2jodZ": {
+      "reportBy": "/collection/student/jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "inventoryDamage": "550pm 10/12",
+      "isArchived": false,
+      "technicianTip": 0,
+      "scheduledDate": null,
+      "urgencyLevel": "Medium",
+      "damageLocation": "KDOJ, XC1, null",
+      "damagePic": null,
+      "inventoryDamageTitle": "550pm 10/12",
+      "studentID": "jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "damageCategory": "Plumbing",
+      "feedbackRating": 0,
+      "roomEntryConsent": true,
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1765360220,
+        "_nanoseconds": 602000000
+      },
+      "complaintID": "gE3yg8FdvOkLYNP2jodZ",
+      "assignedDate": {
+        "_seconds": 1765370314,
+        "_nanoseconds": 792000000
+      },
+      "reviewedOn": {
+        "_seconds": 1765370314,
+        "_nanoseconds": 792000000
+      },
+      "lastStatusUpdate": {
+        "_seconds": 1765370314,
+        "_nanoseconds": 792000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1766563200,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1766565000,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1766570400,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1766572200,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 2,
+      "reviewedBy": "/collection/staff/ees78VjOOeg7jZQlNwi3S9i0iE32",
+      "isRead": true,
+      "suggestedDate": {
+        "_seconds": 1766073600,
+        "_nanoseconds": 0
+      },
+      "reportStatus": "Pending",
+      "assignedTo": null
+    },
+    "hHjM4lMOyQhF0WqQKCXx": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "test1012",
+      "isArchived": false,
+      "technicianTip": 0,
+      "urgencyLevel": "Medium",
+      "damageLocation": "KTF, H25, 211",
+      "damagePic": null,
+      "inventoryDamageTitle": "LQtest2_1012",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Plumbing",
+      "feedbackRating": 0,
+      "roomEntryConsent": false,
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1765348363,
+        "_nanoseconds": 194000000
+      },
+      "complaintID": "hHjM4lMOyQhF0WqQKCXx",
+      "scheduledDate": {
+        "_seconds": 1767139200,
+        "_nanoseconds": 0
+      },
+      "reviewedBy": "/collection/staff/2FSWNmjuNpSy9Sn6o0Kead5soQi2",
+      "estimatedDurationJobDone": 1,
+      "assignedDate": {
+        "_seconds": 1766389347,
+        "_nanoseconds": 28000000
+      },
+      "reviewedOn": {
+        "_seconds": 1766389347,
+        "_nanoseconds": 28000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1766389347,
+        "_nanoseconds": 28000000
+      },
+      "assignmentNotificationRead": false,
+      "lastStatusUpdate": {
+        "_seconds": 1766389347,
+        "_nanoseconds": 28000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1766476800,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1766478600,
+          "_nanoseconds": 0
+        }
+      ],
+      "statusChangeCount": 0,
+      "isRead": true,
+      "suggestedDate": {
+        "_seconds": 1767484800,
+        "_nanoseconds": 0
+      },
+      "reportStatus": "Pending",
+      "assignedTo": null
+    },
+    "hu4fn616KEyAdLJF3zqL": {
+      "reportBy": "/collection/student/jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "inventoryDamage": "2312 1224",
+      "isArchived": false,
+      "technicianTip": 0,
+      "scheduledDate": null,
+      "urgencyLevel": "High",
+      "damageLocation": "KDOJ, XC1, 404",
+      "damagePic": null,
+      "inventoryDamageTitle": "2312 1224",
+      "studentID": "jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "damageCategory": "Plumbing",
+      "feedbackRating": 0,
+      "roomEntryConsent": true,
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1766463890,
+        "_nanoseconds": 829000000
+      },
+      "complaintID": "hu4fn616KEyAdLJF3zqL",
+      "assignedDate": {
+        "_seconds": 1766463933,
+        "_nanoseconds": 6000000
+      },
+      "reviewedOn": {
+        "_seconds": 1766463933,
+        "_nanoseconds": 6000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1766463933,
+        "_nanoseconds": 6000000
+      },
+      "assignmentNotificationRead": false,
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1766478600,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1766480400,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1766484000,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1766485800,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 2,
+      "reviewedBy": "/collection/staff/JA0BrWLkaCeucu8V3IJGJGmnw2I3",
+      "assignedTo": "/collection/technician/3JKwJEvy0EmPNq8fh6LL",
+      "reasonCantCompleteProof": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1766464034/rjp8vc1v5gdqwaurknyv.png"
+      ],
+      "cantCompleteCount": 1,
+      "reportStatus": "Pending",
+      "lastStatusUpdate": {
+        "_seconds": 1766464035,
+        "_nanoseconds": 136000000
+      },
+      "reasonCantComplete": "sad",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "i4LM0A3H6EDZVYrhs1dW": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "fffff",
+      "reportStatus": "Pending",
+      "urgencyLevel": "Medium",
+      "damageLocation": "",
+      "inventoryDamageTitle": "jjjjj",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Plumbing",
+      "roomEntryConsent": false,
+      "repairLocation": {
+        "_latitude": 1.5609188,
+        "_longitude": 103.6297359
+      },
+      "urgencyLevelAI": null,
+      "createdAt": {
+        "_seconds": 1767675199,
+        "_nanoseconds": 708000000
+      },
+      "reportedDate": {
+        "_seconds": 1767675199,
+        "_nanoseconds": 708000000
+      },
+      "lastStatusUpdate": {
+        "_seconds": 1767675199,
+        "_nanoseconds": 708000000
+      },
+      "complaintID": "i4LM0A3H6EDZVYrhs1dW",
+      "damagePic": [],
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "iMf78cIGAAXGFR1dzD9k": {
+      "reportBy": "/collection/student/2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "inventoryDamage": "jh",
+      "isRead": false,
+      "urgencyLevel": "High",
+      "damageLocation": "sjj",
+      "inventoryDamageTitle": "jh",
+      "studentID": "2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "damageCategory": "Plumbing",
+      "roomEntryConsent": true,
+      "repairLocation": {
+        "_latitude": 1.5641683,
+        "_longitude": 103.6350973
+      },
+      "urgencyLevelAI": "High",
+      "createdAt": {
+        "_seconds": 1767773002,
+        "_nanoseconds": 174000000
+      },
+      "reportedDate": {
+        "_seconds": 1767773002,
+        "_nanoseconds": 174000000
+      },
+      "complaintID": "iMf78cIGAAXGFR1dzD9k",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767773005/pccydsqakj742imxeguf.jpg"
+      ],
+      "assignedDate": {
+        "_seconds": 1767773040,
+        "_nanoseconds": 516000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767773040,
+        "_nanoseconds": 516000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1767773040,
+        "_nanoseconds": 516000000
+      },
+      "assignmentNotificationRead": false,
+      "lastStatusUpdate": {
+        "_seconds": 1767773040,
+        "_nanoseconds": 516000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1767830400,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1767832200,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1767834000,
+          "_nanoseconds": 0
+        }
+      ],
+      "reviewedBy": "/collection/staff/JA0BrWLkaCeucu8V3IJGJGmnw2I3",
+      "estimatedDurationJobDone": 1,
+      "assignedTo": "/collection/technician/3JKwJEvy0EmPNq8fh6LL",
+      "taskStartedAt": {
+        "_seconds": 1767773055,
+        "_nanoseconds": 124936000
+      },
+      "reportStatus": "Ongoing",
+      "statusChangeCount": 3
+    },
+    "jrJd0l8OIuZBUh21j5zy": {
+      "reportBy": "/collection/student/jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "inventoryDamage": "ssds",
+      "isArchived": false,
+      "technicianTip": 0,
+      "reportStatus": "Pending",
+      "scheduledDate": null,
+      "reviewedBy": "/collection/staff",
+      "urgencyLevel": "Medium",
+      "damageLocation": "KDOJ, XC1, 404",
+      "assignedTo": "/collection/technician",
+      "damagePic": null,
+      "inventoryDamageTitle": "sdds",
+      "studentID": "jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "damageCategory": "Plumbing",
+      "feedbackRating": 0,
+      "roomEntryConsent": true,
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1766158753,
+        "_nanoseconds": 548000000
+      },
+      "lastStatusUpdate": {
+        "_seconds": 1766158753,
+        "_nanoseconds": 548000000
+      },
+      "complaintID": "jrJd0l8OIuZBUh21j5zy",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "k5hqZrNgDKcQXdYbkZJg": {
+      "damageCategory": "Plumbing",
+      "feedbackRating": 0,
+      "inventoryDamage": "ttt444",
+      "rejectionReason": "",
+      "reportBy": "/collection/student/Fhju47y1lgYARrokJcSaw9jqTyA3",
+      "roomEntryConsent": true,
+      "technicianTip": 0,
+      "urgencyLevel": "Medium",
+      "reportedDate": {
+        "_seconds": 1764263247,
+        "_nanoseconds": 18000000
+      },
+      "complaintID": "k5hqZrNgDKcQXdYbkZJg",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1764263248/py22gql2gdldmb1yjr3f.jpg",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1764263249/uqdginqs993cnvpai2bq.jpg",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1764263252/ohxghyr6ujgjxiqkjp8s.webp"
+      ],
+      "assignedDate": {
+        "_seconds": 1764744211,
+        "_nanoseconds": 613000000
+      },
+      "reviewedOn": {
+        "_seconds": 1764744211,
+        "_nanoseconds": 613000000
+      },
+      "assignedTechnicianNo": "TN0006",
+      "assignedTechnicianId": "3JKwJEvy0EmPNq8fh6LL",
+      "lastStatusUpdate": {
+        "_seconds": 1764744211,
+        "_nanoseconds": 613000000
+      },
+      "assignedTechnicianName": "goh",
+      "reviewedBy": "/collection/staff/ees78VjOOeg7jZQlNwi3S9i0iE32",
+      "assignedTo": "/collection/technician/3JKwJEvy0EmPNq8fh6LL",
+      "isRead": true,
+      "proofPic": "https://res.cloudinary.com/deaju8keu/image/upload/v1765245462/ynkajdon4kb5h7zi8wyq.jpg",
+      "scheduledDate": {
+        "_seconds": 1765213232,
+        "_nanoseconds": 233000000
+      },
+      "reportStatus": "Completed"
+    },
+    "lwJJRefjsnBTXN5lfR30": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "test1230_5",
+      "urgencyLevel": "High",
+      "damageLocation": "Second floor",
+      "inventoryDamageTitle": "lqtest1230_5",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Furniture",
+      "roomEntryConsent": false,
+      "repairLocation": {
+        "_latitude": 1.5641737,
+        "_longitude": 103.6380185
+      },
+      "urgencyLevelAI": "High",
+      "reportedDate": {
+        "_seconds": 1767028833,
+        "_nanoseconds": 409000000
+      },
+      "complaintID": "lwJJRefjsnBTXN5lfR30",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767028836/fxni53wyv1odcfyyu86s.jpg",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767028835/zwvowqawnxaszi3s63yx.jpg",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767028839/i0h8gsmsoy51lsmqiqq6.jpg"
+      ],
+      "assignedDate": {
+        "_seconds": 1767673370,
+        "_nanoseconds": 130000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767673370,
+        "_nanoseconds": 130000000
+      },
+      "reportStatus": "Approved",
+      "assignmentNotificationRead": false,
+      "lastStatusUpdate": {
+        "_seconds": 1767673370,
+        "_nanoseconds": 130000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1769245200,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1769247000,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 1,
+      "reviewedBy": "/collection/staff/2FSWNmjuNpSy9Sn6o0Kead5soQi2",
+      "assignedTo": "/collection/technician/b1NOTIA9R2asTptjCJST",
+      "lastStatusChangedAt": {
+        "_seconds": 1767673370,
+        "_nanoseconds": 597000000
+      },
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "mCtAjOvzYsZ01fobPyLF": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "REAL TIME LOCATION",
+      "isArchived": false,
+      "technicianTip": 0,
+      "scheduledDate": null,
+      "urgencyLevel": "Medium",
+      "damageLocation": "KTF, H25, 211",
+      "damagePic": null,
+      "inventoryDamageTitle": "TESTLOCATIONKQ",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Plumbing",
+      "feedbackRating": 0,
+      "roomEntryConsent": true,
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1765858026,
+        "_nanoseconds": 830000000
+      },
+      "complaintID": "mCtAjOvzYsZ01fobPyLF",
+      "assignedDate": {
+        "_seconds": 1765858583,
+        "_nanoseconds": 780000000
+      },
+      "reviewedOn": {
+        "_seconds": 1765858583,
+        "_nanoseconds": 780000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1765960200,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1765976400,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1765978200,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1765980000,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 2,
+      "reviewedBy": "/collection/staff/FaIGBxLYJpW18zDx4oGv6ZOf33V2",
+      "assignedTo": "/collection/technician/2NPQBWXURezEmsWX0KjL",
+      "lastLocationUpdate": {
+        "_seconds": 1765957194,
+        "_nanoseconds": 426000000
+      },
+      "arrivedAt": {
+        "_seconds": 1767770328,
+        "_nanoseconds": 672000000
+      },
+      "proofPic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767770351/x3gud0adwjcne8fx6qyo.jpg"
+      ],
+      "reportStatus": "Completed",
+      "lastStatusUpdate": {
+        "_seconds": 1767770352,
+        "_nanoseconds": 717000000
+      },
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "mVqGKHOIGh2GdJb0AaRB": {
+      "reportBy": "/collection/student/jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "inventoryDamage": "557 goh",
+      "isArchived": false,
+      "technicianTip": 0,
+      "urgencyLevel": "High",
+      "damageLocation": "KDOJ, XC1, null",
+      "damagePic": null,
+      "inventoryDamageTitle": "557 goh",
+      "studentID": "jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "damageCategory": "Plumbing",
+      "feedbackRating": 0,
+      "roomEntryConsent": true,
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1765360651,
+        "_nanoseconds": 892000000
+      },
+      "complaintID": "mVqGKHOIGh2GdJb0AaRB",
+      "estimatedDurationJobDone": 1,
+      "assignedDate": {
+        "_seconds": 1765361198,
+        "_nanoseconds": 602000000
+      },
+      "reviewedOn": {
+        "_seconds": 1765361198,
+        "_nanoseconds": 602000000
+      },
+      "lastStatusUpdate": {
+        "_seconds": 1765361198,
+        "_nanoseconds": 602000000
+      },
+      "scheduledDate": {
+        "_seconds": 1765324800,
+        "_nanoseconds": 0
+      },
+      "reportStatus": "Pending",
+      "reviewedBy": null,
+      "assignedTo": null,
+      "isRead": true
+    },
+    "nu1P2Hk5lGkRuYScX98M": {
+      "reportBy": "/collection/student/2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "inventoryDamage": "sh",
+      "isRead": false,
+      "urgencyLevel": "High",
+      "damageLocation": "k10 toilet",
+      "inventoryDamageTitle": "sh",
+      "studentID": "2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "damageCategory": "Plumbing",
+      "roomEntryConsent": true,
+      "repairLocation": {
+        "_latitude": 1.5609759,
+        "_longitude": 103.6493754
+      },
+      "urgencyLevelAI": "High",
+      "createdAt": {
+        "_seconds": 1767766986,
+        "_nanoseconds": 26000000
+      },
+      "reportedDate": {
+        "_seconds": 1767766986,
+        "_nanoseconds": 26000000
+      },
+      "complaintID": "nu1P2Hk5lGkRuYScX98M",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767766989/ypca7vzpghmvdfyeocru.jpg",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767766988/b1bjzxfcljsd8gzgxvdb.jpg",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767766989/tpe6casgwdiq0cvt4qzs.jpg"
+      ],
+      "assignedDate": {
+        "_seconds": 1767767014,
+        "_nanoseconds": 611000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767767014,
+        "_nanoseconds": 611000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1767767014,
+        "_nanoseconds": 611000000
+      },
+      "assignmentNotificationRead": false,
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1767767400,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1767769200,
+          "_nanoseconds": 0
+        }
+      ],
+      "reviewedBy": "/collection/staff/JA0BrWLkaCeucu8V3IJGJGmnw2I3",
+      "estimatedDurationJobDone": 1,
+      "assignedTo": "/collection/technician/3JKwJEvy0EmPNq8fh6LL",
+      "taskStartedAt": {
+        "_seconds": 1767767048,
+        "_nanoseconds": 482582000
+      },
+      "arrivedAt": {
+        "_seconds": 1767767181,
+        "_nanoseconds": 689000000
+      },
+      "statusChangeCount": 5,
+      "proofPic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767767197/ddyyb4jxwctvqli82s8p.jpg",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767767201/e23dkk4zj5bxg1l9wgca.png",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767767204/qec5479jiblejwk0tmlk.jpg"
+      ],
+      "reportStatus": "Completed",
+      "lastStatusUpdate": {
+        "_seconds": 1767767205,
+        "_nanoseconds": 297000000
+      }
+    },
+    "oh11NJKsGHjJFb2VjibQ": {
+      "inventoryDamage": "test3kq",
+      "technicianTip": 0,
+      "scheduledDate": null,
+      "urgencyLevel": "Medium",
+      "assignedTo": "/collection/technician",
+      "damagePic": null,
+      "damageCategory": "Electrical",
+      "feedbackRating": 0,
+      "roomEntryConsent": true,
+      "reportedDate": {
+        "_seconds": 1764341602,
+        "_nanoseconds": 762000000
+      },
+      "complaintID": "oh11NJKsGHjJFb2VjibQ",
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "isArchived": true,
+      "archivedAt": {
+        "_seconds": 1764383549,
+        "_nanoseconds": 411000000
+      },
+      "isRead": false,
+      "rejectionReason": "no reason",
+      "reviewedOn": {
+        "_seconds": 1764601929,
+        "_nanoseconds": 929000000
+      },
+      "reportStatus": "Rejected",
+      "lastStatusUpdate": {
+        "_seconds": 1764601929,
+        "_nanoseconds": 929000000
+      },
+      "reviewedBy": "",
+      "studentID": ""
+    },
+    "pv597Z3uBnDCJh41FVf5": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "socket cannot plug",
+      "reportStatus": "Pending",
+      "urgencyLevel": "Medium",
+      "damageLocation": "KTF, H25, 211",
+      "inventoryDamageTitle": "soket cannot plug",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Electrical",
+      "roomEntryConsent": true,
+      "repairLocation": null,
+      "urgencyLevelAI": null,
+      "reportedDate": {
+        "_seconds": 1767428721,
+        "_nanoseconds": 792000000
+      },
+      "complaintID": "pv597Z3uBnDCJh41FVf5",
+      "damagePic": [],
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "qjxImDbnQej3dWvr2hTW": {
+      "reportBy": "/collection/student/2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "inventoryDamage": "sh",
+      "isRead": false,
+      "urgencyLevel": "High",
+      "damageLocation": "KDOJ, XC1, 324",
+      "inventoryDamageTitle": "dh",
+      "studentID": "2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "damageCategory": "Plumbing",
+      "roomEntryConsent": true,
+      "repairLocation": {
+        "_latitude": 1.5762494,
+        "_longitude": 103.6211409
+      },
+      "urgencyLevelAI": "High",
+      "createdAt": {
+        "_seconds": 1767767345,
+        "_nanoseconds": 350000000
+      },
+      "reportedDate": {
+        "_seconds": 1767767345,
+        "_nanoseconds": 350000000
+      },
+      "complaintID": "qjxImDbnQej3dWvr2hTW",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767767348/qjldxbpteuvqmgifqdw2.jpg",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767767347/ys3lnjzktmyxmre6waak.jpg"
+      ],
+      "assignmentNotificationRead": false,
+      "reviewedBy": "/collection/staff/JA0BrWLkaCeucu8V3IJGJGmnw2I3",
+      "estimatedDurationJobDone": 1,
+      "taskStartedAt": {
+        "_seconds": 1767767399,
+        "_nanoseconds": 536110000
+      },
+      "arrivedAt": {
+        "_seconds": 1767767401,
+        "_nanoseconds": 572000000
+      },
+      "reasonCantCompleteProof": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767767420/ubekh3bvzhhszuu4nfty.jpg",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767767424/hdcnvgcyi1y93rhwvp1r.png",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767767429/k2m1xk2op7mpdbgcmitv.jpg"
+      ],
+      "cantCompleteCount": 1,
+      "reasonCantComplete": "dh",
+      "assignedDate": {
+        "_seconds": 1767948811,
+        "_nanoseconds": 595000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767948811,
+        "_nanoseconds": 595000000
+      },
+      "statusChangeCount": 6,
+      "lastStatusChangedAt": {
+        "_seconds": 1767948811,
+        "_nanoseconds": 595000000
+      },
+      "reportStatus": "Approved",
+      "lastStatusUpdate": {
+        "_seconds": 1767948811,
+        "_nanoseconds": 595000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1768377600,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1768379400,
+          "_nanoseconds": 0
+        }
+      ],
+      "assignedTo": "/collection/technician/44xcS7ikYVVn3fci9bGH"
+    },
+    "qmKq2qJKV2PwpZyz7n3K": {
+      "reportBy": "/collection/student/jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "inventoryDamage": "jdjssjsj",
+      "isArchived": false,
+      "technicianTip": 0,
+      "damageLocationType": "room",
+      "reportStatus": "Pending",
+      "scheduledDate": null,
+      "reviewedBy": "/collection/staff",
+      "urgencyLevel": "Medium",
+      "damageLocation": "Kolej Dato Oon Jafar, Universiti Teknologi Malaysia, 81310, 81110 Skudai, Johor, Malaysia",
+      "assignedTo": "/collection/technician",
+      "damagePic": null,
+      "damageLocationDescription": "",
+      "inventoryDamageTitle": "jshs",
+      "studentID": "jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "damageCategory": "Plumbing",
+      "feedbackRating": 0,
+      "roomEntryConsent": true,
+      "repairLocation": {
+        "_latitude": 1.5762494,
+        "_longitude": 103.6211409
+      },
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1766630569,
+        "_nanoseconds": 390000000
+      },
+      "lastStatusUpdate": {
+        "_seconds": 1766630569,
+        "_nanoseconds": 390000000
+      },
+      "complaintID": "qmKq2qJKV2PwpZyz7n3K",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "rQAJZqzHQsmqv0N70b8M": {
+      "reportBy": "/collection/student/2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "inventoryDamage": "hh",
+      "urgencyLevel": "High",
+      "damageLocation": "",
+      "inventoryDamageTitle": "hh",
+      "studentID": "2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "damageCategory": "Plumbing",
+      "roomEntryConsent": true,
+      "repairLocation": {
+        "_latitude": 1.5762494,
+        "_longitude": 103.6211409
+      },
+      "urgencyLevelAI": null,
+      "reportedDate": {
+        "_seconds": 1767660908,
+        "_nanoseconds": 277000000
+      },
+      "assignedDate": {
+        "_seconds": 1767660940,
+        "_nanoseconds": 605000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767660940,
+        "_nanoseconds": 605000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1767660940,
+        "_nanoseconds": 605000000
+      },
+      "assignmentNotificationRead": false,
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1767661200,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1767663000,
+          "_nanoseconds": 0
+        }
+      ],
+      "reviewedBy": "/collection/staff/JA0BrWLkaCeucu8V3IJGJGmnw2I3",
+      "estimatedDurationJobDone": 1,
+      "assignedTo": "/collection/technician/3JKwJEvy0EmPNq8fh6LL",
+      "taskStartedAt": {
+        "_seconds": 1767660961,
+        "_nanoseconds": 404957000
+      },
+      "arrivedAt": {
+        "_seconds": 1767661012,
+        "_nanoseconds": 884000000
+      },
+      "reasonCantCompleteProof": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767661042/cf18mvzkmepfcniv25ug.jpg"
+      ],
+      "cantCompleteCount": 1,
+      "reportStatus": "Pending",
+      "lastStatusUpdate": {
+        "_seconds": 1767661043,
+        "_nanoseconds": 898000000
+      },
+      "reasonCantComplete": "dhhd",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "s8ED6tn8slUMwXrjLdDB": {
+      "damageCategory": "Electrical",
+      "damageLocation": "KTF, H25, 211",
+      "feedbackRating": 0,
+      "inventoryDamage": "test1223_6",
+      "inventoryDamageTitle": "lqtest1223_6",
+      "rejectionReason": "",
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "roomEntryConsent": true,
+      "scheduledDate": null,
+      "technicianTip": 0,
+      "urgencyLevel": "Medium",
+      "urgencyLevelAI": null,
+      "isArchived": false,
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "reportedDate": {
+        "_seconds": 1766460065,
+        "_nanoseconds": 685000000
+      },
+      "complaintID": "s8ED6tn8slUMwXrjLdDB",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1766460066/biifl3vng1ihzsqgfwbv.jpg"
+      ],
+      "assignedDate": {
+        "_seconds": 1767675007,
+        "_nanoseconds": 304000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767675007,
+        "_nanoseconds": 304000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1767675007,
+        "_nanoseconds": 304000000
+      },
+      "reportStatus": "Approved",
+      "assignmentNotificationRead": false,
+      "lastStatusUpdate": {
+        "_seconds": 1767675007,
+        "_nanoseconds": 304000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1769074200,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1769076000,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 1,
+      "reviewedBy": "/collection/staff/2FSWNmjuNpSy9Sn6o0Kead5soQi2",
+      "assignedTo": "/collection/technician/z1JIPmrW0Ed7jTXC4XCY",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "t4n6EwRtUdniGVfZa4WM": {
+      "reportBy": "/collection/student/jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "inventoryDamage": "ff",
+      "isArchived": false,
+      "technicianTip": 0,
+      "damageLocationType": "public",
+      "scheduledDate": null,
+      "damageLocation": "s",
+      "damageLocationDescription": "",
+      "inventoryDamageTitle": "ff",
+      "studentID": "jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "damageCategory": "Plumbing",
+      "feedbackRating": 0,
+      "roomEntryConsent": true,
+      "repairLocation": {
+        "_latitude": 1.5490688,
+        "_longitude": 103.7959073
+      },
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1766729164,
+        "_nanoseconds": 5000000
+      },
+      "complaintID": "t4n6EwRtUdniGVfZa4WM",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1766729166/p693w1exuj5uoqusoges.jpg"
+      ],
+      "assignedDate": {
+        "_seconds": 1766729191,
+        "_nanoseconds": 698000000
+      },
+      "reviewedOn": {
+        "_seconds": 1766729191,
+        "_nanoseconds": 698000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1766729191,
+        "_nanoseconds": 698000000
+      },
+      "assignmentNotificationRead": false,
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1766732400,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1766734200,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 1,
+      "reviewedBy": "/collection/staff/JA0BrWLkaCeucu8V3IJGJGmnw2I3",
+      "assignedTo": "/collection/technician/3JKwJEvy0EmPNq8fh6LL",
+      "taskStartedAt": {
+        "_seconds": 1766729202,
+        "_nanoseconds": 403995000
+      },
+      "arrivedAt": {
+        "_seconds": 1766729279,
+        "_nanoseconds": 227000000
+      },
+      "reasonCantCompleteProof": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1766729294/dheo3hvokgll27wrjqvw.jpg"
+      ],
+      "cantCompleteCount": 1,
+      "reportStatus": "Pending",
+      "lastStatusUpdate": {
+        "_seconds": 1766729295,
+        "_nanoseconds": 417000000
+      },
+      "reasonCantComplete": "d",
+      "statusChangeCount": 0,
+      "isRead": true,
+      "urgencyLevel": "High"
+    },
+    "v3wvwbBMtKG2DL5bqaN6": {
+      "reportBy": "/collection/student/2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "inventoryDamage": "jh",
+      "urgencyLevel": "High",
+      "damageLocation": "s43 second floor toilet",
+      "inventoryDamageTitle": "jh",
+      "studentID": "2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "damageCategory": "Plumbing",
+      "roomEntryConsent": true,
+      "repairLocation": {
+        "_latitude": 1.5552874,
+        "_longitude": 103.6484326
+      },
+      "urgencyLevelAI": "High",
+      "reportedDate": {
+        "_seconds": 1767670655,
+        "_nanoseconds": 947000000
+      },
+      "complaintID": "v3wvwbBMtKG2DL5bqaN6",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767670658/tiginjibsitioldconuj.jpg"
+      ],
+      "assignedDate": {
+        "_seconds": 1767670729,
+        "_nanoseconds": 933000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767670729,
+        "_nanoseconds": 933000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1767670729,
+        "_nanoseconds": 933000000
+      },
+      "assignmentNotificationRead": false,
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1767675600,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1767677400,
+          "_nanoseconds": 0
+        }
+      ],
+      "reviewedBy": "/collection/staff/JA0BrWLkaCeucu8V3IJGJGmnw2I3",
+      "estimatedDurationJobDone": 1,
+      "assignedTo": "/collection/technician/3JKwJEvy0EmPNq8fh6LL",
+      "taskStartedAt": {
+        "_seconds": 1767670748,
+        "_nanoseconds": 729077000
+      },
+      "arrivedAt": {
+        "_seconds": 1767670810,
+        "_nanoseconds": 813000000
+      },
+      "reasonCantCompleteProof": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767670832/yavghlm4aqymwkbhqrtu.jpg",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767670838/pkuohdgwz7316rs8tpyp.png"
+      ],
+      "cantCompleteCount": 1,
+      "reportStatus": "Pending",
+      "lastStatusUpdate": {
+        "_seconds": 1767670839,
+        "_nanoseconds": 442000000
+      },
+      "reasonCantComplete": "nono",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "vl0rabOenW3y9aCqXMUT": {
+      "reportBy": "/collection/student/jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "inventoryDamage": "hs",
+      "isArchived": false,
+      "technicianTip": 0,
+      "damageLocationType": "room",
+      "scheduledDate": null,
+      "urgencyLevel": "High",
+      "damageLocation": "KDOJ, XC1, 404",
+      "damagePic": null,
+      "damageLocationDescription": "",
+      "inventoryDamageTitle": "hs",
+      "studentID": "jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "damageCategory": "Plumbing",
+      "feedbackRating": 0,
+      "roomEntryConsent": true,
+      "repairLocation": {
+        "_latitude": 1.5760539,
+        "_longitude": 103.6212182
+      },
+      "rejectionReason": "",
+      "reportedDate": {
+        "_seconds": 1767069554,
+        "_nanoseconds": 876000000
+      },
+      "complaintID": "vl0rabOenW3y9aCqXMUT",
+      "assignedDate": {
+        "_seconds": 1767069585,
+        "_nanoseconds": 298000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767069585,
+        "_nanoseconds": 298000000
+      },
+      "assignmentNotificationRead": false,
+      "lastStatusUpdate": {
+        "_seconds": 1767069585,
+        "_nanoseconds": 298000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1767070800,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1767072600,
+          "_nanoseconds": 0
+        }
+      ],
+      "estimatedDurationJobDone": 1,
+      "reviewedBy": "/collection/staff/JA0BrWLkaCeucu8V3IJGJGmnw2I3",
+      "statusChangeCount": 0,
+      "suggestedDate": {
+        "_seconds": 1767110400,
+        "_nanoseconds": 0
+      },
+      "reportStatus": "Pending",
+      "lastStatusChangedAt": {
+        "_seconds": 1767069632,
+        "_nanoseconds": 385000000
+      },
+      "isRead": false,
+      "assignedTo": null
+    },
+    "x5zNr5YO8ZJnj8BQMMZR": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "test0105_7",
+      "damageLocation": "",
+      "inventoryDamageTitle": "lqtest0105_7",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Furniture",
+      "roomEntryConsent": true,
+      "repairLocation": {
+        "_latitude": 1.5598143,
+        "_longitude": 103.6315391
+      },
+      "urgencyLevelAI": null,
+      "reportedDate": {
+        "_seconds": 1767649087,
+        "_nanoseconds": 497000000
+      },
+      "complaintID": "x5zNr5YO8ZJnj8BQMMZR",
+      "damagePic": [],
+      "urgencyLevel": "High",
+      "assignedDate": {
+        "_seconds": 1767672102,
+        "_nanoseconds": 229000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767672102,
+        "_nanoseconds": 229000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1767672102,
+        "_nanoseconds": 229000000
+      },
+      "reportStatus": "Approved",
+      "assignmentNotificationRead": false,
+      "lastStatusUpdate": {
+        "_seconds": 1767672102,
+        "_nanoseconds": 229000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1767859200,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1767861000,
+          "_nanoseconds": 0
+        }
+      ],
+      "reviewedBy": "/collection/staff/2FSWNmjuNpSy9Sn6o0Kead5soQi2",
+      "estimatedDurationJobDone": 1,
+      "assignedTo": "/collection/technician/b1NOTIA9R2asTptjCJST",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "yIKTbaiAufJiim0OsHXq": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "test1230_1",
+      "reportStatus": "Pending",
+      "urgencyLevel": "High",
+      "damageLocation": "Side entrance",
+      "inventoryDamageTitle": "lqtest1230_1",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Electrical",
+      "roomEntryConsent": false,
+      "repairLocation": {
+        "_latitude": 1.5598143,
+        "_longitude": 103.6315391
+      },
+      "urgencyLevelAI": "High",
+      "reportedDate": {
+        "_seconds": 1767027854,
+        "_nanoseconds": 252000000
+      },
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "ymqQXB0YIRpdwlGSBiWZ": {
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "inventoryDamage": "test1230_4",
+      "reportStatus": "Pending",
+      "damageLocation": "KTF, H25, 211",
+      "inventoryDamageTitle": "lqtest1230_4",
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "damageCategory": "Plumbing",
+      "roomEntryConsent": true,
+      "repairLocation": null,
+      "urgencyLevelAI": "Minor",
+      "reportedDate": {
+        "_seconds": 1767028382,
+        "_nanoseconds": 440000000
+      },
+      "complaintID": "ymqQXB0YIRpdwlGSBiWZ",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767028383/nwnzl9ap8b75tcmfqm4v.jpg",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767028387/zgsfkjmbk8otblynmbgj.jpg",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767028388/rtaweezeujpgv3u557id.jpg"
+      ],
+      "urgencyLevel": "Medium",
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "ytJYF86GBgE4muvqwNeW": {
+      "reportBy": "/collection/student/2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "inventoryDamage": "sini rosak",
+      "urgencyLevel": "Minor",
+      "damageLocation": "level 3 toilet",
+      "inventoryDamageTitle": "testow",
+      "studentID": "2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "damageCategory": "Electrical",
+      "roomEntryConsent": true,
+      "repairLocation": {
+        "_latitude": 2.0400737,
+        "_longitude": 103.3205798
+      },
+      "urgencyLevelAI": "Minor",
+      "reportedDate": {
+        "_seconds": 1767947302,
+        "_nanoseconds": 130000000
+      },
+      "complaintID": "ytJYF86GBgE4muvqwNeW",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767947303/gzh20daksibutq86kbsa.jpg"
+      ],
+      "assignmentNotificationRead": false,
+      "estimatedDurationJobDone": 1,
+      "reviewedBy": "/collection/staff/JA0BrWLkaCeucu8V3IJGJGmnw2I3",
+      "assignedTo": "/collection/technician/z1JIPmrW0Ed7jTXC4XCY",
+      "assignedDate": {
+        "_seconds": 1767947640,
+        "_nanoseconds": 114000000
+      },
+      "reviewedOn": {
+        "_seconds": 1767947640,
+        "_nanoseconds": 114000000
+      },
+      "lastStatusChangedAt": {
+        "_seconds": 1767947640,
+        "_nanoseconds": 114000000
+      },
+      "scheduledDateTimeSlot": [
+        {
+          "_seconds": 1768032000,
+          "_nanoseconds": 0
+        },
+        {
+          "_seconds": 1768033800,
+          "_nanoseconds": 0
+        }
+      ],
+      "taskStartedAt": {
+        "_seconds": 1767947770,
+        "_nanoseconds": 81872000
+      },
+      "arrivedAt": {
+        "_seconds": 1767947789,
+        "_nanoseconds": 46000000
+      },
+      "proofPic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1767947810/pki12qw1ncgnkdjrskju.png"
+      ],
+      "reportStatus": "Completed",
+      "lastStatusUpdate": {
+        "_seconds": 1767947810,
+        "_nanoseconds": 957000000
+      },
+      "statusChangeCount": 0,
+      "isRead": true
+    },
+    "zLDbbBN4I3ToubLfHij0": {
+      "assignedTo": "/collection/technician",
+      "damageCategory": "Electrical",
+      "damageLocation": "KTF, H25, 211",
+      "feedbackRating": 0,
+      "inventoryDamage": "test1223_4",
+      "inventoryDamageTitle": "lqtest1223_4",
+      "rejectionReason": "",
+      "reportBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "reportStatus": "Pending",
+      "reviewedBy": "/collection/staff",
+      "roomEntryConsent": true,
+      "scheduledDate": null,
+      "technicianTip": 0,
+      "urgencyLevel": "Medium",
+      "urgencyLevelAI": null,
+      "isArchived": false,
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "reportedDate": {
+        "_seconds": 1766459386,
+        "_nanoseconds": 524000000
+      },
+      "lastStatusUpdate": {
+        "_seconds": 1766459386,
+        "_nanoseconds": 524000000
+      },
+      "complaintID": "zLDbbBN4I3ToubLfHij0",
+      "damagePic": [
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1766459387/jm9ekxggtp7ttpfsshjv.jpg",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1766459389/njdxq2ayqioo9szlx3hu.webp",
+        "https://res.cloudinary.com/deaju8keu/image/upload/v1766459390/der3dkx8a1niefpvl1oc.jpg"
+      ],
+      "statusChangeCount": 0,
+      "isRead": true
+    }
+  },
+  "donation": {
+    "pi_3SjDhCE0wJz5FQGW0n9CDksB": {
+      "amount": 5,
+      "donationStatus": "completed",
+      "donatedBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "paymentType": "Card",
+      "timestamp": {
+        "_seconds": 1766904223,
+        "_nanoseconds": 452000000
+      }
+    },
+    "pi_3SjDonE0wJz5FQGW0In4AnAU": {
+      "amount": 5.8,
+      "donationStatus": "completed",
+      "donatedBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "paymentType": "FPX",
+      "timestamp": {
+        "_seconds": 1766904689,
+        "_nanoseconds": 480000000
+      }
+    },
+    "pi_3SjDpjE0wJz5FQGW1X5kyczz": {
+      "amount": 5.2,
+      "donationStatus": "completed",
+      "donatedBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "paymentType": "Card",
+      "timestamp": {
+        "_seconds": 1766904747,
+        "_nanoseconds": 615000000
+      }
+    },
+    "pi_3SjDrkE0wJz5FQGW010Bt7Dn": {
+      "amount": 6.1,
+      "paymentId": "pi_3SjDrkE0wJz5FQGW010Bt7Dn",
+      "donationStatus": "completed",
+      "donatedBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "paymentType": "FPX",
+      "timestamp": {
+        "_seconds": 1766904867,
+        "_nanoseconds": 224000000
+      }
+    },
+    "pi_3SjDsOE0wJz5FQGW09TQxpqE": {
+      "amount": 5,
+      "paymentId": "pi_3SjDsOE0wJz5FQGW09TQxpqE",
+      "donationStatus": "completed",
+      "donatedBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "paymentType": "Card",
+      "timestamp": {
+        "_seconds": 1766904912,
+        "_nanoseconds": 839000000
+      }
+    },
+    "pi_3SjDu7E0wJz5FQGW1CzTHUcZ": {
+      "amount": 12.8,
+      "paymentId": "pi_3SjDu7E0wJz5FQGW1CzTHUcZ",
+      "donationStatus": "completed",
+      "donatedBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "paymentType": "Card",
+      "timestamp": {
+        "_seconds": 1766905021,
+        "_nanoseconds": 537000000
+      }
+    },
+    "pi_3SlPz4E0wJz5FQGW1Tr5e5xn": {
+      "amount": 5,
+      "paymentId": "pi_3SlPz4E0wJz5FQGW1Tr5e5xn",
+      "donationStatus": "completed",
+      "donatedBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "paymentType": "Card",
+      "timestamp": {
+        "_seconds": 1767428112,
+        "_nanoseconds": 479000000
+      }
+    },
+    "pi_3SmQiyE0wJz5FQGW1QSPGe7H": {
+      "amount": 5,
+      "paymentId": "pi_3SmQiyE0wJz5FQGW1QSPGe7H",
+      "donationStatus": "completed",
+      "donatedBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "paymentType": "FPX",
+      "timestamp": {
+        "_seconds": 1767669299,
+        "_nanoseconds": 315000000
+      }
+    },
+    "pi_3SmQqBE0wJz5FQGW0FCPD6Hs": {
+      "amount": 10,
+      "paymentId": "pi_3SmQqBE0wJz5FQGW0FCPD6Hs",
+      "donationStatus": "completed",
+      "donatedBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "paymentType": "FPX",
+      "timestamp": {
+        "_seconds": 1767669747,
+        "_nanoseconds": 299000000
+      }
+    },
+    "pi_3SmQrVE0wJz5FQGW1T8Iqwd6": {
+      "amount": 2,
+      "paymentId": "pi_3SmQrVE0wJz5FQGW1T8Iqwd6",
+      "donationStatus": "completed",
+      "donatedBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "paymentType": "FPX",
+      "timestamp": {
+        "_seconds": 1767669822,
+        "_nanoseconds": 470000000
+      }
+    },
+    "pi_3SmqAVE0wJz5FQGW1rr85hmI": {
+      "amount": 5,
+      "paymentId": "pi_3SmqAVE0wJz5FQGW1rr85hmI",
+      "donationStatus": "completed",
+      "donatedBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "paymentType": "Card",
+      "timestamp": {
+        "_seconds": 1767767100,
+        "_nanoseconds": 862000000
+      }
+    },
+    "pi_3SoDePE0wJz5FQGW19Qn8tEg": {
+      "amount": 8.9,
+      "paymentId": "pi_3SoDePE0wJz5FQGW19Qn8tEg",
+      "donationStatus": "completed",
+      "donatedBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "paymentType": "Card",
+      "timestamp": {
+        "_seconds": 1768095691,
+        "_nanoseconds": 611000000
+      }
+    },
+    "pi_3SoDjiE0wJz5FQGW0p0AF19w": {
+      "amount": 5,
+      "paymentId": "pi_3SoDjiE0wJz5FQGW0p0AF19w",
+      "donationStatus": "completed",
+      "donatedBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "paymentType": "Card",
+      "timestamp": {
+        "_seconds": 1768096018,
+        "_nanoseconds": 87000000
+      }
+    },
+    "pi_3SoDo7E0wJz5FQGW0q33zu9n": {
+      "amount": 2.9,
+      "paymentId": "pi_3SoDo7E0wJz5FQGW0q33zu9n",
+      "donationStatus": "completed",
+      "donatedBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "paymentType": "FPX",
+      "timestamp": {
+        "_seconds": 1768096308,
+        "_nanoseconds": 294000000
+      }
+    },
+    "pi_3SoDs8E0wJz5FQGW1LBLE6GJ": {
+      "amount": 2,
+      "paymentId": "pi_3SoDs8E0wJz5FQGW1LBLE6GJ",
+      "donationStatus": "completed",
+      "donatedBy": "/collection/student/3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "paymentType": "Card",
+      "timestamp": {
+        "_seconds": 1768096539,
+        "_nanoseconds": 900000000
+      }
+    }
+  },
+  "live_locations": {
+    "D88vRGnPz6WS8rOoEGfM": {},
+    "LguK5AEKdtN47N0gOtWL3ugS8WY2": {
+      "lng": -122.084,
+      "taskId": "mCtAjOvzYsZ01fobPyLF",
+      "lat": 37.4219983,
+      "timestamp": {
+        "_seconds": 1765957194,
+        "_nanoseconds": 204000000
+      }
+    }
+  },
+  "rating": {
+    "IGNk5gjVpf8OQXHxUpnA": {
+      "studentID": "1gv1438m3rPYXhC5E9T4iizmvNz1",
+      "complaintID": "nfl1rGOQPod0STS7KrqA",
+      "comment": "good",
+      "date": {
+        "_seconds": 1764229262,
+        "_nanoseconds": 384000000
+      },
+      "rating": 5,
+      "technicianID": "/collection/technician"
+    },
+    "Kpk4c7frcT09nYg7vWZG": {
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "complaintID": "6Obsgpd5l0sbTMTWACyz",
+      "rating": 5,
+      "comment": "",
+      "technicianID": "/collection/technician",
+      "date": {
+        "_seconds": 1764258386,
+        "_nanoseconds": 839000000
+      }
+    },
+    "OWspcT0YnucKREGHIqPl": {
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "complaintID": "g7SWLZxxAKQ2OlJTXyWs",
+      "rating": 1,
+      "comment": "bad attitude",
+      "technicianID": "/collection/technician",
+      "date": {
+        "_seconds": 1764259973,
+        "_nanoseconds": 372000000
+      }
+    },
+    "RrPDqTjbLPpboSOvsu50": {
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "complaintID": "JATKh8IMV0B0DF175fTF",
+      "rating": 5,
+      "technicianID": "/collection/technician/3JKwJEvy0EmPNq8fh6LL",
+      "date": {
+        "_seconds": 1765347393,
+        "_nanoseconds": 892000000
+      },
+      "comment": "gud"
+    },
+    "UZVBLIT2tIghZXWNKdJt": {
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "complaintID": "LSdkkRG0zhhFeh6ZlB4R",
+      "rating": 1,
+      "comment": "soso",
+      "technicianID": "/collection/technician/u97440kePBwq3fbArGBE",
+      "date": {
+        "_seconds": 1768118091,
+        "_nanoseconds": 310000000
+      }
+    },
+    "Vf7wMxuX64u1rRhF4pYT": {
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "complaintID": "WWe5HMJnt4PnD6l2ETO4",
+      "rating": 5,
+      "comment": "good job",
+      "technicianID": "/collection/technician/2NPQBWXURezEmsWX0KjL",
+      "date": {
+        "_seconds": 1768036558,
+        "_nanoseconds": 454000000
+      }
+    },
+    "XPVdtPH21YXBNsJN9790": {
+      "studentID": {
+        "_firestore": {
+          "projectId": "testing-82aaf"
+        },
+        "_path": {
+          "segments": [
+            "student",
+            "npGUEUSzjdI8EA1IBhbA"
+          ]
+        },
+        "_converter": {}
+      },
+      "technicianID": {
+        "_firestore": {
+          "projectId": "testing-82aaf"
+        },
+        "_path": {
+          "segments": [
+            "technician",
+            "s"
+          ]
+        },
+        "_converter": {}
+      },
+      "complaintID": {
+        "_firestore": {
+          "projectId": "testing-82aaf"
+        },
+        "_path": {
+          "segments": [
+            "complaint",
+            "c"
+          ]
+        },
+        "_converter": {}
+      },
+      "rating": 5,
+      "comment": "good enough",
+      "date": {
+        "_seconds": 1762847909,
+        "_nanoseconds": 941000000
+      }
+    },
+    "kTIH0j2KKqxQjWDoslIB": {
+      "studentID": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "complaintID": "mCtAjOvzYsZ01fobPyLF",
+      "comment": "",
+      "technicianID": "/collection/technician/2NPQBWXURezEmsWX0KjL",
+      "date": {
+        "_seconds": 1767770526,
+        "_nanoseconds": 659000000
+      },
+      "rating": 4
+    }
+  },
+  "staff": {
+    "2FSWNmjuNpSy9Sn6o0Kead5soQi2": {
+      "staffName": "Sioh",
+      "staffNo": "STN200",
+      "email": "sioh@gmail.com",
+      "phoneNo": "0164578952",
+      "staffRank": "admin",
+      "workCollege": "KTF",
+      "role": "staff",
+      "assignedComplaints": [],
+      "uid": "2FSWNmjuNpSy9Sn6o0Kead5soQi2"
+    },
+    "A3ebBm64CdYyQM7FDHySd3wG3e72": {
+      "uid": "A3ebBm64CdYyQM7FDHySd3wG3e72",
+      "role": "staff",
+      "staffNo": "STN6655",
+      "assignedComplaints": [],
+      "staffName": "TARMIZI",
+      "workCollege": "KRP",
+      "staffRank": "admin",
+      "email": "tata@gmail.com",
+      "phoneNo": ""
+    },
+    "C5ijENt41JZ5C77GHKtoM4jvgUs1": {
+      "uid": "C5ijENt41JZ5C77GHKtoM4jvgUs1",
+      "role": "staff",
+      "staffNo": "STN058",
+      "assignedComplaints": [],
+      "staffName": "Tan tan tan",
+      "workCollege": "KTDI",
+      "staffRank": "manager",
+      "email": "tan@gmail.com",
+      "phoneNo": "0184670511"
+    },
+    "FaIGBxLYJpW18zDx4oGv6ZOf33V2": {
+      "uid": "FaIGBxLYJpW18zDx4oGv6ZOf33V2",
+      "role": "staff",
+      "staffNo": "STN002",
+      "assignedComplaints": [],
+      "staffName": "KQ",
+      "workCollege": "KTF",
+      "staffRank": "manager",
+      "email": "kq@gmail.com",
+      "phoneNo": "0123456789"
+    },
+    "JA0BrWLkaCeucu8V3IJGJGmnw2I3": {
+      "uid": "JA0BrWLkaCeucu8V3IJGJGmnw2I3",
+      "role": "staff",
+      "staffNo": "STN0099",
+      "assignedComplaints": [],
+      "staffName": "Ruhaidah",
+      "workCollege": "KDOJ",
+      "staffRank": null,
+      "email": "ruhaidah@gmail.com",
+      "phoneNo": "0123456789"
+    },
+    "OJd5ZdhGRIUka0RLEXljWepzFEt1": {
+      "uid": "OJd5ZdhGRIUka0RLEXljWepzFEt1",
+      "role": "staff",
+      "staffNo": "7777777",
+      "assignedComplaints": [],
+      "staffName": "terwq",
+      "workCollege": "KTDI",
+      "staffRank": "officer",
+      "email": "twerq@gmail.com",
+      "phoneNo": "012123123"
+    },
+    "ees78VjOOeg7jZQlNwi3S9i0iE32": {
+      "uid": "ees78VjOOeg7jZQlNwi3S9i0iE32",
+      "role": "staff",
+      "staffNo": "STN8820",
+      "assignedComplaints": [],
+      "staffName": "GOH CHANG ZHE",
+      "workCollege": "KTDI",
+      "staffRank": "admin",
+      "email": "gohzhe@graduate.utm.my",
+      "phoneNo": "01188208820"
+    },
+    "miniechu": {
+      "email": "miniechu@yahoo.com",
+      "role": "staff",
+      "phoneNo": "0111111111",
+      "staffName": "Minie Chu",
+      "staffNo": "STN0001",
+      "staffRank": "supervisor",
+      "workCollege": "KTDI",
+      "assignedComplaints": [
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "collection",
+              "complaint"
+            ]
+          },
+          "_converter": {}
+        }
+      ]
+    }
+  },
+  "student": {
+    "2ReFvjLcu7Tmi7HrjBbSBPHdslJ3": {
+      "donationHistory": [],
+      "role": "student",
+      "gender": "",
+      "year": null,
+      "complaintHistory": [],
+      "matricNo": "A23CS0225",
+      "uid": "2ReFvjLcu7Tmi7HrjBbSBPHdslJ3",
+      "currentComplaint": [],
+      "livingAddress": {
+        "_latitude": 1.5762494,
+        "_longitude": 103.6211409
+      },
+      "studentName": "changzhe",
+      "wing": "",
+      "email": "changzhegoh@gmail.com",
+      "photoUrl": null,
+      "roomNumber": "324",
+      "residentCollege": "KDOJ",
+      "block": "XC1",
+      "phoneNo": "0183672088"
+    },
+    "3HKHYn6e6vZYJGqwUWrZxrUl4y72": {
+      "donationHistory": [],
+      "uid": "3HKHYn6e6vZYJGqwUWrZxrUl4y72",
+      "currentComplaint": [],
+      "role": "student",
+      "year": 3,
+      "complaintHistory": [],
+      "residentCollege": "KTF",
+      "block": "H25",
+      "email": "kktankq@gmail.com",
+      "phoneNo": "0184670511",
+      "photoUrl": "https://res.cloudinary.com/deaju8keu/image/upload/v1764665848/a1onkqkdzygzzuq0he74.jpg",
+      "gender": "",
+      "wing": "",
+      "faculty": "",
+      "roomNumber": "211",
+      "studentName": "Keqinnn",
+      "matricNo": "A23CS01844",
+      "livingAddress": {
+        "_latitude": 1.5585223,
+        "_longitude": 103.6399138
+      }
+    },
+    "F7dzJ3fZq5QhU9WnCSB9o5Xv6bh1": {
+      "donationHistory": [],
+      "uid": "F7dzJ3fZq5QhU9WnCSB9o5Xv6bh1",
+      "currentComplaint": [],
+      "role": "student",
+      "year": 1,
+      "studentName": "OW YEE HAO",
+      "complaintHistory": [],
+      "matricNo": "A23CS0261",
+      "email": "owyeehao0919@gmail.com",
+      "phoneNo": "0127259262",
+      "photoUrl": null,
+      "roomNumber": "303",
+      "residentCollege": "KRP",
+      "block": "G29",
+      "wing": "",
+      "gender": "Male"
+    },
+    "Fhju47y1lgYARrokJcSaw9jqTyA3": {
+      "studentName": "laura",
+      "matricNo": "A23CS0008",
+      "email": "laura@gmail.com",
+      "phoneNo": "012-4444444",
+      "residentCollege": "KTDI",
+      "block": "M20",
+      "year": 2,
+      "role": "student",
+      "complaintHistory": [],
+      "currentComplaint": [],
+      "donationHistory": [],
+      "uid": "Fhju47y1lgYARrokJcSaw9jqTyA3"
+    },
+    "KANKN1Hxc5PynmDFVSVAncGTOw23": {
+      "studentName": "Tan Lily",
+      "matricNo": "A23CS4321",
+      "email": "lily@gmail.com",
+      "phoneNo": "0123456987",
+      "residentCollege": "KTF",
+      "block": "H22",
+      "year": 2,
+      "role": "student",
+      "complaintHistory": [],
+      "currentComplaint": [],
+      "donationHistory": [],
+      "uid": "KANKN1Hxc5PynmDFVSVAncGTOw23",
+      "photoUrl": null,
+      "roomNumber": "361",
+      "gender": "",
+      "wing": "a",
+      "faculty": ""
+    },
+    "bZKmPLmM8yg64jSSawqyhAfbZZJ3": {
+      "donationHistory": [],
+      "roomNumber": "219",
+      "role": "student",
+      "gender": "Female",
+      "year": 3,
+      "complaintHistory": [],
+      "matricNo": "A23CS0001",
+      "phoneNo": "01234567899",
+      "uid": "bZKmPLmM8yg64jSSawqyhAfbZZJ3",
+      "currentComplaint": [],
+      "studentName": "student",
+      "residentCollege": "KTDI",
+      "block": "M21",
+      "wing": "",
+      "email": "student@gmail.com"
+    },
+    "jyElirIXcfUMpEFFtU4zrenxTJt2": {
+      "donationHistory": [],
+      "uid": "jyElirIXcfUMpEFFtU4zrenxTJt2",
+      "currentComplaint": [],
+      "role": "student",
+      "year": 3,
+      "studentName": "CHEW ZHUO HENG",
+      "complaintHistory": [],
+      "residentCollege": "KDOJ",
+      "block": "XC1",
+      "matricNo": "A23CS0064",
+      "email": "chewheng@graduate.utm.my",
+      "photoUrl": null,
+      "gender": "Male",
+      "wing": "",
+      "roomNumber": "404",
+      "livingAddress": {
+        "_latitude": 1.5760539,
+        "_longitude": 103.6212182
+      },
+      "notificationUnreadCount": 2,
+      "phoneNo": "0135101019"
+    },
+    "npGUEUSzjdI8EA1IBhbA": {
+      "matricNo": "SN00001",
+      "studentName": "Leong Mei Mei",
+      "year": 2,
+      "residentCollege": "KTDI",
+      "block": "M20",
+      "complaintHistory": [
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "collection",
+              "complaint"
+            ]
+          },
+          "_converter": {}
+        }
+      ],
+      "currentComplaint": [
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "collection",
+              "complaint"
+            ]
+          },
+          "_converter": {}
+        }
+      ],
+      "donationHistory": [
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "collection",
+              "donation"
+            ]
+          },
+          "_converter": {}
+        }
+      ],
+      "email": "mei2@gmail.com",
+      "phoneNo": "0122222222",
+      "role": "student"
+    }
+  },
+  "technician": {
+    "2NPQBWXURezEmsWX0KjL": {
+      "monthlySalary": 0,
+      "uid": "LguK5AEKdtN47N0gOtWL3ugS8WY2",
+      "role": "technician",
+      "technicianName": "Kq",
+      "technicianNo": "TN0004",
+      "availability": true,
+      "email": "tkq@gmail.com",
+      "phoneNo": "0123456789",
+      "maintenanceField": "Plumbing",
+      "tasksAssigned": [
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "YuwcQYABtEk6ZWibGfVl"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "273Tf4SBvO5GehT2Vlq9"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "GWTKwUg0FClqo1StoiUH"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "mCtAjOvzYsZ01fobPyLF"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "WWe5HMJnt4PnD6l2ETO4"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "8ri1bSO9rdFjQLO4qpIN"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "GD4WMsPsxi9M1vjbxQUD"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "ffAa9GqS7g7cR09Aj5qx"
+            ]
+          },
+          "_converter": {}
+        }
+      ],
+      "isOnTask": true,
+      "taskStartedAt": {
+        "_seconds": 1768035758,
+        "_nanoseconds": 847232000
+      },
+      "currentTaskId": "WWe5HMJnt4PnD6l2ETO4",
+      "locationTrackingStoppedAt": {
+        "_seconds": 1768117852,
+        "_nanoseconds": 623581000
+      },
+      "isLocationTrackingActive": true,
+      "locationUpdatedAt": {
+        "_seconds": 1768036337,
+        "_nanoseconds": 435822000
+      },
+      "currentLocation": {
+        "_latitude": 37.4219983,
+        "_longitude": -122.084
+      }
+    },
+    "3JKwJEvy0EmPNq8fh6LL": {
+      "monthlySalary": 1800,
+      "uid": "nOjlMyemjUX4UUkBZNYQUaylwsF2",
+      "role": "technician",
+      "technicianNo": "TN0006",
+      "availability": true,
+      "email": "changzheg@gmail.com",
+      "phoneNo": "0183672088",
+      "maintenanceField": "Plumbing",
+      "isOnTask": true,
+      "technicianName": "GOH CHANG ZHE",
+      "tasksAssigned": [
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "k5hqZrNgDKcQXdYbkZJg"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "JD4VDnkcnmOFOB0rpjO5"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "V309qEA7hzM45g6jTFCW"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "hu4fn616KEyAdLJF3zqL"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "QkwQ4IuA5rigvQ78iLgw"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "t4n6EwRtUdniGVfZa4WM"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "rQAJZqzHQsmqv0N70b8M"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "aCKH299O22geNGj9dXHO"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "G6kFQKUpx4k4XKom2Ub2"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "QYXIBJiH5tnur4Gb8pte"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "v3wvwbBMtKG2DL5bqaN6"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "DNm2mpAWp3itYlOkxE89"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "nu1P2Hk5lGkRuYScX98M"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "ZxltI4acuEXAAsfMIbX1"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "qjxImDbnQej3dWvr2hTW"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "iMf78cIGAAXGFR1dzD9k"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "2WvoSxdK2WK4kgyte9of"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "EXX2RTkkhp5E1zrOt5LI"
+            ]
+          },
+          "_converter": {}
+        }
+      ],
+      "currentTaskId": "EXX2RTkkhp5E1zrOt5LI",
+      "taskStartedAt": {
+        "_seconds": 1768062213,
+        "_nanoseconds": 241000000
+      },
+      "locationTrackingStoppedAt": {
+        "_seconds": 1768062232,
+        "_nanoseconds": 902668000
+      },
+      "isLocationTrackingActive": true,
+      "currentLocation": {
+        "_latitude": 1.5812482,
+        "_longitude": 103.756347
+      },
+      "locationUpdatedAt": {
+        "_seconds": 1768065101,
+        "_nanoseconds": 268536000
+      }
+    },
+    "44xcS7ikYVVn3fci9bGH": {
+      "monthlySalary": 1000,
+      "uid": "dummBtwp0RVAu87htEkYCsQX5Mo2",
+      "role": "technician",
+      "technicianName": "technician test ow",
+      "technicianNo": "TN0002",
+      "availability": true,
+      "email": "test@gmail.com",
+      "phoneNo": "0127259262",
+      "maintenanceField": "Plumbing",
+      "tasksAssigned": [
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "IYAAYKu1Iv0vanccI7it"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "273Tf4SBvO5GehT2Vlq9"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "RvY04wNvbNuQYpLmRker"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "S1Cm9Ip4wYWxadXLLtS7"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "0yR1PLakekaSumHc2oPJ"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "GD4WMsPsxi9M1vjbxQUD"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "qjxImDbnQej3dWvr2hTW"
+            ]
+          },
+          "_converter": {}
+        }
+      ]
+    },
+    "b1NOTIA9R2asTptjCJST": {
+      "technicianName": "ss",
+      "technicianNo": "TN0005",
+      "email": "ss@gmail.com",
+      "phoneNo": "0112345678",
+      "maintenanceField": "Furniture",
+      "monthlySalary": 2000,
+      "role": "technician",
+      "availability": true,
+      "uid": "sDCewu1MQ1Vc2uBYwJM9XdIFAZh2",
+      "tasksAssigned": [
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "PSZJKCBrbawoa2UfHfa3"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "x5zNr5YO8ZJnj8BQMMZR"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "lwJJRefjsnBTXN5lfR30"
+            ]
+          },
+          "_converter": {}
+        }
+      ]
+    },
+    "dtjASToxGLQ0vGqpQz5d": {
+      "technicianNo": "TN0001",
+      "technicianName": "Ali bin Ahmad",
+      "maintenanceField": "Electrical",
+      "monthlySalary": 3000,
+      "availability": true,
+      "email": "ali@gmail.com",
+      "password": "123",
+      "phoneNo": "0123333333",
+      "role": "technician",
+      "tasksAssigned": [
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "collection",
+              "complaint"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "SoyOh8TVzgGbb4h0vV9d"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "Glko4Dm1g21PPW5kgE8J"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "SLftF6M4rTPsFS1U1SJX"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "RcEIzd8XLAU6qppqbqVv"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "RvAsJAVSIj1Xa8P5romd"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "QZjGs9ICrbtsXG6j8vUi"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "AWpDd5jjxHB8pF1g2aik"
+            ]
+          },
+          "_converter": {}
+        }
+      ]
+    },
+    "u97440kePBwq3fbArGBE": {
+      "monthlySalary": 0,
+      "uid": "8vvKlYPynlX8F0VdK3J1xirCFRP2",
+      "role": "technician",
+      "technicianName": "ElectricKq",
+      "technicianNo": "TN0007",
+      "availability": true,
+      "email": "etkq@gmail.com",
+      "phoneNo": "",
+      "maintenanceField": "Electrical",
+      "isOnTask": true,
+      "locationTrackingStoppedAt": {
+        "_seconds": 1768118045,
+        "_nanoseconds": 738555000
+      },
+      "isLocationTrackingActive": true,
+      "tasksAssigned": [
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "LSdkkRG0zhhFeh6ZlB4R"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "2v9FJydusnwM68VHa1Vs"
+            ]
+          },
+          "_converter": {}
+        }
+      ],
+      "taskStartedAt": {
+        "_seconds": 1768122872,
+        "_nanoseconds": 309686000
+      },
+      "currentTaskId": "2v9FJydusnwM68VHa1Vs",
+      "currentLocation": {
+        "_latitude": 37.4219983,
+        "_longitude": -122.084
+      },
+      "locationUpdatedAt": {
+        "_seconds": 1768124709,
+        "_nanoseconds": 616758000
+      }
+    },
+    "z1JIPmrW0Ed7jTXC4XCY": {
+      "monthlySalary": 3000,
+      "uid": "9yKpcl1WZLT06XvgxsyfmLKhVnE2",
+      "role": "technician",
+      "technicianName": "PANG LEE CHUN",
+      "technicianNo": "TN0003",
+      "availability": true,
+      "email": "pangleechun@gmail.com",
+      "phoneNo": "0127259262",
+      "maintenanceField": "Electrical",
+      "tasksAssigned": [
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "chfwbLzJCUYN745leDhI"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "5KWyogn0ZvwI7etWxjrs"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "YubScaaQvK2Z275yxdv6"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "SoyOh8TVzgGbb4h0vV9d"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "RcEIzd8XLAU6qppqbqVv"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "0ib6XkuVDLthHMmyztn6"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "s8ED6tn8slUMwXrjLdDB"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "5BZEiaWabQi0iCgKPn2l"
+            ]
+          },
+          "_converter": {}
+        },
+        {
+          "_firestore": {
+            "projectId": "testing-82aaf"
+          },
+          "_path": {
+            "segments": [
+              "complaint",
+              "ytJYF86GBgE4muvqwNeW"
+            ]
+          },
+          "_converter": {}
+        }
+      ],
+      "currentLocation": {
+        "_latitude": 37.4219983,
+        "_longitude": -122.084
+      },
+      "isOnTask": true,
+      "taskStartedAt": {
+        "_seconds": 1767947767,
+        "_nanoseconds": 801117000
+      },
+      "currentTaskId": "ytJYF86GBgE4muvqwNeW",
+      "locationTrackingStoppedAt": {
+        "_seconds": 1767947825,
+        "_nanoseconds": 783384000
+      },
+      "isLocationTrackingActive": true,
+      "locationUpdatedAt": {
+        "_seconds": 1767947829,
+        "_nanoseconds": 830381000
+      }
+    }
+  },
+  "training_library": {
+    "3fxrPrH5K5KvjSsZnO1I": {
+      "complaintId": "CP_982xKLm0",
+      "images": [
+        ""
+      ],
+      "finalUrgencyLabel": "High",
+      "aiSuggestedUrgency": "Medium",
+      "category": "Plumbing",
+      "timestamp": {
+        "_seconds": 1767650635,
+        "_nanoseconds": 477000000
+      },
+      "isProcessed": false,
+      "studentID": ""
+    }
+  }
+}
