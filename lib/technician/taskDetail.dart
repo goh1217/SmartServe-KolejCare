@@ -69,6 +69,11 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   List<String> reasonCantCompleteProofList = []; // List to store up to 3 proof images
   int currentReasonImageIndex = 0; // Track current reason image being displayed
   String reasonCantCompleteText = '';
+  
+  // For upload progress tracking
+  bool isUploading = false;
+  int uploadProgress = 0; // 0-100
+  int totalImagesToUpload = 0;
 
   @override
   void initState() {
@@ -1634,12 +1639,101 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
     );
   }
 
+  void _showLoadingDialog(String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return WillPopScope(
+          onWillPop: () async => false,
+          child: Dialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            elevation: 0.0,
+            backgroundColor: Colors.transparent,
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Loading Animation
+                  SizedBox(
+                    width: 60,
+                    height: 60,
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        const Color(0xFF1A3A3A),
+                      ),
+                      strokeWidth: 4,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // Message
+                  Text(
+                    message,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  // Progress bar
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value: uploadProgress / 100,
+                      minHeight: 6,
+                      backgroundColor: Colors.grey.shade300,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        const Color(0xFF00C853),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Progress text
+                  Text(
+                    '$uploadProgress% (${uploadProgress ~/ (100 / totalImagesToUpload).ceil()} of $totalImagesToUpload)',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                  // Subtext
+                  Text(
+                    'Please wait, do not close the app',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade500,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _submitCompleteTask(List<String> imagePaths) async {
     try {
-      // Show uploading indicator
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Uploading proof images...")),
-      );
+      // Show loading dialog
+      setState(() {
+        isUploading = true;
+        totalImagesToUpload = imagePaths.length;
+        uploadProgress = 0;
+      });
+      
+      _showLoadingDialog('Uploading proof images...');
 
       // Upload all images to Cloudinary
       List<String> uploadedUrls = [];
@@ -1648,12 +1742,19 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
         if (url != null) {
           uploadedUrls.add(url);
         }
+        setState(() {
+          uploadProgress = ((i + 1) / imagePaths.length * 100).toInt();
+        });
       }
 
       if (uploadedUrls.isEmpty) {
+        Navigator.of(context).pop(); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Image upload failed.")),
         );
+        setState(() {
+          isUploading = false;
+        });
         return;
       }
 
@@ -1669,10 +1770,13 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
         'statusChangeCount': FieldValue.increment(1),
       });
 
+      Navigator.of(context).pop(); // Close loading dialog
+      
       setState(() {
         proofImages = uploadedUrls;
         currentProofImageIndex = 0;
         status = "Completed";
+        isUploading = false;
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1680,6 +1784,10 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
       );
     } catch (e) {
       print("Error submitting complete task: $e");
+      Navigator.of(context).pop(); // Close loading dialog
+      setState(() {
+        isUploading = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );
@@ -1941,10 +2049,14 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
 
   Future<void> _submitCantCompleteTask(List<String> imagePaths) async {
     try {
-      // Show uploading indicator
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Uploading proof images...")),
-      );
+      // Show loading dialog
+      setState(() {
+        isUploading = true;
+        totalImagesToUpload = imagePaths.length;
+        uploadProgress = 0;
+      });
+      
+      _showLoadingDialog('Uploading proof images...');
 
       // Upload all images to Cloudinary
       List<String> uploadedUrls = [];
@@ -1953,12 +2065,19 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
         if (url != null) {
           uploadedUrls.add(url);
         }
+        setState(() {
+          uploadProgress = ((i + 1) / imagePaths.length * 100).toInt();
+        });
       }
 
       if (uploadedUrls.isEmpty) {
+        Navigator.of(context).pop(); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Image upload failed.")),
         );
+        setState(() {
+          isUploading = false;
+        });
         return;
       }
 
@@ -1980,10 +2099,13 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
       // Send notification to student
       await _sendNotificationToStudent();
 
+      Navigator.of(context).pop(); // Close loading dialog
+      
       setState(() {
         status = 'Pending';
         reasonCantCompleteProofList = uploadedUrls;
         currentReasonImageIndex = 0;
+        isUploading = false;
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1993,6 +2115,10 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
       );
     } catch (e) {
       print("Error submitting can't complete task: $e");
+      Navigator.of(context).pop(); // Close loading dialog
+      setState(() {
+        isUploading = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );
