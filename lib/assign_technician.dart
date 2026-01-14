@@ -268,7 +268,7 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
       final snap = await _firestore
           .collection('complaint')
           .where('assignedTo', isEqualTo: assignedPath)
-          .where('reportStatus', whereIn: ['Approved', 'In Progress'])
+          .where('reportStatus', whereIn: ['Approved', 'Ongoing'])
           .get();
 
       final List<TechnicianBooking> bookings = [];
@@ -453,7 +453,7 @@ class _AssignTechnicianPageState extends State<AssignTechnicianPage> {
         final existingBookings = await _firestore
             .collection('complaint')
             .where('assignedTo', isEqualTo: assignedPath)
-            .where('reportStatus', whereIn: ['Approved', 'In Progress'])
+            .where('reportStatus', whereIn: ['Approved', 'Ongoing'])
             .get();
 
         final currentBookings = <TechnicianBooking>[];
