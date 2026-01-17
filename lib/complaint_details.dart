@@ -175,69 +175,56 @@ class _ComplaintDetailsPageState extends State<ComplaintDetailsPage> {
                       width: 1.5,
                     ),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            widget.complaint.title,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
+                          Expanded(
+                            child: Text(
+                              widget.complaint.title,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Student: ${widget.complaint.studentName}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[700],
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          if (data['inventoryDamageTitle'] != null &&
-                              (data['inventoryDamageTitle'] as String).isNotEmpty)
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Inventory: ${data['inventoryDamageTitle']}',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey[700],
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                              ],
+                            decoration: BoxDecoration(
+                              color: _getStatusColor(status).withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                          Text(
-                            'Room: ${widget.complaint.room}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[700],
+                            child: Text(
+                              status,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: _getStatusColor(status),
+                              ),
                             ),
                           ),
                         ],
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
+                      const SizedBox(height: 12),
+                      Text(
+                        'Student: ${widget.complaint.studentName}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[700],
                         ),
-                        decoration: BoxDecoration(
-                          color: _getStatusColor(status).withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          status,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: _getStatusColor(status),
-                          ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Room: ${widget.complaint.room}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[700],
                         ),
                       ),
                     ],
